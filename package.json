@@ -1,0 +1,38 @@
+{
+  "name": "ng-cached-resource",
+  "version": "0.0.0",
+  "description": "Work with $resources offline using localStorage!",
+  "author": "Good Eggs <open-source@goodeggs.com>",
+  "contributors": [
+    "Max Edmands <max@goodeggs.com>",
+    "Aaron Borden <aaron@goodeggs.com>"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/goodeggs/ng-cached-resource.git"
+  },
+  "homepage": "https://github.com/goodeggs/ng-cached-resource",
+  "bugs": "https://github.com/goodeggs/ng-cached-resource/issues",
+  "devDependencies": {
+    "coffee-script": ">=1.7.x",
+    "karma": "^0.10.9",
+    "karma-chrome-launcher": "^0.1.2",
+    "karma-coffee-preprocessor": "^0.1.3",
+    "karma-firefox-launcher": "^0.1.3",
+    "karma-html2js-preprocessor": "^0.1.0",
+    "karma-jasmine": "^0.1.5",
+    "karma-mocha": "^0.1.1",
+    "karma-phantomjs-launcher": "^0.1.2",
+    "karma-requirejs": "^0.2.1",
+    "karma-script-launcher": "^0.1.0",
+    "mocha": "~1.x.x",
+    "requirejs": "^2.1.11",
+    "uglify-js": "^2.4.12",
+    "browserify": "^3.32.0"
+  },
+  "main": "ng-cached-resource.js",
+  "scripts": {
+    "test": "karma start",
+    "pretest": "coffee --bare --compile --output lib/ src/ && browserify lib/index.js > ng-cached-resource.js && uglifyjs ng-cached-resource.js > ng-cached-resource.min.js"
+  }
+}
