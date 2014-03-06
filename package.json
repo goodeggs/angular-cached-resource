@@ -34,5 +34,9 @@
   "scripts": {
     "test": "karma start",
     "pretest": "coffee --bare --compile --output lib/ src/ && browserify lib/index.js > ng-cached-resource.js && uglifyjs ng-cached-resource.js > ng-cached-resource.min.js"
+  },
+  "dependencies": {
+    "chai": "^1.9.0",
+    "karma-chai": "^0.1.0"
   }
 }

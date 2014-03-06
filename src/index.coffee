@@ -1,12 +1,13 @@
 app = angular.module 'cached-resource', []
+online = yes
 
-app.service 'cachedResource', ($q) ->
+app.service 'cacheResource', ($q) ->
 
   (resource) ->
     cachedResource = {}
     if resource.get?
       cachedResource.get = (parameters, success, error) ->
-        deferred = $q.deffered()
+        deferred = $q.defer()
         if online
           resource.get parameters, (route) ->
             #add to cache
@@ -15,5 +16,6 @@ app.service 'cachedResource', ($q) ->
           deferred.resolve(fromCache)
 
         deferred.$promise
+    cachedResource
 
 app
