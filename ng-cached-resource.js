@@ -31,10 +31,9 @@ app.service('cacheResource', [
             parameters = null;
           }
           key = localStorageKey(url, parameters);
-          console.log(key);
           instance = Resource.get.apply(Resource, arguments);
           instance.$promise.then(function(response) {
-            return localStorage.setItem(key, JSON.stringify(response));
+            return localStorage.setItem(key, angular.toJson(response));
           });
           return instance;
         };

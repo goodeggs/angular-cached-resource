@@ -17,11 +17,10 @@ app.service 'cacheResource', ['$resource', ($resource) ->
       CachedResource.get = (parameters) ->
         parameters = null if typeof parameters is 'function'
         key = localStorageKey(url, parameters)
-        console.log key
 
         instance = Resource.get.apply(Resource, arguments)
         instance.$promise.then (response) ->
-          localStorage.setItem key, JSON.stringify response
+          localStorage.setItem key, angular.toJson response
         instance
 
     CachedResource

@@ -1,5 +1,5 @@
 describe 'cacheResource', ->
-  {cacheResource, $httpBackend} = {}
+  {cacheResource, $httpBackend, resource} = {}
 
   beforeEach ->
     module('cachedResource', 'ngResource')
@@ -7,27 +7,36 @@ describe 'cacheResource', ->
       cacheResource = $injector.get 'cacheResource'
       $httpBackend = $injector.get '$httpBackend'
 
-  afterEach ->
-    $httpBackend.verifyNoOutstandingExpectation()
-    $httpBackend.verifyNoOutstandingRequest()
+  describe 'with empty cache', ->
+    beforeEach ->
+      CachedResource = cacheResource('/mock/:parameter')
+      expect(CachedResource).to.have.key 'get'
 
-  it 'wraps the "get" function of a resource', (done) ->
-    CachedResource = cacheResource('/mock/:parameter')
-    expect(CachedResource).to.have.key 'get'
+      $httpBackend.when('GET', '/mock/1').respond
+        parameter: 1
+        magic: 'Here is the response'
 
-    $httpBackend.when('GET', '/mock/1').respond
-      parameter: 1
-      magic: 'Here is the response'
+      $httpBackend.expectGET '/mock/1'
+      resource = CachedResource.get({parameter: 1})
 
-    $httpBackend.expectGET '/mock/1'
+    afterEach ->
+      $httpBackend.verifyNoOutstandingExpectation()
+      $httpBackend.verifyNoOutstandingRequest()
+      localStorage.clear()
 
-    resource = CachedResource.get({parameter: 1})
-    expect(resource).to.have.property '$promise'
+    it 'wraps the "get" function of a resource', (done) ->
+      expect(resource).to.have.property '$promise'
 
-    resource.$promise.then ->
-      expect(resource).to.have.property 'magic', 'Here is the response'
-      done()
+      resource.$promise.then ->
+        expect(resource).to.have.property 'magic', 'Here is the response'
+        done()
 
-    resource.$save
+      $httpBackend.flush()
 
-    $httpBackend.flush()
+    it 'adds the response to local storage', ->
+      $httpBackend.flush()
+
+      cachedResponse = JSON.parse localStorage.getItem '/mock/1'
+      expect(cachedResponse).to.deep.equal
+        parameter: 1
+        magic: 'Here is the response'
