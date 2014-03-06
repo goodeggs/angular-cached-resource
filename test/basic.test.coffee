@@ -2,7 +2,7 @@ describe 'cacheResource', ->
   {cacheResource} = {}
 
   beforeEach ->
-    module('cached-resource')
+    module('cachedResource')
     inject (_cacheResource_) ->
       cacheResource = _cacheResource_
 

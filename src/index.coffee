@@ -1,4 +1,4 @@
-app = angular.module 'cached-resource', []
+app = angular.module 'cachedResource', []
 online = yes
 
 app.service 'cacheResource', ($q) ->
