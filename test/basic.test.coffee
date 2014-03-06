@@ -1,17 +1,32 @@
 describe 'cacheResource', ->
-  {cacheResource} = {}
+  {cacheResource, $resource, $httpBackend} = {}
 
   beforeEach ->
-    module('cachedResource')
-    inject (_cacheResource_) ->
-      cacheResource = _cacheResource_
+    module('cachedResource', 'ngResource')
+    inject ($injector) ->
+      cacheResource = $injector.get 'cacheResource'
+      $resource = $injector.get '$resource'
+      $httpBackend = $injector.get '$httpBackend'
 
-  it 'wraps a resource', ->
-    fakeResource =
-      get: -> @getArgs = arguments
-      query: -> @queryArgs = arguments
+  afterEach ->
+    $httpBackend.verifyNoOutstandingExpectation()
+    $httpBackend.verifyNoOutstandingRequest()
 
-    cached = cacheResource(fakeResource)
-    cached.get({_id: 1})
+  it 'wraps the "get" function of a resource', (done) ->
+    cached = cacheResource($resource('/mock/:parameter'))
+    expect(cached).to.have.key 'get'
 
-    expect(fakeResource.getArgs[0]).to.have.property '_id', 1
+    $httpBackend.when('GET', '/mock/1').respond
+      parameter: 1
+      magic: 'Here is the response'
+
+    $httpBackend.expectGET '/mock/1'
+
+    resource = cached.get({parameter: 1})
+    expect(resource).to.have.property '$promise'
+
+    resource.$promise.then ->
+      expect(resource).to.have.property 'magic', 'Here is the response'
+      done()
+
+    $httpBackend.flush()

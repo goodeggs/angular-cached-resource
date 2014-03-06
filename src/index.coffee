@@ -1,21 +1,26 @@
 app = angular.module 'cachedResource', []
-online = yes
 
-app.service 'cacheResource', ($q) ->
+app.service 'cacheResource', ->
 
-  (resource) ->
-    cachedResource = {}
-    if resource.get?
-      cachedResource.get = (parameters, success, error) ->
-        deferred = $q.defer()
-        if online
-          resource.get parameters, (route) ->
-            #add to cache
-            deferred.resolve(route)
-        else
-          deferred.resolve(fromCache)
+  return ((identity) -> identity) unless window.localStorage?
 
-        deferred.$promise
-    cachedResource
+  localStorageKey = (Resource, parameters) ->
+    console.log {Resource, parameters}
+    'key'
+
+  (Resource) ->
+    CachedResource = {}
+
+    if Resource.get?
+      CachedResource.get = (parameters) ->
+        parameters = null if typeof parameters is 'function'
+        key = localStorageKey(Resource, parameters)
+
+        instance = Resource.get.apply(Resource, arguments)
+        instance.$promise.then (response) ->
+          # localStorage.setItem key, response
+        instance
+
+    CachedResource
 
 app

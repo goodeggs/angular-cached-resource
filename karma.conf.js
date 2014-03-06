@@ -16,6 +16,8 @@ module.exports = function(config) {
     files: [
       'test/angular.js',
       'test/angular-mocks.js',
+      'test/angular-resource.js',
+
       'ng-cached-resource.js',
 
       'test/*.test.coffee'
