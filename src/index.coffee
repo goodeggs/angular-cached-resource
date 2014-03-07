@@ -1,6 +1,6 @@
 app = angular.module 'cachedResource', ['ngResource']
 
-app.service 'cacheResource', ['$resource', ($resource) ->
+app.service 'cacheResource', ['$resource', '$timeout', '$q', ($resource, $timeout, $q) ->
 
   return ((identity) -> identity) unless window.localStorage?
 
@@ -17,11 +17,12 @@ app.service 'cacheResource', ['$resource', ($resource) ->
       CachedResource.get = (parameters) ->
         parameters = null if typeof parameters is 'function'
         key = localStorageKey(url, parameters)
-
         instance = Resource.get.apply(Resource, arguments)
+
         instance.$promise.then (response) ->
           localStorage.setItem key, angular.toJson response
-        instance
+
+        angular.extend(instance, angular.fromJson localStorage.getItem key)
 
     CachedResource
 

@@ -5,7 +5,7 @@ var app;
 app = angular.module('cachedResource', ['ngResource']);
 
 app.service('cacheResource', [
-  '$resource', function($resource) {
+  '$resource', '$timeout', '$q', function($resource, $timeout, $q) {
     var localStorageKey;
     if (window.localStorage == null) {
       return (function(identity) {
@@ -35,7 +35,7 @@ app.service('cacheResource', [
           instance.$promise.then(function(response) {
             return localStorage.setItem(key, angular.toJson(response));
           });
-          return instance;
+          return angular.extend(instance, angular.fromJson(localStorage.getItem(key)));
         };
       }
       return CachedResource;
