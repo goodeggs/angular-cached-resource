@@ -2,7 +2,7 @@ describe 'cacheResource', ->
   {cacheResource, $httpBackend} = {}
 
   beforeEach ->
-    module('cachedResource', 'ngResource')
+    module('cachedResource')
     inject ($injector) ->
       cacheResource = $injector.get 'cacheResource'
       $httpBackend = $injector.get '$httpBackend'
