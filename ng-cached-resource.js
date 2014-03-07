@@ -40,9 +40,7 @@ simpleCache = function(Resource, method, url) {
 app.service('cacheResource', [
   '$resource', function($resource) {
     if (window.localStorage == null) {
-      return (function(identity) {
-        return identity;
-      });
+      return $resource;
     }
     return function(url) {
       var CachedResource, Resource, method, _i, _len, _ref;

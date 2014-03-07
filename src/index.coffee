@@ -25,7 +25,7 @@ simpleCache = (Resource, method, url) ->
 
 app.service 'cacheResource', ['$resource', ($resource) ->
 
-  return ((identity) -> identity) unless window.localStorage?
+  return $resource unless window.localStorage?
 
   return (url) ->
     Resource = $resource.apply(null, arguments)
