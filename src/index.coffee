@@ -23,7 +23,7 @@ simpleCache = (Resource, method, url) ->
       angular.extend(resource, cached)
 
 
-app.service 'cacheResource', ['$resource', ($resource) ->
+app.factory 'cacheResource', ['$resource', ($resource) ->
 
   return $resource unless window.localStorage?
 

@@ -37,7 +37,7 @@ simpleCache = function(Resource, method, url) {
   };
 };
 
-app.service('cacheResource', [
+app.factory('cacheResource', [
   '$resource', function($resource) {
     if (window.localStorage == null) {
       return $resource;
