@@ -31,6 +31,10 @@ describe 'cacheResource', ->
         expect(resource).to.have.property '$promise'
         $httpBackend.flush()
 
+      it 'has a http promise', ->
+        expect(resource).to.have.property '$httpPromise'
+        $httpBackend.flush()
+
       it 'resolves promise from response', (done) ->
         resource.$promise.then ->
           expect(resource).to.have.property 'magic', 'Here is the response'
@@ -70,6 +74,12 @@ describe 'cacheResource', ->
           expect(resource.parameter).to.equal cachedData.parameter
           expect(resource.magic).to.equal cachedData.magic
 
+        it 'resolves the promise with cached data', (done) ->
+          resource.$promise.then (data) ->
+            expect(data.magic).to.equal cachedData.magic
+            done()
+          $httpBackend.flush()
+
       describe 'online', ->
         {resource, updatedData} = {}
 
@@ -88,20 +98,28 @@ describe 'cacheResource', ->
 
           $httpBackend.flush()
 
-        it 'fetches updated resource', (done) ->
-          resource.$promise.then (data) ->
-            expect(data).to.be.defined
-            expect(data.parameter).to.equal updatedData.parameter
-            expect(data.magic).to.equal updatedData.magic
-            done()
+        describe '$httpPromise', ->
+          it 'fetches updated resource', (done) ->
+            resource.$httpPromise.then (data) ->
+              expect(data).to.be.defined
+              expect(data.parameter).to.equal updatedData.parameter
+              expect(data.magic).to.equal updatedData.magic
+              done()
 
-          $httpBackend.flush()
+            $httpBackend.flush()
 
-        it 'updates the object in cache', ->
-          $httpBackend.flush()
+          it 'updates the object in cache', ->
+            $httpBackend.flush()
 
-          data = JSON.parse localStorage.getItem '/mock/1'
-          expect(data).to.deep.equal updatedData
+            data = JSON.parse localStorage.getItem '/mock/1'
+            expect(data).to.deep.equal updatedData
+
+        describe '$promise', ->
+          it 'resolves with cached data', (done) ->
+            resource.$promise.then (data) ->
+              expect(data.magic).to.equal cachedData.magic
+              done()
+            $httpBackend.flush()
 
   describe '::query', ->
     describe 'with empty cache', ->

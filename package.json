@@ -28,7 +28,9 @@
     "mocha": "~1.x.x",
     "requirejs": "^2.1.11",
     "uglify-js": "^2.4.12",
-    "browserify": "^3.32.0"
+    "browserify": "^3.32.0",
+    "sinon": "^1.9.0",
+    "karma-sinon-chai": "^0.1.4"
   },
   "main": "ng-cached-resource.js",
   "scripts": {
