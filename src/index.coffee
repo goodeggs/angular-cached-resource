@@ -16,10 +16,7 @@ app.factory 'cacheResource', ['$resource', '$timeout', '$q', ($resource, $timeou
       parameters = null if angular.isFunction parameters
       key = localStorageKey(url, parameters)
 
-      deferred = $q.defer()
-      resource.$promise = deferred.promise
-
-      resourcePromise.then (response) ->
+      resource.$httpPromise.then (response) ->
         localStorage.setItem key, angular.toJson response
 
       cached = angular.fromJson localStorage.getItem key
@@ -30,9 +27,10 @@ app.factory 'cacheResource', ['$resource', '$timeout', '$q', ($resource, $timeou
         else
           angular.extend(resource, cached)
 
-        # Notify the cached item is available on next tick
-        $timeout ->
-          deferred.notify 'cacheReady'
+        # Resolve the promise as the cache is ready
+        deferred = $q.defer()
+        resource.$promise = deferred.promise
+        deferred.resolve resource
 
       resource
 

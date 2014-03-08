@@ -27,9 +27,7 @@ app.factory('cacheResource', [
           parameters = null;
         }
         key = localStorageKey(url, parameters);
-        deferred = $q.defer();
-        resource.$promise = deferred.promise;
-        resourcePromise.then(function(response) {
+        resource.$httpPromise.then(function(response) {
           return localStorage.setItem(key, angular.toJson(response));
         });
         cached = angular.fromJson(localStorage.getItem(key));
@@ -42,9 +40,9 @@ app.factory('cacheResource', [
           } else {
             angular.extend(resource, cached);
           }
-          $timeout(function() {
-            return deferred.notify('cacheReady');
-          });
+          deferred = $q.defer();
+          resource.$promise = deferred.promise;
+          deferred.resolve(resource);
         }
         return resource;
       };

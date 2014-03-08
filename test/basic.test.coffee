@@ -148,6 +148,10 @@ describe 'cacheResource', ->
         expect(resource).to.have.property '$promise'
         $httpBackend.flush()
 
+      it 'has an http promise', ->
+        expect(resource).to.have.property '$httpPromise'
+        $httpBackend.flush()
+
       it 'resolves promise from response', (done) ->
         resource.$promise.then ->
           expect(resource.length).to.equal 2
@@ -192,6 +196,12 @@ describe 'cacheResource', ->
           first = resource[0]
           expect(first.magic).to.equal cachedData[0].magic
 
+        it 'resolves promise from cache', (done) ->
+          resource.$promise.then (data) ->
+            expect(data[0].magic).to.equal cachedData[0].magic
+            done()
+          $httpBackend.flush()
+
       describe 'online', ->
         {resource, updatedData} = {}
 
@@ -212,17 +222,26 @@ describe 'cacheResource', ->
 
           $httpBackend.flush()
 
-        it 'fetches updated resource', (done) ->
-          resource.$promise.then (data) ->
-            expect(data.length).to.equal updatedData.length
-            expect(data[0].magic).to.equal updatedData[0].magic
-            done()
+        describe '$promise', ->
+          it 'resolves from cache', (done) ->
+            resource.$promise.then (data) ->
+              expect(data.length).to.equal cachedData.length
+              expect(data[0].magic).to.equal cachedData[0].magic
+              done()
 
-          $httpBackend.flush()
+            $httpBackend.flush()
 
-        it 'updates the object in cache', ->
-          $httpBackend.flush()
+        describe '$httpPromise', ->
+          it 'fetches updated resource', (done) ->
+            resource.$httpPromise.then (data) ->
+              expect(data.length).to.equal updatedData.length
+              expect(data[0].magic).to.equal updatedData[0].magic
+              done()
 
-          data = JSON.parse localStorage.getItem '/mock/color/red'
-          expect(data).to.deep.equal updatedData
+            $httpBackend.flush()
 
+          it 'updates the object in cache', ->
+            $httpBackend.flush()
+
+            data = JSON.parse localStorage.getItem '/mock/color/red'
+            expect(data).to.deep.equal updatedData
