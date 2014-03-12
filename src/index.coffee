@@ -1,7 +1,7 @@
 app = angular.module 'cachedResource', ['ngResource']
 
 
-app.factory 'cacheResource', ['$resource', '$timeout', '$q', ($resource, $timeout, $q) ->
+app.factory 'cachedResource', ['$resource', '$timeout', '$q', ($resource, $timeout, $q) ->
   localStorageKey = (url, parameters) ->
     for name, value of parameters
       url = url.replace ":#{name}", value

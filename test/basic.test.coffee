@@ -1,10 +1,10 @@
-describe 'cacheResource', ->
-  {cacheResource, $httpBackend} = {}
+describe 'cachedResource', ->
+  {cachedResource, $httpBackend} = {}
 
   beforeEach ->
     module('cachedResource')
     inject ($injector) ->
-      cacheResource = $injector.get 'cacheResource'
+      cachedResource = $injector.get 'cachedResource'
       $httpBackend = $injector.get '$httpBackend'
 
   describe '::get', ->
@@ -12,7 +12,7 @@ describe 'cacheResource', ->
       {resource} = {}
 
       beforeEach ->
-        CachedResource = cacheResource('/mock/:parameter')
+        CachedResource = cachedResource('/mock/:parameter')
         expect(CachedResource).to.have.property 'get'
 
         $httpBackend.when('GET', '/mock/1').respond
@@ -67,7 +67,7 @@ describe 'cacheResource', ->
             parameter: 1
             magic: 'Not a cache'
           $httpBackend.expectGET '/mock/1'
-          resource = cacheResource('/mock/:parameter').get({parameter: 1})
+          resource = cachedResource('/mock/:parameter').get({parameter: 1})
 
         it 'has data from the cache', ->
           expect(resource).to.be.defined
@@ -89,7 +89,7 @@ describe 'cacheResource', ->
             magic: 'Updated thing'
           $httpBackend.when('GET', '/mock/1').respond updatedData
           $httpBackend.expectGET '/mock/1'
-          resource = cacheResource('/mock/:parameter').get({parameter: 1})
+          resource = cachedResource('/mock/:parameter').get({parameter: 1})
 
         it 'has data from the cache', ->
           expect(resource).to.be.defined
@@ -126,7 +126,7 @@ describe 'cacheResource', ->
       {resource, items} = {}
 
       beforeEach ->
-        CachedResource = cacheResource('/mock/color/:color')
+        CachedResource = cachedResource('/mock/color/:color')
         expect(CachedResource).to.have.property 'query'
 
         items = [
@@ -188,7 +188,7 @@ describe 'cacheResource', ->
             {parameter: 3, magic: 'Not a third cache'}
           ]
           $httpBackend.expectGET '/mock/color/red'
-          resource = cacheResource('/mock/color/:color').query({color: 'red'})
+          resource = cachedResource('/mock/color/:color').query({color: 'red'})
 
         it 'has data from the cache', ->
           expect(resource.length).to.equal 2
@@ -213,7 +213,7 @@ describe 'cacheResource', ->
           ]
           $httpBackend.when('GET', '/mock/color/red').respond updatedData
           $httpBackend.expectGET '/mock/color/red'
-          resource = cacheResource('/mock/color/:color').query({color: 'red'})
+          resource = cachedResource('/mock/color/:color').query({color: 'red'})
 
         it 'has data from the cache', ->
           expect(resource.length).to.equal cachedData.length

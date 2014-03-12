@@ -18,12 +18,12 @@ Asking for a cached resource with `get` or `query` will do the following:
 Here's an example:
 
 ```javascript
-var app = angular.module('example', ['ngResource', 'cachedResource']);
+var app = angular.module('example', ['cachedResource']);
 
-app.config(function($resource, cacheResource) {
+app.config(function($resource, cachedResource) {
 
   // create a resource object
-  var userResource = cacheResource($resource('/api/user/:userId', {userId: '@id'}));
+  var userResource = cacheResource('/api/user/:userId', {userId: '@id'});
 
   // use it just like you would a regular resource, but now caching is enabled!
   var user = userResource.get({id: 203});

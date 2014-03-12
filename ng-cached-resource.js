@@ -4,7 +4,7 @@ var app;
 
 app = angular.module('cachedResource', ['ngResource']);
 
-app.factory('cacheResource', [
+app.factory('cachedResource', [
   '$resource', '$timeout', '$q', function($resource, $timeout, $q) {
     var localStorageKey, simpleCache;
     localStorageKey = function(url, parameters) {
