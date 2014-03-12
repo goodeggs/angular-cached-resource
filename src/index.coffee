@@ -1,13 +1,12 @@
 app = angular.module 'cachedResource', ['ngResource']
 
-
 app.factory 'cachedResource', ['$resource', '$timeout', '$q', ($resource, $timeout, $q) ->
   localStorageKey = (url, parameters) ->
     for name, value of parameters
       url = url.replace ":#{name}", value
     url
 
-  simpleCache = (Resource, method, url) ->
+  readCache = (Resource, method, url) ->
     (parameters) ->
       resource = Resource[method].apply(Resource, arguments)
       resource.$httpPromise = resource.$promise
@@ -34,13 +33,25 @@ app.factory 'cachedResource', ['$resource', '$timeout', '$q', ($resource, $timeo
 
       resource
 
+
+  writeCache = (Resource, method, url) ->
+    (parameters) ->
+      writeArgs = arguments
+      resource = Resource[method].apply(Resource, writeArgs)
+      return resource unless window.localStorage?
+      resource
+
+  classMethodWrappers =
+    get: readCache
+    query: readCache
+    save: writeCache
+
   return (url) ->
     Resource = $resource.apply(null, arguments)
     CachedResource = {}
 
-    for method in ['get', 'query']
-      if Resource[method]?
-        CachedResource[method] = simpleCache Resource, method, url
+    for method, wrapper of classMethodWrappers when Resource[method]?
+      CachedResource[method] = wrapper Resource, method, url
 
     CachedResource
 
