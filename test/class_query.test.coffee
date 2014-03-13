@@ -50,7 +50,7 @@ describe 'cachedResource.query', ->
     it 'adds the response to local storage', ->
       $httpBackend.flush()
 
-      cachedItems = JSON.parse localStorage.getItem '/mock/color/red'
+      cachedItems = JSON.parse localStorage.getItem 'cachedResource://class-query-test?color=red'
       expect(cachedItems).to.deep.equal items
 
   describe 'given cached data', ->
@@ -61,7 +61,7 @@ describe 'cachedResource.query', ->
         {parameter: 1, magic: 'I am the cache'}
         {parameter: 2, magic: 'I am the second cache'}
       ]
-      localStorage.setItem '/mock/color/red', JSON.stringify cachedData
+      localStorage.setItem 'cachedResource://class-query-test?color=red', JSON.stringify cachedData
 
     describe 'offline', ->
       {resource} = {}
@@ -73,7 +73,7 @@ describe 'cachedResource.query', ->
           {parameter: 3, magic: 'Not a third cache'}
         ]
         $httpBackend.expectGET '/mock/color/red'
-        resource = cachedResource('class-get-test', '/mock/color/:color').query({color: 'red'})
+        resource = cachedResource('class-query-test', '/mock/color/:color').query({color: 'red'})
 
       it 'has data from the cache', ->
         expect(resource.length).to.equal 2
@@ -98,7 +98,7 @@ describe 'cachedResource.query', ->
         ]
         $httpBackend.when('GET', '/mock/color/red').respond updatedData
         $httpBackend.expectGET '/mock/color/red'
-        resource = cachedResource('class-get-test', '/mock/color/:color').query({color: 'red'})
+        resource = cachedResource('class-query-test', '/mock/color/:color').query({color: 'red'})
 
       it 'has data from the cache', ->
         expect(resource.length).to.equal cachedData.length
@@ -128,5 +128,5 @@ describe 'cachedResource.query', ->
         it 'updates the object in cache', ->
           $httpBackend.flush()
 
-          data = JSON.parse localStorage.getItem '/mock/color/red'
+          data = JSON.parse localStorage.getItem 'cachedResource://class-query-test?color=red'
           expect(data).to.deep.equal updatedData

@@ -1,19 +1,18 @@
 app = angular.module 'cachedResource', ['ngResource']
 
 app.factory 'cachedResource', ['$resource', '$timeout', '$q', ($resource, $timeout, $q) ->
-  localStorageKey = (url, parameters) ->
-    for name, value of parameters
-      url = url.replace ":#{name}", value
-    url
+  localStorageKey = (resourceKey, parameters) ->
+    instanceKey = ("#{name}=#{value}" for name, value of parameters).join('&')
+    "cachedResource://#{resourceKey}?#{instanceKey}"
 
-  readCache = (action, url) ->
+  readCache = (action, resourceKey) ->
     (parameters) ->
       resource = action.apply(null, arguments)
       resource.$httpPromise = resource.$promise
       return resource unless window.localStorage?
 
       parameters = null if angular.isFunction parameters
-      key = localStorageKey(url, parameters)
+      key = localStorageKey(resourceKey, parameters)
 
       resource.$httpPromise.then (response) ->
         localStorage.setItem key, angular.toJson response
@@ -33,7 +32,7 @@ app.factory 'cachedResource', ['$resource', '$timeout', '$q', ($resource, $timeo
 
       resource
 
-  writeCache = (action, url) ->
+  writeCache = (action, resourceKey) ->
     (parameters) ->
       writeArgs = arguments
       resource = action.apply(null, writeArgs)
@@ -54,7 +53,7 @@ app.factory 'cachedResource', ['$resource', '$timeout', '$q', ($resource, $timeo
     #
     # cachedResource(cacheKey, url, [paramDefaults], [actions])
     args = Array::slice.call arguments
-    cacheKey = args.shift()
+    resourceKey = args.shift()
     url = args.shift()
     while args.length
       arg = args.pop()
@@ -70,9 +69,9 @@ app.factory 'cachedResource', ['$resource', '$timeout', '$q', ($resource, $timeo
 
     for name, action of actions
       if action.method is 'GET'
-        CachedResource[name] = readCache Resource[name].bind(Resource), url
+        CachedResource[name] = readCache Resource[name].bind(Resource), resourceKey
       else if action.method in ['POST', 'PUT', 'DELETE']
-        CachedResource[name] = writeCache Resource[name].bind(Resource), url
+        CachedResource[name] = writeCache Resource[name].bind(Resource), resourceKey
       else
         CachedResource[name] = Resource[name]
 

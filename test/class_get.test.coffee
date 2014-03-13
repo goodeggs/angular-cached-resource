@@ -44,7 +44,7 @@ describe 'cachedResource.get', ->
     it 'adds the response to local storage', ->
       $httpBackend.flush()
 
-      cachedResponse = JSON.parse localStorage.getItem '/mock/1'
+      cachedResponse = JSON.parse localStorage.getItem 'cachedResource://class-get-test?parameter=1'
       expect(cachedResponse).to.deep.equal
         parameter: 1
         magic: 'Here is the response'
@@ -56,7 +56,7 @@ describe 'cachedResource.get', ->
       cachedData =
         parameter: 1
         magic: 'I am the cache'
-      localStorage.setItem '/mock/1', JSON.stringify cachedData
+      localStorage.setItem 'cachedResource://class-get-test?parameter=1', JSON.stringify cachedData
 
     describe 'offline', ->
       {resource} = {}
@@ -110,7 +110,7 @@ describe 'cachedResource.get', ->
         it 'updates the object in cache', ->
           $httpBackend.flush()
 
-          data = JSON.parse localStorage.getItem '/mock/1'
+          data = JSON.parse localStorage.getItem 'cachedResource://class-get-test?parameter=1'
           expect(data).to.deep.equal updatedData
 
       describe '$promise', ->
