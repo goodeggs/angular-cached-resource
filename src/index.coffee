@@ -1,23 +1,38 @@
 app = angular.module 'cachedResource', ['ngResource']
 
 app.factory 'cachedResource', ['$resource', '$timeout', '$q', ($resource, $timeout, $q) ->
-  localStorageKey = (resourceKey, parameters) ->
-    instanceKey = ("#{name}=#{value}" for name, value of parameters).join('&')
-    "cachedResource://#{resourceKey}?#{instanceKey}"
+  LOCAL_STORAGE_PREFIX = 'cachedResource://'
+
+  cache = if window.localStorage?
+    getItem: (key, fallback) ->
+      item = localStorage.getItem("#{LOCAL_STORAGE_PREFIX}#{key}")
+      if item? then angular.fromJson(item) else fallback
+    setItem: (key, value) ->
+      localStorage.setItem("#{LOCAL_STORAGE_PREFIX}#{key}", angular.toJson value)
+      value
+  else
+    getItem: (key, fallback) -> fallback
+    setItem: (key, value) -> value
+
+  readKey = (resourceKey, parameters) ->
+    key = resourceKey
+    paramKeys = Object.keys(parameters).sort()
+    if paramKeys.length
+      key += '?' + ("#{param}=#{parameters[param]}" for param in paramKeys).join('&')
+    key
 
   readCache = (action, resourceKey) ->
     (parameters) ->
       resource = action.apply(null, arguments)
       resource.$httpPromise = resource.$promise
-      return resource unless window.localStorage?
 
       parameters = null if angular.isFunction parameters
-      key = localStorageKey(resourceKey, parameters)
+      key = readKey(resourceKey, parameters)
 
       resource.$httpPromise.then (response) ->
-        localStorage.setItem key, angular.toJson response
+        cache.setItem key, response
 
-      cached = angular.fromJson localStorage.getItem key
+      cached = cache.getItem key
       if cached
         if angular.isArray cached
           for item in cached
@@ -36,7 +51,6 @@ app.factory 'cachedResource', ['$resource', '$timeout', '$q', ($resource, $timeo
     (parameters) ->
       writeArgs = arguments
       resource = action.apply(null, writeArgs)
-      return resource unless window.localStorage?
       resource
 
   defaultActions =
@@ -51,9 +65,9 @@ app.factory 'cachedResource', ['$resource', '$timeout', '$q', ($resource, $timeo
     # $resource(url, [paramDefaults], [actions])
     # ...but adding an additional cacheKey param in the beginning, so we have:
     #
-    # cachedResource(cacheKey, url, [paramDefaults], [actions])
+    # cachedResource(resourceKey, url, [paramDefaults], [actions])
     args = Array::slice.call arguments
-    resourceKey = args.shift()
+    $key = args.shift()
     url = args.shift()
     while args.length
       arg = args.pop()
@@ -65,14 +79,16 @@ app.factory 'cachedResource', ['$resource', '$timeout', '$q', ($resource, $timeo
     paramDefaults ?= {}
 
     Resource = $resource.call(null, url, paramDefaults, actions)
-    CachedResource = {}
+    CachedResource =
+      $resource: Resource
+      $key: $key
 
     for name, params of actions
       action = Resource[name].bind(Resource)
       if params.method is 'GET'
-        CachedResource[name] = readCache(action, resourceKey)
+        CachedResource[name] = readCache(action, $key)
       else if params.method in ['POST', 'PUT', 'DELETE']
-        CachedResource[name] = writeCache(action, resourceKey)
+        CachedResource[name] = writeCache(action, $key)
       else
         CachedResource[name] = action
 
