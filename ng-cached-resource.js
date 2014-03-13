@@ -82,7 +82,7 @@ app.factory('cachedResource', [
       }
     };
     return function() {
-      var CachedResource, Resource, action, actions, arg, args, name, paramDefaults, resourceKey, url, _ref;
+      var CachedResource, Resource, action, actions, arg, args, name, paramDefaults, params, resourceKey, url, _ref;
       args = Array.prototype.slice.call(arguments);
       resourceKey = args.shift();
       url = args.shift();
@@ -103,13 +103,14 @@ app.factory('cachedResource', [
       Resource = $resource.call(null, url, paramDefaults, actions);
       CachedResource = {};
       for (name in actions) {
-        action = actions[name];
-        if (action.method === 'GET') {
-          CachedResource[name] = readCache(Resource[name].bind(Resource), resourceKey);
-        } else if ((_ref = action.method) === 'POST' || _ref === 'PUT' || _ref === 'DELETE') {
-          CachedResource[name] = writeCache(Resource[name].bind(Resource), resourceKey);
+        params = actions[name];
+        action = Resource[name].bind(Resource);
+        if (params.method === 'GET') {
+          CachedResource[name] = readCache(action, resourceKey);
+        } else if ((_ref = params.method) === 'POST' || _ref === 'PUT' || _ref === 'DELETE') {
+          CachedResource[name] = writeCache(action, resourceKey);
         } else {
-          CachedResource[name] = Resource[name];
+          CachedResource[name] = action;
         }
       }
       return CachedResource;

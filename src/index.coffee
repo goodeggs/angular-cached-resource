@@ -67,13 +67,14 @@ app.factory 'cachedResource', ['$resource', '$timeout', '$q', ($resource, $timeo
     Resource = $resource.call(null, url, paramDefaults, actions)
     CachedResource = {}
 
-    for name, action of actions
-      if action.method is 'GET'
-        CachedResource[name] = readCache Resource[name].bind(Resource), resourceKey
-      else if action.method in ['POST', 'PUT', 'DELETE']
-        CachedResource[name] = writeCache Resource[name].bind(Resource), resourceKey
+    for name, params of actions
+      action = Resource[name].bind(Resource)
+      if params.method is 'GET'
+        CachedResource[name] = readCache(action, resourceKey)
+      else if params.method in ['POST', 'PUT', 'DELETE']
+        CachedResource[name] = writeCache(action, resourceKey)
       else
-        CachedResource[name] = Resource[name]
+        CachedResource[name] = action
 
     CachedResource
 ]
