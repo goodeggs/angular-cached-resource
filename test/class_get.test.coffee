@@ -11,7 +11,7 @@ describe 'cachedResource.get', ->
     {resource} = {}
 
     beforeEach ->
-      CachedResource = cachedResource('/mock/:parameter')
+      CachedResource = cachedResource('class-get-test', '/mock/:parameter')
       expect(CachedResource).to.have.property 'get'
 
       $httpBackend.when('GET', '/mock/1').respond
@@ -66,7 +66,7 @@ describe 'cachedResource.get', ->
           parameter: 1
           magic: 'Not a cache'
         $httpBackend.expectGET '/mock/1'
-        resource = cachedResource('/mock/:parameter').get({parameter: 1})
+        resource = cachedResource('class-get-test', '/mock/:parameter').get({parameter: 1})
 
       it 'has data from the cache', ->
         expect(resource).to.be.defined
@@ -88,7 +88,7 @@ describe 'cachedResource.get', ->
           magic: 'Updated thing'
         $httpBackend.when('GET', '/mock/1').respond updatedData
         $httpBackend.expectGET '/mock/1'
-        resource = cachedResource('/mock/:parameter').get({parameter: 1})
+        resource = cachedResource('class-get-test', '/mock/:parameter').get({parameter: 1})
 
       it 'has data from the cache', ->
         expect(resource).to.be.defined

@@ -11,7 +11,7 @@ describe 'cachedResource.query', ->
     {resource, items} = {}
 
     beforeEach ->
-      CachedResource = cachedResource('/mock/color/:color')
+      CachedResource = cachedResource('class-query-test', '/mock/color/:color')
       expect(CachedResource).to.have.property 'query'
 
       items = [
@@ -73,7 +73,7 @@ describe 'cachedResource.query', ->
           {parameter: 3, magic: 'Not a third cache'}
         ]
         $httpBackend.expectGET '/mock/color/red'
-        resource = cachedResource('/mock/color/:color').query({color: 'red'})
+        resource = cachedResource('class-get-test', '/mock/color/:color').query({color: 'red'})
 
       it 'has data from the cache', ->
         expect(resource.length).to.equal 2
@@ -98,7 +98,7 @@ describe 'cachedResource.query', ->
         ]
         $httpBackend.when('GET', '/mock/color/red').respond updatedData
         $httpBackend.expectGET '/mock/color/red'
-        resource = cachedResource('/mock/color/:color').query({color: 'red'})
+        resource = cachedResource('class-get-test', '/mock/color/:color').query({color: 'red'})
 
       it 'has data from the cache', ->
         expect(resource.length).to.equal cachedData.length

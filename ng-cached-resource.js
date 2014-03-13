@@ -77,8 +77,9 @@ app.factory('cachedResource', [
       }
     };
     return function() {
-      var CachedResource, Resource, action, actions, arg, args, name, paramDefaults, url, _ref;
+      var CachedResource, Resource, action, actions, arg, args, cacheKey, name, paramDefaults, url, _ref;
       args = Array.prototype.slice.call(arguments);
+      cacheKey = args.shift();
       url = args.shift();
       while (args.length) {
         arg = args.pop();

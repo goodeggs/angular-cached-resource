@@ -8,7 +8,7 @@ describe 'cachedResource.save', ->
       $httpBackend = $injector.get '$httpBackend'
       $http = $injector.get '$http'
       $timeout = $injector.get '$timeout'
-      CachedResource = cachedResource '/mock/:id'
+      CachedResource = cachedResource 'class-save-test', '/mock/:id'
 
   afterEach ->
     $timeout.flush()

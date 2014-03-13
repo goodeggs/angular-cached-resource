@@ -50,7 +50,11 @@ app.factory 'cachedResource', ['$resource', '$timeout', '$q', ($resource, $timeo
   return ->
     # we are mimicking the API of $resource, which is:
     # $resource(url, [paramDefaults], [actions])
+    # ...but adding an additional cacheKey param in the beginning, so we have:
+    #
+    # cachedResource(cacheKey, url, [paramDefaults], [actions])
     args = Array::slice.call arguments
+    cacheKey = args.shift()
     url = args.shift()
     while args.length
       arg = args.pop()
