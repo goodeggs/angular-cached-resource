@@ -6,7 +6,7 @@ app = angular.module('cachedResource', ['ngResource']);
 
 app.factory('cachedResource', [
   '$resource', '$timeout', '$q', function($resource, $timeout, $q) {
-    var LOCAL_STORAGE_PREFIX, ResourceCacheEntry, ResourceWriteQueue, cache, defaultActions, readCache, resourceQueues, writeCache;
+    var CachedResourceManager, LOCAL_STORAGE_PREFIX, ResourceCacheEntry, ResourceWriteQueue, cache, defaultActions, readCache, writeCache;
     LOCAL_STORAGE_PREFIX = 'cachedResource://';
     cache = window.localStorage != null ? {
       getItem: function(key, fallback) {
@@ -159,7 +159,28 @@ app.factory('cachedResource', [
       return ResourceWriteQueue;
 
     })();
-    resourceQueues = [];
+    CachedResourceManager = {
+      queuesByKey: {},
+      add: function(CachedResource) {
+        return this.queuesByKey[CachedResource.$key] = new ResourceWriteQueue(CachedResource);
+      },
+      getQueue: function(CachedResource) {
+        return this.queuesByKey[CachedResource.$key];
+      },
+      flushQueues: function() {
+        var key, queue, _ref, _results;
+        _ref = this.queuesByKey;
+        _results = [];
+        for (key in _ref) {
+          queue = _ref[key];
+          _results.push(queue.flush());
+        }
+        return _results;
+      }
+    };
+    addEventListener('online', function(event) {
+      return CachedResourceManager.flushQueues();
+    });
     readCache = function(action, resourceKey) {
       return function(parameters) {
         var cacheEntry, deferred, item, resource, _i, _len, _ref;
@@ -191,7 +212,7 @@ app.factory('cachedResource', [
     };
     writeCache = function(action, CachedResource) {
       return function() {
-        var $queue, args, cacheEntry, deferred, error, params, postData, queueDeferred, resource, success;
+        var args, cacheEntry, deferred, error, params, postData, queue, queueDeferred, resource, success;
         args = Array.prototype.slice.call(arguments);
         params = angular.isObject(args[1]) ? args.shift() : {};
         postData = args[0], success = args[1], error = args[2];
@@ -216,9 +237,9 @@ app.factory('cachedResource', [
           return deferred.resolve(resource);
         });
         queueDeferred.promise["catch"](deferred.reject);
-        $queue = CachedResource.$queue;
-        $queue.enqueue(params, action, queueDeferred);
-        $queue.flush();
+        queue = CachedResourceManager.getQueue(CachedResource);
+        queue.enqueue(params, action, queueDeferred);
+        queue.flush();
         return resource;
       };
     };
@@ -241,7 +262,7 @@ app.factory('cachedResource', [
       }
     };
     return function() {
-      var $key, CachedResource, Resource, action, actions, arg, args, name, paramDefaults, params, queue, url, _ref;
+      var $key, CachedResource, Resource, action, actions, arg, args, name, paramDefaults, params, url, _ref;
       args = Array.prototype.slice.call(arguments);
       $key = args.shift();
       url = args.shift();
@@ -275,8 +296,8 @@ app.factory('cachedResource', [
           CachedResource[name] = action;
         }
       }
-      resourceQueues[$key] = CachedResource.$queue = queue = new ResourceWriteQueue(CachedResource);
-      queue.flush();
+      CachedResourceManager.add(CachedResource);
+      CachedResourceManager.flushQueues();
       return CachedResource;
     };
   }

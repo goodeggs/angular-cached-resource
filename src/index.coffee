@@ -74,7 +74,17 @@ app.factory 'cachedResource', ['$resource', '$timeout', '$q', ($resource, $timeo
         action: entry.actions
       cache.setItem @key, savableQueue
 
-  resourceQueues = []
+  CachedResourceManager =
+    queuesByKey: {}
+    add: (CachedResource) ->
+      @queuesByKey[CachedResource.$key] = new ResourceWriteQueue(CachedResource)
+    getQueue: (CachedResource) ->
+      @queuesByKey[CachedResource.$key]
+    flushQueues: ->
+      queue.flush() for key, queue of @queuesByKey
+
+  addEventListener 'online', (event) ->
+    CachedResourceManager.flushQueues()
 
   readCache = (action, resourceKey) ->
     (parameters) ->
@@ -127,9 +137,9 @@ app.factory 'cachedResource', ['$resource', '$timeout', '$q', ($resource, $timeo
         deferred.resolve(resource)
       queueDeferred.promise.catch deferred.reject
 
-      {$queue} = CachedResource
-      $queue.enqueue(params, action, queueDeferred)
-      $queue.flush()
+      queue = CachedResourceManager.getQueue(CachedResource)
+      queue.enqueue(params, action, queueDeferred)
+      queue.flush()
 
       resource
 
@@ -172,8 +182,8 @@ app.factory 'cachedResource', ['$resource', '$timeout', '$q', ($resource, $timeo
       else
         CachedResource[name] = action
 
-    resourceQueues[$key] = CachedResource.$queue = queue = new ResourceWriteQueue(CachedResource)
-    queue.flush()
+    CachedResourceManager.add(CachedResource)
+    CachedResourceManager.flushQueues()
 
     CachedResource
 ]

@@ -36,10 +36,10 @@ describe 'cachedResource.save', ->
       resource = CachedResource.save {id: 1}, {magic: 'Save #1'}
       $httpBackend.flush()
 
-    # it 'attempts the save again when a window.onOnline event is sent', ->
-    #   $httpBackend.expectPOST('/mock/1', magic: 'Save #1').respond 200
-    #   dispatchEvent(new Event 'online')
-    #   $httpBackend.flush()
+    it 'attempts the save again when a window.onOnline event is sent', ->
+      $httpBackend.expectPOST('/mock/1', magic: 'Save #1').respond 200
+      dispatchEvent(new Event 'online')
+      $httpBackend.flush()
 
     # it 'attempts the save again after a timeout has passed', ->
     #   $httpBackend.expectPOST('/mock/1', magic: 'Save #1').respond 200
