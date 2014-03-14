@@ -21,16 +21,60 @@ app.factory 'cachedResource', ['$resource', '$timeout', '$q', ($resource, $timeo
       if paramKeys.length
         @key += '?' + ("#{param}=#{params[param]}" for param in paramKeys).join('&')
       {@value, @dirty} = cache.getItem(@key, {})
+
     set: (@value) ->
       @dirty = yes
       @_update()
+
     clean: ->
       @dirty = no
       @_update()
+
     _update: ->
       cache.setItem @key, {@value, @dirty}
 
-  cachedResources = []
+  class ResourceWriteQueue
+    constructor: (@CachedResource) ->
+      @key = "#{@CachedResource.$key}/write"
+      @queue = cache.getItem(@key, [])
+
+    enqueue: (params, action, deferred) ->
+      entry = @findEntry {params, action}
+      if not entry?
+        @queue.push {params, action, deferred}
+        @_update()
+      else
+        entry.deferred.$promise.then (response) ->
+          deferred.resolve response
+        entry.deferred.$promise.catch (error) ->
+          deferred.reject error
+
+    findEntry: ({action, params}) ->
+      for entry in @queue
+        return entry if action is entry.action and angular.equals(params, entry.params)
+
+    removeEntry: ({action, params}) ->
+      newQueue = []
+      for entry in @queue
+        newQueue.push entry unless action is entry.action and angular.equals(params, entry.params)
+      @queue = newQueue
+      @_update()
+
+    flush: ->
+      for entry in @queue
+        cacheEntry = new ResourceCacheEntry(@CachedResource.$key, entry.params)
+        onSuccess = (value) =>
+          @removeEntry entry
+          entry.deferred.resolve value
+        @CachedResource.$resource[entry.action](entry.params, cacheEntry.value, onSuccess, entry.deferred.reject)
+
+    _update: ->
+      savableQueue = @queue.map (entry) ->
+        params: entry.params
+        action: entry.actions
+      cache.setItem @key, savableQueue
+
+  resourceQueues = []
 
   readCache = (action, resourceKey) ->
     (parameters) ->
@@ -57,7 +101,7 @@ app.factory 'cachedResource', ['$resource', '$timeout', '$q', ($resource, $timeo
 
       resource
 
-  writeCache = (action, resourceKey) ->
+  writeCache = (action, CachedResource) ->
     ->
       # according to the ngResource documentation:
       # Resource.action([parameters], postData, [success], [error])
@@ -66,19 +110,28 @@ app.factory 'cachedResource', ['$resource', '$timeout', '$q', ($resource, $timeo
       [postData, success, error] = args
 
       resource = @ || {}
+      resource.$resolved = false
 
-      cacheEntry = new ResourceCacheEntry(resourceKey, params)
-      if cacheEntry.dirty and angular.equals(cacheEntry.data, postData)
-        # this exact request is already queued... just wait for it to finish.
-        return resource
+      deferred = $q.defer()
+      resource.$promise = deferred.promise
+      deferred.promise.then success if angular.isFunction(success)
+      deferred.promise.catch error if angular.isFunction(error)
 
-      # add this request to the write queue, unless it already exists
-      # outstandingWrites = cache.getItem "#{resourceKey}/write", []
-      # for write in outstandingWrites when write.action is action and angular.equals(write.params, params)
-      #   outstandingWrite = write
-      # unless outstandingWrite?
+      cacheEntry = new ResourceCacheEntry(CachedResource.$key, params)
+      cacheEntry.set(postData) unless angular.equals(cacheEntry.data, postData)
 
-      resource = action.call(null, params, postData, success, error)
+      queueDeferred = $q.defer()
+      queueDeferred.promise.then (value) ->
+        angular.extend(resource, value)
+        resource.$resolved = true
+        deferred.resolve(resource)
+      queueDeferred.promise.catch deferred.reject
+
+      {$queue} = CachedResource
+      $queue.enqueue(params, action, queueDeferred)
+      $queue.flush()
+
+      resource
 
   defaultActions =
     get:    { method: 'GET',    }
@@ -115,11 +168,12 @@ app.factory 'cachedResource', ['$resource', '$timeout', '$q', ($resource, $timeo
       if params.method is 'GET'
         CachedResource[name] = readCache(action, $key)
       else if params.method in ['POST', 'PUT', 'DELETE']
-        CachedResource[name] = writeCache(action, $key)
+        CachedResource[name] = writeCache(name, CachedResource)
       else
         CachedResource[name] = action
 
-    cachedResources[$key] = CachedResource
+    resourceQueues[$key] = CachedResource.$queue = queue = new ResourceWriteQueue(CachedResource)
+    queue.flush()
 
     CachedResource
 ]
