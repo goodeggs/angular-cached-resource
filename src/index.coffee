@@ -2,6 +2,7 @@ app = angular.module 'cachedResource', ['ngResource']
 
 app.factory 'cachedResource', ['$resource', '$timeout', '$q', ($resource, $timeout, $q) ->
   LOCAL_STORAGE_PREFIX = 'cachedResource://'
+  CACHE_RETRY_TIMEOUT = 60000 # one minute
 
   cache = if window.localStorage?
     getItem: (key, fallback) ->
@@ -58,15 +59,27 @@ app.factory 'cachedResource', ['$resource', '$timeout', '$q', ($resource, $timeo
       for entry in @queue
         newQueue.push entry unless action is entry.action and angular.equals(params, entry.params)
       @queue = newQueue
+
+      if @queue.length is 0 and @timeout
+        $timeout.cancel @timeout
+        delete @timeout
+
       @_update()
 
     flush: ->
+      @_setFlushTimeout()
       for entry in @queue
         cacheEntry = new ResourceCacheEntry(@CachedResource.$key, entry.params)
         onSuccess = (value) =>
           @removeEntry entry
           entry.deferred.resolve value
         @CachedResource.$resource[entry.action](entry.params, cacheEntry.value, onSuccess, entry.deferred.reject)
+
+    _setFlushTimeout: ->
+      if @queue.length > 0 and not @timeout
+        @timeout = $timeout angular.bind(@, @flush), CACHE_RETRY_TIMEOUT
+        @timeout.then =>
+          @_setFlushTimeout unless @queue.length is 0
 
     _update: ->
       savableQueue = @queue.map (entry) ->

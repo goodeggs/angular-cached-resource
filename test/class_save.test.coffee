@@ -11,7 +11,6 @@ describe 'cachedResource.save', ->
       CachedResource = cachedResource 'class-save-test', '/mock/:id'
 
   afterEach ->
-    $timeout.flush()
     $httpBackend.verifyNoOutstandingExpectation()
     $httpBackend.verifyNoOutstandingRequest()
     localStorage.clear()
@@ -41,8 +40,8 @@ describe 'cachedResource.save', ->
       dispatchEvent(new Event 'online')
       $httpBackend.flush()
 
-    # it 'attempts the save again after a timeout has passed', ->
-    #   $httpBackend.expectPOST('/mock/1', magic: 'Save #1').respond 200
-    #   $timeout.flush()
-    #   $httpBackend.flush()
+    it 'attempts the save again after a timeout has passed', ->
+      $httpBackend.expectPOST('/mock/1', magic: 'Save #1').respond 200
+      $timeout.flush()
+      $httpBackend.flush()
 
