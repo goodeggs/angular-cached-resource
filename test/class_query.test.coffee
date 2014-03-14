@@ -51,7 +51,7 @@ describe 'cachedResource.query', ->
       $httpBackend.flush()
 
       cachedItems = JSON.parse localStorage.getItem 'cachedResource://class-query-test?color=red'
-      expect(cachedItems).to.deep.equal items
+      expect(cachedItems.value).to.deep.equal items
 
   describe 'given cached data', ->
     {cachedData} = {}
@@ -61,7 +61,7 @@ describe 'cachedResource.query', ->
         {parameter: 1, magic: 'I am the cache'}
         {parameter: 2, magic: 'I am the second cache'}
       ]
-      localStorage.setItem 'cachedResource://class-query-test?color=red', JSON.stringify cachedData
+      localStorage.setItem 'cachedResource://class-query-test?color=red', JSON.stringify value: cachedData
 
     describe 'offline', ->
       {resource} = {}
@@ -129,4 +129,4 @@ describe 'cachedResource.query', ->
           $httpBackend.flush()
 
           data = JSON.parse localStorage.getItem 'cachedResource://class-query-test?color=red'
-          expect(data).to.deep.equal updatedData
+          expect(data.value).to.deep.equal updatedData

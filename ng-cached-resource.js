@@ -6,7 +6,7 @@ app = angular.module('cachedResource', ['ngResource']);
 
 app.factory('cachedResource', [
   '$resource', '$timeout', '$q', function($resource, $timeout, $q) {
-    var LOCAL_STORAGE_PREFIX, cache, defaultActions, readCache, readKey, writeCache;
+    var LOCAL_STORAGE_PREFIX, ResourceCacheEntry, cache, cachedResources, defaultActions, readCache, writeCache;
     LOCAL_STORAGE_PREFIX = 'cachedResource://';
     cache = window.localStorage != null ? {
       getItem: function(key, fallback) {
@@ -30,44 +30,68 @@ app.factory('cachedResource', [
         return value;
       }
     };
-    readKey = function(resourceKey, parameters) {
-      var key, param, paramKeys;
-      key = resourceKey;
-      paramKeys = Object.keys(parameters).sort();
-      if (paramKeys.length) {
-        key += '?' + ((function() {
-          var _i, _len, _results;
-          _results = [];
-          for (_i = 0, _len = paramKeys.length; _i < _len; _i++) {
-            param = paramKeys[_i];
-            _results.push("" + param + "=" + parameters[param]);
-          }
-          return _results;
-        })()).join('&');
+    ResourceCacheEntry = (function() {
+      function ResourceCacheEntry(resourceKey, params) {
+        var param, paramKeys, _ref;
+        this.key = resourceKey;
+        paramKeys = Object.keys(params).sort();
+        if (paramKeys.length) {
+          this.key += '?' + ((function() {
+            var _i, _len, _results;
+            _results = [];
+            for (_i = 0, _len = paramKeys.length; _i < _len; _i++) {
+              param = paramKeys[_i];
+              _results.push("" + param + "=" + params[param]);
+            }
+            return _results;
+          })()).join('&');
+        }
+        _ref = cache.getItem(this.key, {}), this.value = _ref.value, this.dirty = _ref.dirty;
       }
-      return key;
-    };
+
+      ResourceCacheEntry.prototype.set = function(value) {
+        this.value = value;
+        this.dirty = true;
+        return this._update();
+      };
+
+      ResourceCacheEntry.prototype.clean = function() {
+        this.dirty = false;
+        return this._update();
+      };
+
+      ResourceCacheEntry.prototype._update = function() {
+        return cache.setItem(this.key, {
+          value: this.value,
+          dirty: this.dirty
+        });
+      };
+
+      return ResourceCacheEntry;
+
+    })();
+    cachedResources = [];
     readCache = function(action, resourceKey) {
       return function(parameters) {
-        var cached, deferred, item, key, resource, _i, _len;
+        var cacheEntry, deferred, item, resource, _i, _len, _ref;
         resource = action.apply(null, arguments);
         resource.$httpPromise = resource.$promise;
         if (angular.isFunction(parameters)) {
           parameters = null;
         }
-        key = readKey(resourceKey, parameters);
+        cacheEntry = new ResourceCacheEntry(resourceKey, parameters);
         resource.$httpPromise.then(function(response) {
-          return cache.setItem(key, response);
+          return cacheEntry.set(response);
         });
-        cached = cache.getItem(key);
-        if (cached) {
-          if (angular.isArray(cached)) {
-            for (_i = 0, _len = cached.length; _i < _len; _i++) {
-              item = cached[_i];
+        if (cacheEntry.value) {
+          if (angular.isArray(cacheEntry.value)) {
+            _ref = cacheEntry.value;
+            for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+              item = _ref[_i];
               resource.push(item);
             }
           } else {
-            angular.extend(resource, cached);
+            angular.extend(resource, cacheEntry.value);
           }
           deferred = $q.defer();
           resource.$promise = deferred.promise;
@@ -77,11 +101,17 @@ app.factory('cachedResource', [
       };
     };
     writeCache = function(action, resourceKey) {
-      return function(parameters) {
-        var resource, writeArgs;
-        writeArgs = arguments;
-        resource = action.apply(null, writeArgs);
-        return resource;
+      return function() {
+        var args, cacheEntry, error, params, postData, resource, success;
+        args = Array.prototype.slice.call(arguments);
+        params = angular.isObject(args[1]) ? args.shift() : {};
+        postData = args[0], success = args[1], error = args[2];
+        resource = this || {};
+        cacheEntry = new ResourceCacheEntry(resourceKey, params);
+        if (cacheEntry.dirty && angular.equals(cacheEntry.data, postData)) {
+          return resource;
+        }
+        return resource = action.call(null, params, postData, success, error);
       };
     };
     defaultActions = {
@@ -109,7 +139,7 @@ app.factory('cachedResource', [
       url = args.shift();
       while (args.length) {
         arg = args.pop();
-        if (typeof arg[Object.keys(arg)[0]] === 'object') {
+        if (angular.isObject(arg[Object.keys(arg)[0]])) {
           actions = arg;
         } else {
           paramDefaults = arg;
@@ -128,7 +158,7 @@ app.factory('cachedResource', [
       };
       for (name in actions) {
         params = actions[name];
-        action = Resource[name].bind(Resource);
+        action = angular.bind(Resource, Resource[name]);
         if (params.method === 'GET') {
           CachedResource[name] = readCache(action, $key);
         } else if ((_ref = params.method) === 'POST' || _ref === 'PUT' || _ref === 'DELETE') {
@@ -137,6 +167,7 @@ app.factory('cachedResource', [
           CachedResource[name] = action;
         }
       }
+      cachedResources[$key] = CachedResource;
       return CachedResource;
     };
   }
