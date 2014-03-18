@@ -37,7 +37,14 @@ describe 'CachedResource.save', ->
 
     it 'attempts the save again when a window.onOnline event is sent', ->
       $httpBackend.expectPOST('/mock/1', magic: 'Save #1').respond 200
-      dispatchEvent(new Event 'online')
+
+      # https://developer.mozilla.org/en-US/docs/Web/API/document.createEvent
+      # says that this is deprecated, but it also seems to be the only way to
+      # create a custom event using PhantomJS, which we use to run these tests
+      event = document.createEvent 'CustomEvent'
+      event.initEvent 'online', true, true
+
+      dispatchEvent event
       $httpBackend.flush()
 
     it 'attempts the save again after a timeout has passed', ->

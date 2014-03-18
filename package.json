@@ -34,7 +34,7 @@
   },
   "main": "ng-cached-resource.js",
   "scripts": {
-    "test": "karma start",
+    "test": "karma start --single-run --browsers PhantomJS",
     "pretest": "coffee --bare --compile --output lib/ src/ && browserify lib/index.js > ng-cached-resource.js && uglifyjs ng-cached-resource.js > ng-cached-resource.min.js"
   },
   "dependencies": {
