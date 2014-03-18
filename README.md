@@ -1,4 +1,4 @@
-ngCachedResource [![NPM version][npm-badge]][npm-link] [![Build Status][travis-badge]][travis-link]
+ngCachedResource [![NPM version][npm-badge]][npm-link]  [![Build Status][travis-badge]][travis-link]
 ==============
 
 An [AngularJS][angular] module to interact with RESTful server-side data sources, even
