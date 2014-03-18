@@ -1,6 +1,6 @@
 {
   "name": "ng-cached-resource",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Work with $resources offline using localStorage!",
   "author": "Good Eggs <open-source@goodeggs.com>",
   "contributors": [
