@@ -1,6 +1,6 @@
-app = angular.module 'cachedResource', ['ngResource']
+app = angular.module 'ngCachedResource', ['ngResource']
 
-app.factory 'cachedResource', ['$resource', '$timeout', '$q', ($resource, $timeout, $q) ->
+app.factory '$cachedResource', ['$resource', '$timeout', '$q', ($resource, $timeout, $q) ->
   LOCAL_STORAGE_PREFIX = 'cachedResource://'
   CACHE_RETRY_TIMEOUT = 60000 # one minute
 
@@ -168,7 +168,7 @@ app.factory 'cachedResource', ['$resource', '$timeout', '$q', ($resource, $timeo
     # $resource(url, [paramDefaults], [actions])
     # ...but adding an additional cacheKey param in the beginning, so we have:
     #
-    # cachedResource(resourceKey, url, [paramDefaults], [actions])
+    # $cachedResource(resourceKey, url, [paramDefaults], [actions])
     args = Array::slice.call arguments
     $key = args.shift()
     url = args.shift()

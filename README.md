@@ -8,7 +8,7 @@ Closely mimics the behavior of the core [ngResource][ngResource] module.
 ## A simple example
 
 ```javascript
-var Article = cachedResource('article', '/articles/:id');
+var Article = $cachedResource('article', '/articles/:id');
 
 // GET requests:
 var firstArticle = Article.get({id: 1});
@@ -32,10 +32,10 @@ Article.save({id: 2}, {contents: "Lorem ipsum dolor..."}, function() {
 -------
 
 ## Usage
-Provides a factory called `cachedResource` that returns a "CachedResource" object.
+Provides a factory called `$cachedResource` that returns a "CachedResource" object.
 
 ```js
-cachedResource(cacheKey, url, [paramDefaults], [actions]);
+$cachedResource(cacheKey, url, [paramDefaults], [actions]);
 ```
 
 ### Arguments
@@ -58,7 +58,7 @@ cachedResource(cacheKey, url, [paramDefaults], [actions]);
 
 ### Returns
 
-A cachedResource "class" object. This object is basically a swap-in replacement for an
+A CachedResource "class" object. This object is basically a swap-in replacement for an
 object created by the `$resource` factory with the following modified or additional
 properties:
 
@@ -83,7 +83,7 @@ Asking for a cached resource with `get` or `query` will do the following:
    is pre-populated from the cache. The request will still attempt to go through to the server,
    and if the server responds, the cache entry will be updated.
 
-Updating a cachedResource object will do the following:
+Updating a CachedResource object will do the following:
 
 1. Add the resource update action to a queue.
 2. Immediately attempt to flush the queue by sending all the network requests in the queue.

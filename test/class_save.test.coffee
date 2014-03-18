@@ -1,14 +1,14 @@
-describe 'cachedResource.save', ->
+describe 'CachedResource.save', ->
   {CachedResource, $httpBackend, $http, $timeout} = {}
 
   beforeEach ->
-    module('cachedResource')
+    module('ngCachedResource')
     inject ($injector) ->
-      cachedResource = $injector.get 'cachedResource'
+      $cachedResource = $injector.get '$cachedResource'
       $httpBackend = $injector.get '$httpBackend'
       $http = $injector.get '$http'
       $timeout = $injector.get '$timeout'
-      CachedResource = cachedResource 'class-save-test', '/mock/:id'
+      CachedResource = $cachedResource 'class-save-test', '/mock/:id'
 
   afterEach ->
     $httpBackend.verifyNoOutstandingExpectation()
