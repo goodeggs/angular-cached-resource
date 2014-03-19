@@ -30,15 +30,13 @@
     "uglify-js": "^2.4.12",
     "browserify": "^3.32.0",
     "sinon": "^1.9.0",
-    "karma-sinon-chai": "^0.1.4"
+    "karma-sinon-chai": "^0.1.4",
+    "chai": "^1.9.0",
+    "karma-chai": "^0.1.0"
   },
   "main": "ng-cached-resource.js",
   "scripts": {
     "test": "karma start --single-run --browsers PhantomJS",
     "pretest": "coffee --bare --compile --output lib/ src/ && browserify lib/index.js > ng-cached-resource.js && uglifyjs ng-cached-resource.js > ng-cached-resource.min.js"
-  },
-  "dependencies": {
-    "chai": "^1.9.0",
-    "karma-chai": "^0.1.0"
   }
 }
