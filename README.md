@@ -92,6 +92,22 @@ Updating a CachedResource object will do the following:
 4. If the queue contains requests, attempt to flush it once per minute OR whenever the browser
    sends a [navigator.onOnline][onOnline] event.
 
+------
+
+## Development
+
+Just make sure you run the tests.
+```
+npm install
+npm test
+```
+
+------
+
+## License
+
+MIT.
+
 [npm-badge]: https://badge.fury.io/js/ng-cached-resource.png
 [npm-link]: http://badge.fury.io/js/ng-cached-resource
 
