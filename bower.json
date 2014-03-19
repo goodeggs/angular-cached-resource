@@ -1,0 +1,30 @@
+{
+  "name": "ng-cached-resource",
+  "main": "ng-cached-resource.js",
+  "version": "0.3.2",
+  "homepage": "https://github.com/goodeggs/ng-cached-resource",
+  "authors": [
+    "Max Edmands <max@goodeggs.com>"
+  ],
+  "description": "AngularJS $resource, but they get cached and can be read even while offline using localStorage!",
+  "keywords": [
+    "angularjs",
+    "resource",
+    "cache"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "angular-resource": "~1.2.14",
+    "angular": "~1.2.14"
+  },
+  "devDependencies": {
+    "angular-mocks": "~1.2.14"
+  }
+}
