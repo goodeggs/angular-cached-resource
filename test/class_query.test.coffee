@@ -1,11 +1,22 @@
 describe 'CachedResource.query', ->
-  {$cachedResource, $httpBackend} = {}
+  {$cachedResource, $httpBackend, CachedResource} = {}
 
   beforeEach ->
     module('ngCachedResource')
     inject ($injector) ->
       $cachedResource = $injector.get '$cachedResource'
       $httpBackend = $injector.get '$httpBackend'
+
+  describe 'with no params', ->
+    beforeEach ->
+      CachedResource = $cachedResource('class-query-test', '/mock/color/:color')
+
+    it 'should call the callback after it makes the initial request', (done) ->
+      $httpBackend.expectGET('/mock/color').respond [{color: 'red'}, {color: 'yellow'}, {color: 'blue'}]
+      CachedResource.query (response) ->
+        expect(response).to.have.length 3
+        done()
+      $httpBackend.flush()
 
   describe 'with empty cache', ->
     {resource, items} = {}

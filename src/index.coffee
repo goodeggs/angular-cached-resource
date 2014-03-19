@@ -18,7 +18,7 @@ app.factory '$cachedResource', ['$resource', '$timeout', '$q', ($resource, $time
   class ResourceCacheEntry
     constructor: (resourceKey, params) ->
       @key = resourceKey
-      paramKeys = Object.keys(params).sort()
+      paramKeys = if angular.isObject(params) then Object.keys(params).sort() else []
       if paramKeys.length
         @key += '?' + ("#{param}=#{params[param]}" for param in paramKeys).join('&')
       {@value, @dirty} = cache.getItem(@key, {})

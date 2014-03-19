@@ -35,7 +35,7 @@ app.factory('$cachedResource', [
       function ResourceCacheEntry(resourceKey, params) {
         var param, paramKeys, _ref;
         this.key = resourceKey;
-        paramKeys = Object.keys(params).sort();
+        paramKeys = angular.isObject(params) ? Object.keys(params).sort() : [];
         if (paramKeys.length) {
           this.key += '?' + ((function() {
             var _i, _len, _results;
