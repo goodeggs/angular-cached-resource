@@ -1,7 +1,7 @@
 {
   "name": "ng-cached-resource",
   "main": "ng-cached-resource.js",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "homepage": "https://github.com/goodeggs/ng-cached-resource",
   "authors": [
     "Max Edmands <max@goodeggs.com>"
