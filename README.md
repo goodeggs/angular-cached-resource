@@ -108,11 +108,11 @@ npm test
 
 MIT.
 
-[npm-badge]: https://badge.fury.io/js/ng-cached-resource.png
-[npm-link]: http://badge.fury.io/js/ng-cached-resource
+[npm-badge]: https://badge.fury.io/js/angular-cached-resource.png
+[npm-link]: http://badge.fury.io/js/angular-cached-resource
 
-[travis-badge]: https://travis-ci.org/goodeggs/ng-cached-resource.png
-[travis-link]: https://travis-ci.org/goodeggs/ng-cached-resource
+[travis-badge]: https://travis-ci.org/goodeggs/angular-cached-resource.png
+[travis-link]: https://travis-ci.org/goodeggs/angular-cached-resource
 
 [angular]: http://angularjs.org/
 [ngResource]: http://docs.angularjs.org/api/ngResource/service/$resource
