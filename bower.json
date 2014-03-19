@@ -1,12 +1,13 @@
 {
-  "name": "ng-cached-resource",
-  "main": "ng-cached-resource.js",
+  "name": "angular-cached-resource",
+  "main": "angular-cached-resource.js",
   "version": "0.3.3",
-  "homepage": "https://github.com/goodeggs/ng-cached-resource",
+  "homepage": "https://github.com/goodeggs/angular-cached-resource",
   "authors": [
-    "Max Edmands <max@goodeggs.com>"
+    "Max Edmands <max@goodeggs.com>",
+    "Aaron Borden <aaron@goodeggs.com>"
   ],
-  "description": "AngularJS $resource, but they get cached and can be read even while offline using localStorage!",
+  "description": "An AngularJS module to interact with RESTful resources, even when browser is offline",
   "keywords": [
     "angularjs",
     "resource",

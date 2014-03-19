@@ -18,7 +18,7 @@ module.exports = function(config) {
       'bower_components/angular-mocks/angular-mocks.js',
       'bower_components/angular-resource/angular-resource.js',
 
-      'ng-cached-resource.js',
+      'angular-cached-resource.js',
 
       'test/*.test.coffee'
     ],
