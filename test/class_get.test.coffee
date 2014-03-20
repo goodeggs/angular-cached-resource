@@ -1,122 +1,115 @@
-describe 'CachedResource.get', ->
-  {$cachedResource, $httpBackend} = {}
+describe 'resource instance returned by CachedResource.get', ->
+  {CachedResource, $httpBackend, resourceInstance} = {}
 
   beforeEach ->
     module('ngCachedResource')
     inject ($injector) ->
       $cachedResource = $injector.get '$cachedResource'
       $httpBackend = $injector.get '$httpBackend'
+      CachedResource = $cachedResource('class-get-test', '/mock/:id')
 
-  describe 'with empty cache', ->
-    {resource} = {}
+  afterEach ->
+    $httpBackend.verifyNoOutstandingExpectation()
+    $httpBackend.verifyNoOutstandingRequest()
+    localStorage.clear()
 
-    beforeEach ->
-      CachedResource = $cachedResource('class-get-test', '/mock/:parameter')
-      expect(CachedResource).to.have.property 'get'
+  describe 'when cache is empty', ->
+    expectSuccessfulGET = ->
+      $httpBackend.expectGET('/mock/1').respond magic: 'Here is the response'
 
-      $httpBackend.when('GET', '/mock/1').respond
-        parameter: 1
-        magic: 'Here is the response'
-
-      $httpBackend.expectGET '/mock/1'
-      resource = CachedResource.get({parameter: 1})
-
-    afterEach ->
-      $httpBackend.verifyNoOutstandingExpectation()
-      $httpBackend.verifyNoOutstandingRequest()
-      localStorage.clear()
-
-    it 'has a promise', ->
-      expect(resource).to.have.property '$promise'
-      $httpBackend.flush()
-
-    it 'has a http promise', ->
-      expect(resource).to.have.property '$httpPromise'
-      $httpBackend.flush()
-
-    it 'resolves promise from response', (done) ->
-      resource.$promise.then ->
-        expect(resource).to.have.property 'magic', 'Here is the response'
-        done()
-
-      $httpBackend.flush()
-
-    it 'adds the response to local storage', ->
-      $httpBackend.flush()
-
-      cachedResponse = JSON.parse localStorage.getItem 'cachedResource://class-get-test?parameter=1'
-      expect(cachedResponse.value).to.deep.equal
-        parameter: 1
-        magic: 'Here is the response'
-
-  describe 'given cached data', ->
-    {cachedData} = {}
+    expectFailingGET = ->
+      $httpBackend.expectGET('/mock/1').respond 500
 
     beforeEach ->
-      cachedData =
-        parameter: 1
-        magic: 'I am the cache'
-      localStorage.setItem 'cachedResource://class-get-test?parameter=1', JSON.stringify value: cachedData
+      resourceInstance = CachedResource.get id: 1
 
-    describe 'offline', ->
-      {resource} = {}
+    describe 'has a $promise that', ->
+      {$promise} = {}
 
       beforeEach ->
-        $httpBackend.when('GET', '/mock/1').respond
-          parameter: 1
-          magic: 'Not a cache'
-        $httpBackend.expectGET '/mock/1'
-        resource = $cachedResource('class-get-test', '/mock/:parameter').get({parameter: 1})
+        expect(resourceInstance).to.have.property '$promise'
+        {$promise} = resourceInstance
 
-      it 'has data from the cache', ->
-        expect(resource).to.be.defined
-        expect(resource.parameter).to.equal cachedData.parameter
-        expect(resource.magic).to.equal cachedData.magic
-
-      it 'resolves the promise with cached data', (done) ->
-        resource.$promise.then (data) ->
-          expect(data.magic).to.equal cachedData.magic
+      it 'resolves when the request is complete', (done) ->
+        expectSuccessfulGET()
+        $promise.then ->
+          expect(resourceInstance).to.have.property 'magic', 'Here is the response'
           done()
         $httpBackend.flush()
 
-    describe 'online', ->
-      {resource, updatedData} = {}
+    describe 'has an $httpPromise that', ->
+      {$httpPromise} = {}
 
       beforeEach ->
-        updatedData =
-          parameter: 1
-          magic: 'Updated thing'
-        $httpBackend.when('GET', '/mock/1').respond updatedData
-        $httpBackend.expectGET '/mock/1'
-        resource = $cachedResource('class-get-test', '/mock/:parameter').get({parameter: 1})
+        expect(resourceInstance).to.have.property '$httpPromise'
+        {$httpPromise} = resourceInstance
 
-      it 'has data from the cache', ->
-        expect(resource).to.be.defined
-        expect(resource.parameter).to.equal cachedData.parameter
-        expect(resource.magic).to.equal cachedData.magic
-
+      it 'resolves when the request is complete', (done) ->
+        expectSuccessfulGET()
+        $httpPromise.then ->
+          expect(resourceInstance).to.have.property 'magic', 'Here is the response'
+          done()
         $httpBackend.flush()
 
-      describe '$httpPromise', ->
-        it 'fetches updated resource', (done) ->
-          resource.$httpPromise.then (data) ->
-            expect(data).to.be.defined
-            expect(data.parameter).to.equal updatedData.parameter
-            expect(data.magic).to.equal updatedData.magic
-            done()
+      it 'is rejected when the request fails', (done) ->
+        expectFailingGET()
+        $httpPromise.catch (error) ->
+          expect(error.status).to.equal 500
+          done()
+        $httpBackend.flush()
 
-          $httpBackend.flush()
+  describe 'when cache is full', ->
+    beforeEach ->
+      $httpBackend.expectGET('/mock/1').respond magic: 'Help, I have been added to a cache'
+      CachedResource.get id: 1
+      $httpBackend.flush()
 
-        it 'updates the object in cache', ->
-          $httpBackend.flush()
+    describe 'and connection is unavailable', ->
+      beforeEach ->
+        $httpBackend.expectGET('/mock/1').respond 500
+        resourceInstance = CachedResource.get id: 1
 
-          data = JSON.parse localStorage.getItem 'cachedResource://class-get-test?parameter=1'
-          expect(data.value).to.deep.equal updatedData
+      it 'immediately contains data from the cache', ->
+        expect(resourceInstance.magic).to.equal 'Help, I have been added to a cache'
+        $httpBackend.flush()
 
-      describe '$promise', ->
-        it 'resolves with cached data', (done) ->
-          resource.$promise.then (data) ->
-            expect(data.magic).to.equal cachedData.magic
-            done()
-          $httpBackend.flush()
+      it 'has a $promise that immediately resolves with the cached data', (done) ->
+        resourceInstance.$promise.then (data) ->
+          expect(data.magic).to.equal 'Help, I have been added to a cache'
+          done()
+        $httpBackend.flush()
 
+      it 'has an $httpPromise that gets rejected', (done) ->
+        resourceInstance.$httpPromise.catch (error) ->
+          expect(error.status).to.equal 500
+          done()
+        $httpBackend.flush()
+
+      it 'contains data from the cache even after the server returns the error', ->
+        $httpBackend.flush()
+        expect(resourceInstance.magic).to.equal 'Help, I have been added to a cache'
+
+    describe 'and connection is available', ->
+      beforeEach ->
+        $httpBackend.expectGET('/mock/1').respond magic: 'I am updated now'
+        resourceInstance = CachedResource.get id: 1
+
+      it 'immediately contains data from the cache', ->
+        expect(resourceInstance.magic).to.equal 'Help, I have been added to a cache'
+        $httpBackend.flush()
+
+      it 'has a $promise that immediately resolves with the cached data', (done) ->
+        resourceInstance.$promise.then (data) ->
+          expect(data.magic).to.equal 'Help, I have been added to a cache'
+          done()
+        $httpBackend.flush()
+
+      it 'has an $httpPromise that gets resolved with the new data', (done) ->
+        resourceInstance.$httpPromise.then (data) ->
+          expect(data.magic).to.equal 'I am updated now'
+          done()
+        $httpBackend.flush()
+
+      it 'updates the object in memory after HTTP request is made', ->
+        $httpBackend.flush()
+        expect(resourceInstance.magic).to.equal 'I am updated now'
