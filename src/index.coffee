@@ -118,7 +118,7 @@ app.factory '$cachedResource', ['$resource', '$timeout', '$q', ($resource, $time
 
       resource.$httpPromise.then (response) ->
         cacheArrayEntry.set response.map (instance) ->
-          cacheInstanceParams = angular.copy(parameters)
+          cacheInstanceParams = {}
           for attribute, param of boundParams when angular.isString(instance[attribute])
             cacheInstanceParams[param] = instance[attribute]
           cacheInstanceEntry = new ResourceCacheEntry(CachedResource.$key, cacheInstanceParams)

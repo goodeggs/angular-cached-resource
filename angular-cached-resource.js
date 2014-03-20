@@ -239,7 +239,7 @@ app.factory('$cachedResource', [
         resource.$httpPromise.then(function(response) {
           return cacheArrayEntry.set(response.map(function(instance) {
             var attribute, cacheInstanceEntry, cacheInstanceParams, param;
-            cacheInstanceParams = angular.copy(parameters);
+            cacheInstanceParams = {};
             for (attribute in boundParams) {
               param = boundParams[attribute];
               if (angular.isString(instance[attribute])) {
