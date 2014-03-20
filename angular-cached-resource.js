@@ -200,15 +200,15 @@ app.factory('$cachedResource', [
     addEventListener('online', function(event) {
       return CachedResourceManager.flushQueues();
     });
-    readCache = function(action, resourceKey) {
+    readCache = function(name, CachedResource) {
       return function(parameters) {
         var cacheEntry, deferred, item, resource, _i, _len, _ref;
-        resource = action.apply(null, arguments);
+        resource = CachedResource.$resource[name].apply(CachedResource.$resource, arguments);
         resource.$httpPromise = resource.$promise;
         if (angular.isFunction(parameters)) {
           parameters = null;
         }
-        cacheEntry = new ResourceCacheEntry(resourceKey, parameters);
+        cacheEntry = new ResourceCacheEntry(CachedResource.$key, parameters);
         resource.$httpPromise.then(function(response) {
           return cacheEntry.set(response);
         });
@@ -281,7 +281,7 @@ app.factory('$cachedResource', [
       }
     };
     return function() {
-      var $key, CachedResource, Resource, action, actions, arg, args, name, paramDefaults, params, url, _ref;
+      var $key, CachedResource, Resource, actions, arg, args, name, paramDefaults, params, url, _ref;
       args = Array.prototype.slice.call(arguments);
       $key = args.shift();
       url = args.shift();
@@ -306,13 +306,12 @@ app.factory('$cachedResource', [
       };
       for (name in actions) {
         params = actions[name];
-        action = angular.bind(Resource, Resource[name]);
         if (params.method === 'GET') {
-          CachedResource[name] = readCache(action, $key);
+          CachedResource[name] = readCache(name, CachedResource);
         } else if ((_ref = params.method) === 'POST' || _ref === 'PUT' || _ref === 'DELETE') {
           CachedResource[name] = writeCache(name, CachedResource);
         } else {
-          CachedResource[name] = action;
+          CachedResource[name] = angular.bind(Resource, Resource[name]);
         }
       }
       CachedResourceManager.add(CachedResource);

@@ -99,13 +99,13 @@ app.factory '$cachedResource', ['$resource', '$timeout', '$q', ($resource, $time
   addEventListener 'online', (event) ->
     CachedResourceManager.flushQueues()
 
-  readCache = (action, resourceKey) ->
+  readCache = (name, CachedResource) ->
     (parameters) ->
-      resource = action.apply(null, arguments)
+      resource = CachedResource.$resource[name].apply(CachedResource.$resource, arguments)
       resource.$httpPromise = resource.$promise
 
       parameters = null if angular.isFunction parameters
-      cacheEntry = new ResourceCacheEntry(resourceKey, parameters)
+      cacheEntry = new ResourceCacheEntry(CachedResource.$key, parameters)
 
       resource.$httpPromise.then (response) ->
         cacheEntry.set response
@@ -187,13 +187,12 @@ app.factory '$cachedResource', ['$resource', '$timeout', '$q', ($resource, $time
       $key: $key
 
     for name, params of actions
-      action = angular.bind(Resource, Resource[name])
       if params.method is 'GET'
-        CachedResource[name] = readCache(action, $key)
+        CachedResource[name] = readCache(name, CachedResource)
       else if params.method in ['POST', 'PUT', 'DELETE']
         CachedResource[name] = writeCache(name, CachedResource)
       else
-        CachedResource[name] = action
+        CachedResource[name] = angular.bind(Resource, Resource[name])
 
     CachedResourceManager.add(CachedResource)
     CachedResourceManager.flushQueues()
