@@ -16,12 +16,16 @@ app.factory '$cachedResource', ['$resource', '$timeout', '$q', ($resource, $time
     setItem: (key, value) -> value
 
   class ResourceCacheEntry
+    defaultValue: {}
+
     constructor: (resourceKey, params) ->
-      @key = resourceKey
+      @setKey(resourceKey)
       paramKeys = if angular.isObject(params) then Object.keys(params).sort() else []
       if paramKeys.length
         @key += '?' + ("#{param}=#{params[param]}" for param in paramKeys).join('&')
-      {@value, @dirty} = cache.getItem(@key, {})
+      {@value, @dirty} = cache.getItem(@key, @defaultValue)
+
+    setKey: (@key) ->
 
     set: (@value) ->
       @dirty = yes
@@ -33,6 +37,10 @@ app.factory '$cachedResource', ['$resource', '$timeout', '$q', ($resource, $time
 
     _update: ->
       cache.setItem @key, {@value, @dirty}
+
+  class ResourceCacheArrayEntry extends ResourceCacheEntry
+    defaultValue: []
+    setKey: (key) -> @key = "#{key}/array"
 
   class ResourceWriteQueue
     constructor: (@CachedResource) ->
@@ -99,6 +107,36 @@ app.factory '$cachedResource', ['$resource', '$timeout', '$q', ($resource, $time
   addEventListener 'online', (event) ->
     CachedResourceManager.flushQueues()
 
+  readArrayCache = (name, CachedResource, boundParams) ->
+    (parameters) ->
+      resource = CachedResource.$resource[name].apply(CachedResource.$resource, arguments)
+      resource.$httpPromise = resource.$promise
+
+      parameters = {} if angular.isFunction parameters
+      parameters ?= {}
+      cacheArrayEntry = new ResourceCacheArrayEntry(CachedResource.$key, parameters)
+
+      resource.$httpPromise.then (response) ->
+        cacheArrayEntry.set response.map (instance) ->
+          cacheInstanceParams = angular.copy(parameters)
+          for attribute, param of boundParams when angular.isString(instance[attribute])
+            cacheInstanceParams[param] = instance[attribute]
+          cacheInstanceEntry = new ResourceCacheEntry(CachedResource.$key, cacheInstanceParams)
+          cacheInstanceEntry.set instance
+          cacheInstanceParams
+
+      if cacheArrayEntry.value
+        for cacheInstanceParams in cacheArrayEntry.value
+          cacheInstanceEntry = new ResourceCacheEntry(CachedResource.$key, cacheInstanceParams)
+          resource.push cacheInstanceEntry.value
+
+        # Resolve the promise as the cache is ready
+        deferred = $q.defer()
+        resource.$promise = deferred.promise
+        deferred.resolve resource
+
+      resource
+
   readCache = (name, CachedResource) ->
     (parameters) ->
       resource = CachedResource.$resource[name].apply(CachedResource.$resource, arguments)
@@ -111,11 +149,7 @@ app.factory '$cachedResource', ['$resource', '$timeout', '$q', ($resource, $time
         cacheEntry.set response
 
       if cacheEntry.value
-        if angular.isArray(cacheEntry.value)
-          for item in cacheEntry.value
-            resource.push item
-        else
-          angular.extend(resource, cacheEntry.value)
+        angular.extend(resource, cacheEntry.value)
 
         # Resolve the promise as the cache is ready
         deferred = $q.defer()
@@ -186,8 +220,14 @@ app.factory '$cachedResource', ['$resource', '$timeout', '$q', ($resource, $time
       $resource: Resource
       $key: $key
 
+    boundParams = {}
+    for param, paramDefault of paramDefaults when paramDefault[0] is '@'
+      boundParams[paramDefault.substr(1)] = param
+
     for name, params of actions
-      if params.method is 'GET'
+      if params.method is 'GET' and params.isArray
+        CachedResource[name] = readArrayCache(name, CachedResource, boundParams)
+      else if params.method is 'GET'
         CachedResource[name] = readCache(name, CachedResource)
       else if params.method in ['POST', 'PUT', 'DELETE']
         CachedResource[name] = writeCache(name, CachedResource)
