@@ -1,4 +1,4 @@
-describe 'CachedResource.save', ->
+describe 'CachedResource.post', ->
   {CachedResource, $httpBackend, $http, $timeout} = {}
 
   beforeEach ->
