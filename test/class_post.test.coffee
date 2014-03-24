@@ -1,12 +1,11 @@
 describe 'CachedResource.post', ->
-  {CachedResource, $httpBackend, $http, $timeout} = {}
+  {CachedResource, $httpBackend, $timeout} = {}
 
   beforeEach ->
     module('ngCachedResource')
     inject ($injector) ->
       $cachedResource = $injector.get '$cachedResource'
       $httpBackend = $injector.get '$httpBackend'
-      $http = $injector.get '$http'
       $timeout = $injector.get '$timeout'
       CachedResource = $cachedResource 'class-save-test', '/mock/:id'
 
