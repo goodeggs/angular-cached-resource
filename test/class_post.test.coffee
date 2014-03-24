@@ -52,3 +52,12 @@ describe 'CachedResource.post', ->
       $timeout.flush()
       $httpBackend.flush()
 
+    it 'attempts the save a third time after another timeout has passed, if the first timeout save failed', ->
+      $httpBackend.expectPOST('/mock/1', magic: 'Save #1').respond 504
+      $timeout.flush()
+      $httpBackend.flush()
+
+      $httpBackend.expectPOST('/mock/1', magic: 'Save #1').respond 200
+      $timeout.flush()
+      $httpBackend.flush()
+

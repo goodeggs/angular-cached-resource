@@ -87,7 +87,8 @@ app.factory '$cachedResource', ['$resource', '$timeout', '$q', ($resource, $time
       if @queue.length > 0 and not @timeout
         @timeout = $timeout angular.bind(@, @flush), CACHE_RETRY_TIMEOUT
         @timeout.then =>
-          @_setFlushTimeout unless @queue.length is 0
+          delete @timeout
+          @_setFlushTimeout()
 
     _update: ->
       savableQueue = @queue.map (entry) ->
