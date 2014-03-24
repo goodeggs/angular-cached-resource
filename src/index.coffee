@@ -27,8 +27,7 @@ app.factory '$cachedResource', ['$resource', '$timeout', '$q', ($resource, $time
 
     setKey: (@key) ->
 
-    set: (@value) ->
-      @dirty = yes
+    set: (@value, @dirty) ->
       @_update()
 
     clean: ->
@@ -125,7 +124,7 @@ app.factory '$cachedResource', ['$resource', '$timeout', '$q', ($resource, $time
           for attribute, param of boundParams when angular.isString(instance[attribute])
             cacheInstanceParams[param] = instance[attribute]
           cacheInstanceEntry = new ResourceCacheEntry(CachedResource.$key, cacheInstanceParams)
-          cacheInstanceEntry.set instance
+          cacheInstanceEntry.set instance, false
           cacheInstanceParams
 
       if cacheArrayEntry.value
@@ -141,25 +140,43 @@ app.factory '$cachedResource', ['$resource', '$timeout', '$q', ($resource, $time
       resource
 
   readCache = (name, CachedResource) ->
-    (parameters) ->
-      resource = CachedResource.$resource[name].apply(CachedResource.$resource, arguments)
-      resource.$httpPromise = resource.$promise
+    ->
+      # according to the ngResource documentation:
+      # Resource.action([parameters], [success], [error])
+      args = Array::slice.call arguments
+      params = if angular.isObject(args[0]) then args.shift() else {}
+      [success, error] = args
 
-      parameters = null if angular.isFunction parameters
-      cacheEntry = new ResourceCacheEntry(CachedResource.$key, parameters)
+      cacheDeferred = $q.defer()
+      cacheDeferred.promise.then success if angular.isFunction success
+      cacheDeferred.promise.catch error if angular.isFunction error
 
-      resource.$httpPromise.then (response) ->
-        cacheEntry.set response
+      httpDeferred = $q.defer()
+
+      instance =
+        $promise:     cacheDeferred.promise
+        $httpPromise: httpDeferred.promise
+
+      cacheEntry = new ResourceCacheEntry(CachedResource.$key, params)
+
+      if cacheEntry.dirty
+        CachedResourceManager.getQueue(CachedResource).flush()
+      else
+        resource = CachedResource.$resource[name].apply(CachedResource.$resource, arguments)
+        resource.$promise.then (response) ->
+          angular.extend(instance, response)
+          cacheDeferred.resolve instance unless cacheEntry.value
+          httpDeferred.resolve instance
+          cacheEntry.set response, false
+        resource.$promise.catch (error) ->
+          cacheDeferred.reject error unless cacheEntry.value
+          httpDeferred.reject error
 
       if cacheEntry.value
-        angular.extend(resource, cacheEntry.value)
+        angular.extend(instance, cacheEntry.value)
+        cacheDeferred.resolve instance
 
-        # Resolve the promise as the cache is ready
-        deferred = $q.defer()
-        resource.$promise = deferred.promise
-        deferred.resolve resource
-
-      resource
+      instance
 
   writeCache = (action, CachedResource) ->
     ->
@@ -178,7 +195,7 @@ app.factory '$cachedResource', ['$resource', '$timeout', '$q', ($resource, $time
       deferred.promise.catch error if angular.isFunction(error)
 
       cacheEntry = new ResourceCacheEntry(CachedResource.$key, params)
-      cacheEntry.set(postData) unless angular.equals(cacheEntry.data, postData)
+      cacheEntry.set(postData, true) unless angular.equals(cacheEntry.data, postData)
 
       queueDeferred = $q.defer()
       queueDeferred.promise.then (value) ->
