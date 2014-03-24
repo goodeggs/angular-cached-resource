@@ -130,7 +130,7 @@ app.factory '$cachedResource', ['$resource', '$timeout', '$q', ($resource, $time
       if cacheArrayEntry.value
         for cacheInstanceParams in cacheArrayEntry.value
           cacheInstanceEntry = new ResourceCacheEntry(CachedResource.$key, cacheInstanceParams)
-          resource.push cacheInstanceEntry.value
+          resource.push new CachedResource cacheInstanceEntry.value
 
         # Resolve the promise as the cache is ready
         deferred = $q.defer()
@@ -153,7 +153,7 @@ app.factory '$cachedResource', ['$resource', '$timeout', '$q', ($resource, $time
 
       httpDeferred = $q.defer()
 
-      instance =
+      instance = new CachedResource
         $promise:     cacheDeferred.promise
         $httpPromise: httpDeferred.promise
 
@@ -182,11 +182,21 @@ app.factory '$cachedResource', ['$resource', '$timeout', '$q', ($resource, $time
     ->
       # according to the ngResource documentation:
       # Resource.action([parameters], postData, [success], [error])
+      # or
+      # resourceInstance.action([parameters], [success], [error])
+      instanceMethod = @ instanceof CachedResource
       args = Array::slice.call arguments
-      params = if angular.isObject(args[1]) then args.shift() else {}
-      [postData, success, error] = args
+      params =
+        if not instanceMethod and angular.isObject(args[1])
+          args.shift()
+        else if instanceMethod and angular.isObject(args[0])
+          args.shift()
+        else
+          {}
+      postData = if instanceMethod then @ else args.shift()
+      [success, error] = args
 
-      resource = @ || {}
+      resource = @ || new CachedResource()
       resource.$resolved = false
 
       deferred = $q.defer()
@@ -235,24 +245,27 @@ app.factory '$cachedResource', ['$resource', '$timeout', '$q', ($resource, $time
     actions ?= defaultActions
     paramDefaults ?= {}
 
-    Resource = $resource.call(null, url, paramDefaults, actions)
-    CachedResource =
-      $resource: Resource
-      $key: $key
-
     boundParams = {}
     for param, paramDefault of paramDefaults when paramDefault[0] is '@'
       boundParams[paramDefault.substr(1)] = param
 
+    Resource = $resource.call(null, url, paramDefaults, actions)
+
+    class CachedResource
+      constructor: (attrs) ->
+        angular.extend @, attrs
+      @$resource: Resource
+      @$key: $key
+
     for name, params of actions
-      if params.method is 'GET' and params.isArray
-        CachedResource[name] = readArrayCache(name, CachedResource, boundParams)
-      else if params.method is 'GET'
-        CachedResource[name] = readCache(name, CachedResource)
-      else if params.method in ['POST', 'PUT', 'DELETE']
-        CachedResource[name] = writeCache(name, CachedResource)
-      else
-        CachedResource[name] = angular.bind(Resource, Resource[name])
+      handler = if params.method is 'GET' and params.isArray
+          readArrayCache(name, CachedResource, boundParams)
+        else if params.method is 'GET'
+          readCache(name, CachedResource)
+        else if params.method in ['POST', 'PUT', 'DELETE']
+          writeCache(name, CachedResource)
+      CachedResource::["$#{name}"] = handler unless params.method is 'GET'
+      CachedResource[name] = handler
 
     CachedResourceManager.add(CachedResource)
     CachedResourceManager.flushQueues()

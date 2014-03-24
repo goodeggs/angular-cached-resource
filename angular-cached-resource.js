@@ -262,7 +262,7 @@ app.factory('$cachedResource', [
           for (_i = 0, _len = _ref.length; _i < _len; _i++) {
             cacheInstanceParams = _ref[_i];
             cacheInstanceEntry = new ResourceCacheEntry(CachedResource.$key, cacheInstanceParams);
-            resource.push(cacheInstanceEntry.value);
+            resource.push(new CachedResource(cacheInstanceEntry.value));
           }
           deferred = $q.defer();
           resource.$promise = deferred.promise;
@@ -285,10 +285,10 @@ app.factory('$cachedResource', [
           cacheDeferred.promise["catch"](error);
         }
         httpDeferred = $q.defer();
-        instance = {
+        instance = new CachedResource({
           $promise: cacheDeferred.promise,
           $httpPromise: httpDeferred.promise
-        };
+        });
         cacheEntry = new ResourceCacheEntry(CachedResource.$key, params);
         if (cacheEntry.dirty) {
           CachedResourceManager.getQueue(CachedResource).flush();
@@ -318,11 +318,13 @@ app.factory('$cachedResource', [
     };
     writeCache = function(action, CachedResource) {
       return function() {
-        var args, cacheEntry, deferred, error, params, postData, queue, queueDeferred, resource, success;
+        var args, cacheEntry, deferred, error, instanceMethod, params, postData, queue, queueDeferred, resource, success;
+        instanceMethod = this instanceof CachedResource;
         args = Array.prototype.slice.call(arguments);
-        params = angular.isObject(args[1]) ? args.shift() : {};
-        postData = args[0], success = args[1], error = args[2];
-        resource = this || {};
+        params = !instanceMethod && angular.isObject(args[1]) ? args.shift() : instanceMethod && angular.isObject(args[0]) ? args.shift() : {};
+        postData = instanceMethod ? this : args.shift();
+        success = args[0], error = args[1];
+        resource = this || new CachedResource();
         resource.$resolved = false;
         deferred = $q.defer();
         resource.$promise = deferred.promise;
@@ -368,7 +370,7 @@ app.factory('$cachedResource', [
       }
     };
     return function() {
-      var $key, CachedResource, Resource, actions, arg, args, boundParams, name, param, paramDefault, paramDefaults, params, url, _ref;
+      var $key, CachedResource, Resource, actions, arg, args, boundParams, handler, name, param, paramDefault, paramDefaults, params, url, _ref;
       args = Array.prototype.slice.call(arguments);
       $key = args.shift();
       url = args.shift();
@@ -386,11 +388,6 @@ app.factory('$cachedResource', [
       if (paramDefaults == null) {
         paramDefaults = {};
       }
-      Resource = $resource.call(null, url, paramDefaults, actions);
-      CachedResource = {
-        $resource: Resource,
-        $key: $key
-      };
       boundParams = {};
       for (param in paramDefaults) {
         paramDefault = paramDefaults[param];
@@ -398,17 +395,26 @@ app.factory('$cachedResource', [
           boundParams[paramDefault.substr(1)] = param;
         }
       }
+      Resource = $resource.call(null, url, paramDefaults, actions);
+      CachedResource = (function() {
+        function CachedResource(attrs) {
+          angular.extend(this, attrs);
+        }
+
+        CachedResource.$resource = Resource;
+
+        CachedResource.$key = $key;
+
+        return CachedResource;
+
+      })();
       for (name in actions) {
         params = actions[name];
-        if (params.method === 'GET' && params.isArray) {
-          CachedResource[name] = readArrayCache(name, CachedResource, boundParams);
-        } else if (params.method === 'GET') {
-          CachedResource[name] = readCache(name, CachedResource);
-        } else if ((_ref = params.method) === 'POST' || _ref === 'PUT' || _ref === 'DELETE') {
-          CachedResource[name] = writeCache(name, CachedResource);
-        } else {
-          CachedResource[name] = angular.bind(Resource, Resource[name]);
+        handler = params.method === 'GET' && params.isArray ? readArrayCache(name, CachedResource, boundParams) : params.method === 'GET' ? readCache(name, CachedResource) : (_ref = params.method) === 'POST' || _ref === 'PUT' || _ref === 'DELETE' ? writeCache(name, CachedResource) : void 0;
+        if (params.method !== 'GET') {
+          CachedResource.prototype["$" + name] = handler;
         }
+        CachedResource[name] = handler;
       }
       CachedResourceManager.add(CachedResource);
       CachedResourceManager.flushQueues();
