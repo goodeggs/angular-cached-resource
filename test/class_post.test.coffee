@@ -60,3 +60,11 @@ describe 'CachedResource.post', ->
       $timeout.flush()
       $httpBackend.flush()
 
+    it 'caches the write in localStorage so the write happens when the page refreshes, too', ->
+      cachedWriteString = localStorage.getItem 'cachedResource://class-save-test/write'
+      expect(cachedWriteString).to.exist
+      cachedWrite = angular.fromJson cachedWriteString
+      expect(cachedWrite).to.have.length 1
+      expect(cachedWrite).to.have.deep.property '[0].action', 'save'
+      expect(cachedWrite).to.have.deep.property '[0].params.id', 1
+

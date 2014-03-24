@@ -80,8 +80,10 @@ app.factory '$cachedResource', ['$resource', '$timeout', '$q', ($resource, $time
         cacheEntry = new ResourceCacheEntry(@CachedResource.$key, entry.params)
         onSuccess = (value) =>
           @removeEntry entry
-          entry.deferred.resolve value
-        @CachedResource.$resource[entry.action](entry.params, cacheEntry.value, onSuccess, entry.deferred.reject)
+          entry.deferred?.resolve value
+        onFailure = (error) =>
+          entry.deferred?.reject error
+        @CachedResource.$resource[entry.action](entry.params, cacheEntry.value, onSuccess, onFailure)
 
     _setFlushTimeout: ->
       if @queue.length > 0 and not @timeout
@@ -93,7 +95,7 @@ app.factory '$cachedResource', ['$resource', '$timeout', '$q', ($resource, $time
     _update: ->
       savableQueue = @queue.map (entry) ->
         params: entry.params
-        action: entry.actions
+        action: entry.action
       cache.setItem @key, savableQueue
 
   CachedResourceManager =
