@@ -24,11 +24,7 @@ describe 'read a resource after writing to it', ->
       expect(resourceInstance).to.have.property 'magic', 'Attempt to save resource'
 
       $httpBackend.expectPOST('/mock/1').respond 200
+      $httpBackend.expectGET('/mock/1').respond magic: 'Resource saved'
       $httpBackend.flush()
 
-      $httpBackend.verifyNoOutstandingRequest()
-
-      # $httpBackend.expectGET('/mock/1').respond magic: 'Resource saved'
-      # $httpBackend.flush()
-
-      # expect(resourceInstance).to.have.property 'magic', 'Resource saved'
+      expect(resourceInstance).to.have.property 'magic', 'Resource saved'

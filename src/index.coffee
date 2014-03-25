@@ -75,14 +75,29 @@ app.factory '$cachedResource', ['$resource', '$timeout', '$q', ($resource, $time
 
     flush: ->
       @_setFlushTimeout()
-      for entry in @queue
-        cacheEntry = new ResourceCacheEntry(@CachedResource.$key, entry.params)
-        onSuccess = (value) =>
-          @removeEntry entry
-          entry.deferred?.resolve value
-        onFailure = (error) =>
-          entry.deferred?.reject error
-        @CachedResource.$resource[entry.action](entry.params, cacheEntry.value, onSuccess, onFailure)
+      @_processEntry(entry) for entry in @queue
+
+
+    processResource: (params, done) ->
+      notDone = true
+      for entry in @_entriesForResource(params)
+        @_processEntry entry, =>
+          if notDone and @_entriesForResource(params).length is 0
+            notDone = false
+            done()
+
+    _entriesForResource: (params) ->
+      entry for entry in @queue when angular.equals(params, entry.params)
+
+    _processEntry: (entry, done) ->
+      cacheEntry = new ResourceCacheEntry(@CachedResource.$key, entry.params)
+      onSuccess = (value) =>
+        @removeEntry entry
+        entry.deferred?.resolve value
+        done() if angular.isFunction(done)
+      onFailure = (error) =>
+        entry.deferred?.reject error
+      @CachedResource.$resource[entry.action](entry.params, cacheEntry.value, onSuccess, onFailure)
 
     _setFlushTimeout: ->
       if @queue.length > 0 and not @timeout
@@ -159,10 +174,8 @@ app.factory '$cachedResource', ['$resource', '$timeout', '$q', ($resource, $time
 
       cacheEntry = new ResourceCacheEntry(CachedResource.$key, params)
 
-      if cacheEntry.dirty
-        CachedResourceManager.getQueue(CachedResource).flush()
-      else
-        resource = CachedResource.$resource[name].apply(CachedResource.$resource, arguments)
+      readHttp = ->
+        resource = CachedResource.$resource[name].call(CachedResource.$resource, params)
         resource.$promise.then (response) ->
           angular.extend(instance, response)
           cacheDeferred.resolve instance unless cacheEntry.value
@@ -171,6 +184,11 @@ app.factory '$cachedResource', ['$resource', '$timeout', '$q', ($resource, $time
         resource.$promise.catch (error) ->
           cacheDeferred.reject error unless cacheEntry.value
           httpDeferred.reject error
+
+      if cacheEntry.dirty
+        CachedResourceManager.getQueue(CachedResource).processResource params, readHttp
+      else
+        readHttp()
 
       if cacheEntry.value
         angular.extend(instance, cacheEntry.value)
