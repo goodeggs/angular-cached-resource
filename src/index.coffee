@@ -30,10 +30,6 @@ app.factory '$cachedResource', ['$resource', '$timeout', '$q', ($resource, $time
     set: (@value, @dirty) ->
       @_update()
 
-    clean: ->
-      @dirty = no
-      @_update()
-
     _update: ->
       cache.setItem @key, {@value, @dirty}
 

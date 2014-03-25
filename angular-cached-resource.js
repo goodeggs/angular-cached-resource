@@ -64,11 +64,6 @@ app.factory('$cachedResource', [
         return this._update();
       };
 
-      ResourceCacheEntry.prototype.clean = function() {
-        this.dirty = false;
-        return this._update();
-      };
-
       ResourceCacheEntry.prototype._update = function() {
         return cache.setItem(this.key, {
           value: this.value,
