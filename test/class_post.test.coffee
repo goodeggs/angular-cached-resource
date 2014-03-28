@@ -44,6 +44,7 @@ describe 'CachedResource.post', ->
       event.initEvent 'online', true, true
 
       dispatchEvent event
+
       $httpBackend.flush()
 
     it 'attempts the save again after a timeout has passed', ->

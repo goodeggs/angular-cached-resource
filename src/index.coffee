@@ -1,124 +1,23 @@
+DEFAULT_ACTIONS =
+  get:    { method: 'GET',    }
+  query:  { method: 'GET',    isArray: yes }
+  save:   { method: 'POST',   }
+  remove: { method: 'DELETE', }
+  delete: { method: 'DELETE', }
+
+ResourceCacheEntry = require './resource_cache_entry'
+ResourceCacheArrayEntry = require './resource_cache_array_entry'
+CachedResourceManager = require './cached_resource_manager'
+resourceManagerListener = null
+
 app = angular.module 'ngCachedResource', ['ngResource']
 
 app.factory '$cachedResource', ['$resource', '$timeout', '$q', ($resource, $timeout, $q) ->
-  LOCAL_STORAGE_PREFIX = 'cachedResource://'
-  CACHE_RETRY_TIMEOUT = 60000 # one minute
+  resourceManager = new CachedResourceManager($timeout)
 
-  cache = if window.localStorage?
-    getItem: (key, fallback) ->
-      item = localStorage.getItem("#{LOCAL_STORAGE_PREFIX}#{key}")
-      if item? then angular.fromJson(item) else fallback
-    setItem: (key, value) ->
-      localStorage.setItem("#{LOCAL_STORAGE_PREFIX}#{key}", angular.toJson value)
-      value
-  else
-    getItem: (key, fallback) -> fallback
-    setItem: (key, value) -> value
-
-  class ResourceCacheEntry
-    defaultValue: {}
-
-    constructor: (resourceKey, params) ->
-      @setKey(resourceKey)
-      paramKeys = if angular.isObject(params) then Object.keys(params).sort() else []
-      if paramKeys.length
-        @key += '?' + ("#{param}=#{params[param]}" for param in paramKeys).join('&')
-      {@value, @dirty} = cache.getItem(@key, @defaultValue)
-
-    setKey: (@key) ->
-
-    set: (@value, @dirty) ->
-      @_update()
-
-    _update: ->
-      cache.setItem @key, {@value, @dirty}
-
-  class ResourceCacheArrayEntry extends ResourceCacheEntry
-    defaultValue: []
-    setKey: (key) -> @key = "#{key}/array"
-
-  class ResourceWriteQueue
-    constructor: (@CachedResource) ->
-      @key = "#{@CachedResource.$key}/write"
-      @queue = cache.getItem(@key, [])
-
-    enqueue: (params, action, deferred) ->
-      entry = @findEntry {params, action}
-      if not entry?
-        @queue.push {params, action, deferred}
-        @_update()
-      else
-        entry.deferred.$promise.then (response) ->
-          deferred.resolve response
-        entry.deferred.$promise.catch (error) ->
-          deferred.reject error
-
-    findEntry: ({action, params}) ->
-      for entry in @queue
-        return entry if action is entry.action and angular.equals(params, entry.params)
-
-    removeEntry: ({action, params}) ->
-      newQueue = []
-      for entry in @queue
-        newQueue.push entry unless action is entry.action and angular.equals(params, entry.params)
-      @queue = newQueue
-
-      if @queue.length is 0 and @timeout
-        $timeout.cancel @timeout
-        delete @timeout
-
-      @_update()
-
-    flush: ->
-      @_setFlushTimeout()
-      @_processEntry(entry) for entry in @queue
-
-
-    processResource: (params, done) ->
-      notDone = true
-      for entry in @_entriesForResource(params)
-        @_processEntry entry, =>
-          if notDone and @_entriesForResource(params).length is 0
-            notDone = false
-            done()
-
-    _entriesForResource: (params) ->
-      entry for entry in @queue when angular.equals(params, entry.params)
-
-    _processEntry: (entry, done) ->
-      cacheEntry = new ResourceCacheEntry(@CachedResource.$key, entry.params)
-      onSuccess = (value) =>
-        @removeEntry entry
-        entry.deferred?.resolve value
-        done() if angular.isFunction(done)
-      onFailure = (error) =>
-        entry.deferred?.reject error
-      @CachedResource.$resource[entry.action](entry.params, cacheEntry.value, onSuccess, onFailure)
-
-    _setFlushTimeout: ->
-      if @queue.length > 0 and not @timeout
-        @timeout = $timeout angular.bind(@, @flush), CACHE_RETRY_TIMEOUT
-        @timeout.then =>
-          delete @timeout
-          @_setFlushTimeout()
-
-    _update: ->
-      savableQueue = @queue.map (entry) ->
-        params: entry.params
-        action: entry.action
-      cache.setItem @key, savableQueue
-
-  CachedResourceManager =
-    queuesByKey: {}
-    add: (CachedResource) ->
-      @queuesByKey[CachedResource.$key] = new ResourceWriteQueue(CachedResource)
-    getQueue: (CachedResource) ->
-      @queuesByKey[CachedResource.$key]
-    flushQueues: ->
-      queue.flush() for key, queue of @queuesByKey
-
-  addEventListener 'online', (event) ->
-    CachedResourceManager.flushQueues()
+  removeEventListener 'online', resourceManagerListener
+  resourceManagerListener = (event) -> resourceManager.flushQueues()
+  addEventListener 'online', resourceManagerListener
 
   readArrayCache = (name, CachedResource, boundParams) ->
     (parameters) ->
@@ -182,7 +81,7 @@ app.factory '$cachedResource', ['$resource', '$timeout', '$q', ($resource, $time
           httpDeferred.reject error
 
       if cacheEntry.dirty
-        CachedResourceManager.getQueue(CachedResource).processResource params, readHttp
+        resourceManager.getQueue(CachedResource).processResource params, readHttp
       else
         readHttp()
 
@@ -228,18 +127,11 @@ app.factory '$cachedResource', ['$resource', '$timeout', '$q', ($resource, $time
         deferred.resolve(resource)
       queueDeferred.promise.catch deferred.reject
 
-      queue = CachedResourceManager.getQueue(CachedResource)
+      queue = resourceManager.getQueue(CachedResource)
       queue.enqueue(params, action, queueDeferred)
       queue.flush()
 
       resource
-
-  defaultActions =
-    get:    { method: 'GET',    }
-    query:  { method: 'GET',    isArray: yes }
-    save:   { method: 'POST',   }
-    remove: { method: 'DELETE', }
-    delete: { method: 'DELETE', }
 
   return ->
     # we are mimicking the API of $resource, which is:
@@ -256,7 +148,7 @@ app.factory '$cachedResource', ['$resource', '$timeout', '$q', ($resource, $time
         actions = arg
       else
         paramDefaults = arg
-    actions ?= defaultActions
+    actions ?= DEFAULT_ACTIONS
     paramDefaults ?= {}
 
     boundParams = {}
@@ -281,10 +173,10 @@ app.factory '$cachedResource', ['$resource', '$timeout', '$q', ($resource, $time
       CachedResource::["$#{name}"] = handler unless params.method is 'GET'
       CachedResource[name] = handler
 
-    CachedResourceManager.add(CachedResource)
-    CachedResourceManager.flushQueues()
+    resourceManager.add(CachedResource)
+    resourceManager.flushQueues()
 
     CachedResource
 ]
 
-app
+module?.exports = app
