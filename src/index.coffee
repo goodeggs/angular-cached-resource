@@ -12,7 +12,7 @@ resourceManagerListener = null
 
 app = angular.module 'ngCachedResource', ['ngResource']
 
-app.factory '$cachedResource', ['$resource', '$timeout', '$q', ($resource, $timeout, $q) ->
+app.factory '$cachedResource', ['$resource', '$timeout', '$q', '$log', ($resource, $timeout, $q, $log) ->
   resourceManager = new CachedResourceManager($timeout)
 
   removeEventListener 'online', resourceManagerListener
@@ -35,9 +35,9 @@ app.factory '$cachedResource', ['$resource', '$timeout', '$q', ($resource, $time
             cacheInstanceParams[param] = instance[attribute]
 
           if Object.keys(cacheInstanceParams).length == 0
-            # console.log """
-            #   instance #{instance} doesn't have any boundParams. Please, make sure you specified them in your resource's initialization, f.e. `{id: "@id"}`, or it won't be cached.
-            # """
+            $log.error """
+              instance #{instance} doesn't have any boundParams. Please, make sure you specified them in your resource's initialization, f.e. `{id: "@id"}`, or it won't be cached.
+            """
           else
             cacheInstanceEntry = new ResourceCacheEntry(CachedResource.$key, cacheInstanceParams)
             cacheInstanceEntry.set instance, false

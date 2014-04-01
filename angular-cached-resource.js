@@ -98,7 +98,7 @@ resourceManagerListener = null;
 app = angular.module('ngCachedResource', ['ngResource']);
 
 app.factory('$cachedResource', [
-  '$resource', '$timeout', '$q', function($resource, $timeout, $q) {
+  '$resource', '$timeout', '$q', '$log', function($resource, $timeout, $q, $log) {
     var readArrayCache, readCache, resourceManager, writeCache;
     resourceManager = new CachedResourceManager($timeout);
     removeEventListener('online', resourceManagerListener);
@@ -129,7 +129,7 @@ app.factory('$cachedResource', [
               }
             }
             if (Object.keys(cacheInstanceParams).length === 0) {
-
+              $log.error("instance " + instance + " doesn't have any boundParams. Please, make sure you specified them in your resource's initialization, f.e. `{id: \"@id\"}`, or it won't be cached.");
             } else {
               cacheInstanceEntry = new ResourceCacheEntry(CachedResource.$key, cacheInstanceParams);
               cacheInstanceEntry.set(instance, false);
