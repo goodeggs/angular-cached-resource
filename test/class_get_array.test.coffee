@@ -6,7 +6,8 @@ describe 'CachedResource.get array resource collections', ->
     inject ($injector) ->
       $cachedResource = $injector.get '$cachedResource'
       $httpBackend = $injector.get '$httpBackend'
-      CachedResource = $cachedResource 'class-get-array-test', '/colors/:color'
+      CachedResource = $cachedResource 'class-get-array-test', '/colors/:color',
+        color: '@color'
 
   afterEach ->
     $httpBackend.verifyNoOutstandingExpectation()
@@ -65,13 +66,16 @@ describe 'CachedResource.get array resource collections', ->
         $httpBackend.flush()
 
   describe 'when cache is full', ->
-    beforeEach ->
-      $httpBackend.expectGET('/colors').respond [
-        { color: 'red', hex: '#FF0000', cached: true }
-        { color: 'green', hex: '#00FF00', cached: true }
-        { color: 'blue', hex: '#0000FF', cached: true }
-        { color: 'papayawhip', hex: '#FFEFD5', cached: true }
+    stringifyColorArray = (colors) -> colors.map((c) -> c.color).toString()
+    colors = [
+        { color: 'red', hex: '#FF0000' }
+        { color: 'green', hex: '#00FF00' }
+        { color: 'blue', hex: '#0000FF' }
+        { color: 'papayawhip', hex: '#FFEFD5' }
       ]
+
+    beforeEach ->
+      $httpBackend.expectGET('/colors').respond colors
       CachedResource.query()
       $httpBackend.flush()
 
@@ -81,12 +85,15 @@ describe 'CachedResource.get array resource collections', ->
         resourceCollection = CachedResource.query()
 
       it 'immediately contains data from the cache', ->
+
         expect(resourceCollection.length).to.equal 4
+        expect(stringifyColorArray(resourceCollection)).to.eql stringifyColorArray(colors)
         $httpBackend.flush()
 
       it 'has a $promise that is immediately resolved with the cached data', (done) ->
         resourceCollection.$promise.then (data) ->
           expect(data.length).to.equal 4
+          expect(stringifyColorArray(data)).to.eql stringifyColorArray(colors)
           done()
         $httpBackend.flush()
 
@@ -106,11 +113,13 @@ describe 'CachedResource.get array resource collections', ->
 
       it 'immediately contains data from the cache', ->
         expect(resourceCollection.length).to.equal 4
+        expect(stringifyColorArray(resourceCollection)).to.eql stringifyColorArray(colors)
         $httpBackend.flush()
 
       it 'has a $promise that immediately resolves with the cached data', (done) ->
         resourceCollection.$promise.then (data) ->
           expect(data.length).to.equal 4
+          expect(stringifyColorArray(data)).to.eql stringifyColorArray(colors)
           done()
         $httpBackend.flush()
 

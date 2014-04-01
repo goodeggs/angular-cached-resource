@@ -160,6 +160,7 @@ app.factory '$cachedResource', ['$resource', '$timeout', '$q', ($resource, $time
     class CachedResource
       constructor: (attrs) ->
         angular.extend @, attrs
+
       @$resource: Resource
       @$key: $key
 
@@ -170,8 +171,9 @@ app.factory '$cachedResource', ['$resource', '$timeout', '$q', ($resource, $time
           readCache(name, CachedResource)
         else if params.method in ['POST', 'PUT', 'DELETE']
           writeCache(name, CachedResource)
-      CachedResource::["$#{name}"] = handler unless params.method is 'GET'
+
       CachedResource[name] = handler
+      CachedResource::["$#{name}"] = handler unless params.method is 'GET'
 
     resourceManager.add(CachedResource)
     resourceManager.flushQueues()

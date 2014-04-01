@@ -8,7 +8,7 @@ Closely mimics the behavior of the core [ngResource][ngResource] module.
 ## A simple example
 
 ```javascript
-var Article = $cachedResource('article', '/articles/:id');
+var Article = $cachedResource('article', '/articles/:id', {id: "@id"});
 
 // GET requests:
 var firstArticle = Article.get({id: 1});
