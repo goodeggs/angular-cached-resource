@@ -245,9 +245,7 @@ app.factory('$cachedResource', [
           paramDefaults = arg;
         }
       }
-      if (actions == null) {
-        actions = DEFAULT_ACTIONS;
-      }
+      actions = angular.extend({}, DEFAULT_ACTIONS, actions);
       if (paramDefaults == null) {
         paramDefaults = {};
       }

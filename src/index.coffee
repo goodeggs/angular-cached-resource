@@ -148,7 +148,7 @@ app.factory '$cachedResource', ['$resource', '$timeout', '$q', ($resource, $time
         actions = arg
       else
         paramDefaults = arg
-    actions ?= DEFAULT_ACTIONS
+    actions = angular.extend({}, DEFAULT_ACTIONS, actions)
     paramDefaults ?= {}
 
     boundParams = {}
