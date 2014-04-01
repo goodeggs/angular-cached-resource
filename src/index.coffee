@@ -31,10 +31,17 @@ app.factory '$cachedResource', ['$resource', '$timeout', '$q', ($resource, $time
       resource.$httpPromise.then (response) ->
         cacheArrayEntry.set response.map (instance) ->
           cacheInstanceParams = {}
-          for attribute, param of boundParams when angular.isString(instance[attribute])
+          for attribute, param of boundParams when typeof instance[attribute] != "object" && typeof instance[attribute] != "function"
             cacheInstanceParams[param] = instance[attribute]
-          cacheInstanceEntry = new ResourceCacheEntry(CachedResource.$key, cacheInstanceParams)
-          cacheInstanceEntry.set instance, false
+
+          if Object.keys(cacheInstanceParams).length == 0
+            # console.log """
+            #   instance #{instance} doesn't have any boundParams. Please, make sure you specified them in your resource's initialization, f.e. `{id: "@id"}`, or it won't be cached.
+            # """
+          else
+            cacheInstanceEntry = new ResourceCacheEntry(CachedResource.$key, cacheInstanceParams)
+            cacheInstanceEntry.set instance, false
+
           cacheInstanceParams
 
       if cacheArrayEntry.value
@@ -160,6 +167,7 @@ app.factory '$cachedResource', ['$resource', '$timeout', '$q', ($resource, $time
     class CachedResource
       constructor: (attrs) ->
         angular.extend @, attrs
+
       @$resource: Resource
       @$key: $key
 
@@ -170,8 +178,9 @@ app.factory '$cachedResource', ['$resource', '$timeout', '$q', ($resource, $time
           readCache(name, CachedResource)
         else if params.method in ['POST', 'PUT', 'DELETE']
           writeCache(name, CachedResource)
-      CachedResource::["$#{name}"] = handler unless params.method is 'GET'
+
       CachedResource[name] = handler
+      CachedResource::["$#{name}"] = handler unless params.method is 'GET'
 
     resourceManager.add(CachedResource)
     resourceManager.flushQueues()

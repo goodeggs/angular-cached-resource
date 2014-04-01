@@ -36,9 +36,8 @@ ResourceWriteQueue = require('./resource_write_queue');
 CachedResourceManager = (function() {
   function CachedResourceManager($timeout) {
     this.$timeout = $timeout;
+    this.queuesByKey = {};
   }
-
-  CachedResourceManager.prototype.queuesByKey = {};
 
   CachedResourceManager.prototype.add = function(CachedResource) {
     return this.queuesByKey[CachedResource.$key] = new ResourceWriteQueue(CachedResource, this.$timeout);
@@ -125,12 +124,16 @@ app.factory('$cachedResource', [
             cacheInstanceParams = {};
             for (attribute in boundParams) {
               param = boundParams[attribute];
-              if (angular.isString(instance[attribute])) {
+              if (typeof instance[attribute] !== "object" && typeof instance[attribute] !== "function") {
                 cacheInstanceParams[param] = instance[attribute];
               }
             }
-            cacheInstanceEntry = new ResourceCacheEntry(CachedResource.$key, cacheInstanceParams);
-            cacheInstanceEntry.set(instance, false);
+            if (Object.keys(cacheInstanceParams).length === 0) {
+
+            } else {
+              cacheInstanceEntry = new ResourceCacheEntry(CachedResource.$key, cacheInstanceParams);
+              cacheInstanceEntry.set(instance, false);
+            }
             return cacheInstanceParams;
           }));
         });
@@ -272,10 +275,10 @@ app.factory('$cachedResource', [
       for (name in actions) {
         params = actions[name];
         handler = params.method === 'GET' && params.isArray ? readArrayCache(name, CachedResource, boundParams) : params.method === 'GET' ? readCache(name, CachedResource) : (_ref = params.method) === 'POST' || _ref === 'PUT' || _ref === 'DELETE' ? writeCache(name, CachedResource) : void 0;
+        CachedResource[name] = handler;
         if (params.method !== 'GET') {
           CachedResource.prototype["$" + name] = handler;
         }
-        CachedResource[name] = handler;
       }
       resourceManager.add(CachedResource);
       resourceManager.flushQueues();
