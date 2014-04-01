@@ -35,7 +35,7 @@ describe 'CachedResource.get cache population from an isArray request', ->
         expect(resourceInstance.hex).to.equal '#7CFC00'
         $httpBackend.flush()
 
-  describe 'when caceh is populated by a query with parameters', ->
+  describe 'when cache is populated by a query with parameters', ->
     beforeEach ->
       $httpBackend.expectGET('/colors?set=limitedX11').respond [
         { color: 'darkorchid', hex: '#9932CC', cached: true }
