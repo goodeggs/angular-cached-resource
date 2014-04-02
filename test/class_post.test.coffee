@@ -43,7 +43,7 @@ describe 'CachedResource.post', ->
       event = document.createEvent 'CustomEvent'
       event.initEvent 'online', true, true
 
-      dispatchEvent event
+      document.dispatchEvent event
 
       $httpBackend.flush()
 
