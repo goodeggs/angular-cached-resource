@@ -15,9 +15,9 @@ app = angular.module 'ngCachedResource', ['ngResource']
 app.factory '$cachedResource', ['$resource', '$timeout', '$q', '$log', ($resource, $timeout, $q, $log) ->
   resourceManager = new CachedResourceManager($timeout)
 
-  removeEventListener 'online', resourceManagerListener
+  document.removeEventListener 'online', resourceManagerListener if resourceManagerListener
   resourceManagerListener = (event) -> resourceManager.flushQueues()
-  addEventListener 'online', resourceManagerListener
+  document.addEventListener 'online', resourceManagerListener
 
   readArrayCache = (name, CachedResource, boundParams) ->
     (parameters) ->
