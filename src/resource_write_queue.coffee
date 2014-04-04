@@ -54,6 +54,7 @@ class ResourceWriteQueue
     cacheEntry = new ResourceCacheEntry(@CachedResource.$key, entry.params)
     onSuccess = (value) =>
       @removeEntry entry
+      cacheEntry.setClean()
       entry.deferred?.resolve value
       done() if angular.isFunction(done)
     onFailure = (error) =>

@@ -17,6 +17,10 @@ class ResourceCacheEntry
   set: (@value, @dirty) ->
     @_update()
 
+  setClean: ->
+    @dirty = false
+    @_update()
+
   _update: ->
     Cache.setItem @key, {@value, @dirty}
 

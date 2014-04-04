@@ -357,6 +357,11 @@ ResourceCacheEntry = (function() {
     return this._update();
   };
 
+  ResourceCacheEntry.prototype.setClean = function() {
+    this.dirty = false;
+    return this._update();
+  };
+
   ResourceCacheEntry.prototype._update = function() {
     return Cache.setItem(this.key, {
       value: this.value,
@@ -493,6 +498,7 @@ ResourceWriteQueue = (function() {
       return function(value) {
         var _ref;
         _this.removeEntry(entry);
+        cacheEntry.setClean();
         if ((_ref = entry.deferred) != null) {
           _ref.resolve(value);
         }
