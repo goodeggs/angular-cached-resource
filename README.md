@@ -83,7 +83,7 @@ bower install angular-cached-resource
 **npm:** (intended for use with [browserify](http://browserify.org/))
 
 ```bash
-npm install angular
+npm install angular-cached-resource
 ```
 
 **Manual Download:**
