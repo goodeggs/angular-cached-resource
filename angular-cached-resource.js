@@ -407,10 +407,10 @@ ResourceWriteQueue = (function() {
       });
       return this._update();
     } else {
-      entry.deferred.$promise.then(function(response) {
+      entry.deferred.promise.then(function(response) {
         return deferred.resolve(response);
       });
-      return entry.deferred.$promise["catch"](function(error) {
+      return entry.deferred.promise["catch"](function(error) {
         return deferred.reject(error);
       });
     }

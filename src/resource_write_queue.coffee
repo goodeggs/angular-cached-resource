@@ -14,9 +14,9 @@ class ResourceWriteQueue
       @queue.push {params, action, deferred}
       @_update()
     else
-      entry.deferred.$promise.then (response) ->
+      entry.deferred.promise.then (response) ->
         deferred.resolve response
-      entry.deferred.$promise.catch (error) ->
+      entry.deferred.promise.catch (error) ->
         deferred.reject error
 
   findEntry: ({action, params}) ->
