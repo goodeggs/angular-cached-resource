@@ -394,7 +394,7 @@ ResourceWriteQueue = (function() {
   }
 
   ResourceWriteQueue.prototype.enqueue = function(params, action, deferred) {
-    var entry;
+    var entry, _ref, _ref1;
     entry = this.findEntry({
       params: params,
       action: action
@@ -407,12 +407,14 @@ ResourceWriteQueue = (function() {
       });
       return this._update();
     } else {
-      entry.deferred.promise.then(function(response) {
-        return deferred.resolve(response);
-      });
-      return entry.deferred.promise["catch"](function(error) {
+      if ((_ref = entry.deferred) != null) {
+        _ref.promise.then(function(response) {
+          return deferred.resolve(response);
+        });
+      }
+      return (_ref1 = entry.deferred) != null ? _ref1.promise["catch"](function(error) {
         return deferred.reject(error);
-      });
+      }) : void 0;
     }
   };
 
