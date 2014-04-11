@@ -118,7 +118,7 @@ Updating a CachedResource object will do the following:
 
 ## Development
 
-Just make sure you run the tests.
+Please make sure you run the tests, and add to them unless it's a trivial change:
 ```
 npm install
 npm test
@@ -128,7 +128,7 @@ npm test
 
 ## License
 
-MIT.
+[MIT](https://github.com/goodeggs/angular-cached-resource/blob/master/LICENSE.md)
 
 [npm-badge]: https://badge.fury.io/js/angular-cached-resource.png
 [npm-link]: http://badge.fury.io/js/angular-cached-resource
