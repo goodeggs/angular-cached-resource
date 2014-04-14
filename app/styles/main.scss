@@ -19,3 +19,9 @@ $icon-font-path: "/bower_components/bootstrap-sass-official/vendor/assets/fonts/
     color: #777;
     border-top: 1px solid #e5e5e5;
 }
+
+#colophon {
+  .media .media-object {
+    width: 50px;
+  }
+}
