@@ -1,12 +1,12 @@
-describe 'read a resource after writing to it', ->
-  {CachedResource, $httpBackend} = {}
+describe 'Instance writes, then reads', ->
+  {CachedResource, instance, $httpBackend} = {}
 
   beforeEach ->
     module('ngCachedResource')
     inject ($injector) ->
       $cachedResource = $injector.get '$cachedResource'
       $httpBackend = $injector.get '$httpBackend'
-      CachedResource = $cachedResource 'write-then-read-test', '/mock/:id'
+      CachedResource = $cachedResource 'instance-writes-then-reads-test', '/mock/:id', {id: '@id'}
 
   afterEach ->
     $httpBackend.verifyNoOutstandingExpectation()
@@ -16,7 +16,8 @@ describe 'read a resource after writing to it', ->
   describe 'when the write was unsuccessful', ->
     beforeEach ->
       $httpBackend.expectPOST('/mock/1').respond 503
-      CachedResource.save {id: 1}, {magic: 'Attempt to save resource'}
+      resourceInstance = new CachedResource id: 1, magic: 'Attempt to save resource'
+      resourceInstance.$save()
       $httpBackend.flush()
 
     it 'returns a cached, saved version of the resource on read', ->
@@ -32,7 +33,8 @@ describe 'read a resource after writing to it', ->
   describe 'when the write was okay', ->
     beforeEach ->
       $httpBackend.expectPOST('/mock/2').respond 200, {id: 2, worked: 'fromWrite'}
-      CachedResource.save {id: 2}, {worked: 'fromWrite'}
+      resourceInstance = new CachedResource {id: 2, worked: 'fromWrite'}
+      resourceInstance.$save()
       $httpBackend.flush()
 
     it 'should return the cached saved version of the resource on read', ->

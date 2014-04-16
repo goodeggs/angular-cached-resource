@@ -125,11 +125,14 @@ app.factory '$cachedResource', ['$resource', '$timeout', '$q', '$log', ($resourc
           args.shift()
         else
           {}
-      postData = if instanceMethod then @ else args.shift()
+      resource = if instanceMethod
+          @
+        else
+          new CachedResource(args.shift())
       [success, error] = args
 
-      resource = @ || new CachedResource()
       resource.$resolved = false
+      params[param] = value for param, value of resource.$params()
 
       deferred = $q.defer()
       resource.$promise = deferred.promise
@@ -137,7 +140,7 @@ app.factory '$cachedResource', ['$resource', '$timeout', '$q', '$log', ($resourc
       deferred.promise.catch error if angular.isFunction(error)
 
       cacheEntry = new ResourceCacheEntry(CachedResource.$key, params)
-      cacheEntry.set(postData, true) unless angular.equals(cacheEntry.data, postData)
+      cacheEntry.set(resource, true) unless angular.equals(cacheEntry.data, resource)
 
       queueDeferred = $q.defer()
       queueDeferred.promise.then (value) ->

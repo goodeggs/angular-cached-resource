@@ -223,14 +223,18 @@ app.factory('$cachedResource', [
     };
     writeCache = function(action, CachedResource) {
       return function() {
-        var args, cacheEntry, deferred, error, instanceMethod, params, postData, queue, queueDeferred, resource, success;
+        var args, cacheEntry, deferred, error, instanceMethod, param, params, queue, queueDeferred, resource, success, value, _ref;
         instanceMethod = this instanceof CachedResource;
         args = Array.prototype.slice.call(arguments);
         params = !instanceMethod && angular.isObject(args[1]) ? args.shift() : instanceMethod && angular.isObject(args[0]) ? args.shift() : {};
-        postData = instanceMethod ? this : args.shift();
+        resource = instanceMethod ? this : new CachedResource(args.shift());
         success = args[0], error = args[1];
-        resource = this || new CachedResource();
         resource.$resolved = false;
+        _ref = resource.$params();
+        for (param in _ref) {
+          value = _ref[param];
+          params[param] = value;
+        }
         deferred = $q.defer();
         resource.$promise = deferred.promise;
         if (angular.isFunction(success)) {
@@ -240,8 +244,8 @@ app.factory('$cachedResource', [
           deferred.promise["catch"](error);
         }
         cacheEntry = new ResourceCacheEntry(CachedResource.$key, params);
-        if (!angular.equals(cacheEntry.data, postData)) {
-          cacheEntry.set(postData, true);
+        if (!angular.equals(cacheEntry.data, resource)) {
+          cacheEntry.set(resource, true);
         }
         queueDeferred = $q.defer();
         queueDeferred.promise.then(function(value) {
