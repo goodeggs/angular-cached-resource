@@ -19,14 +19,24 @@ app.factory '$cachedResource', ['$resource', '$timeout', '$q', '$log', ($resourc
   resourceManagerListener = (event) -> resourceManager.flushQueues()
   document.addEventListener 'online', resourceManagerListener
 
+  processReadArgs = (args) ->
+    # according to the ngResource documentation:
+    # Resource.action([parameters], [success], [error])
+    args = Array::slice.call args
+    params = if angular.isObject(args[0]) then args.shift() else {}
+    [success, error] = args
+    {params, success, error}
+
   readArrayCache = (name, CachedResource, boundParams) ->
-    (parameters) ->
+    ->
+      {params, success, error} = processReadArgs(arguments)
+
       resource = CachedResource.$resource[name].apply(CachedResource.$resource, arguments)
       resource.$httpPromise = resource.$promise
 
-      parameters = {} if angular.isFunction parameters
-      parameters ?= {}
-      cacheArrayEntry = new ResourceCacheArrayEntry(CachedResource.$key, parameters)
+      params = {} if angular.isFunction params
+      params ?= {}
+      cacheArrayEntry = new ResourceCacheArrayEntry(CachedResource.$key, params)
 
       resource.$httpPromise.then (response) ->
         cacheArrayEntry.set response.map (instance) ->
@@ -58,11 +68,7 @@ app.factory '$cachedResource', ['$resource', '$timeout', '$q', '$log', ($resourc
 
   readCache = (name, CachedResource) ->
     ->
-      # according to the ngResource documentation:
-      # Resource.action([parameters], [success], [error])
-      args = Array::slice.call arguments
-      params = if angular.isObject(args[0]) then args.shift() else {}
-      [success, error] = args
+      {params, success, error} = processReadArgs(arguments)
 
       cacheDeferred = $q.defer()
       cacheDeferred.promise.then success if angular.isFunction success
