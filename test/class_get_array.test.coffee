@@ -44,6 +44,11 @@ describe 'CachedResource.get array resource collections', ->
           done()
         $httpBackend.flush()
 
+      it 'populates the array with individual cachedResource instances', ->
+        expectSuccessfulGET()
+        $httpBackend.flush()
+        expect(resourceCollection[i].$cache).to.be.true for i in [0...4]
+
     describe 'have an $httpPromise that', ->
       {$httpPromise} = {}
 
@@ -85,7 +90,6 @@ describe 'CachedResource.get array resource collections', ->
         resourceCollection = CachedResource.query()
 
       it 'immediately contains data from the cache', ->
-
         expect(resourceCollection.length).to.equal 4
         expect(stringifyColorArray(resourceCollection)).to.eql stringifyColorArray(colors)
         $httpBackend.flush()

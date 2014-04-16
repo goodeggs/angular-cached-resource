@@ -25,55 +25,61 @@ app.factory '$cachedResource', ['$resource', '$timeout', '$q', '$log', ($resourc
     args = Array::slice.call args
     params = if angular.isObject(args[0]) then args.shift() else {}
     [success, error] = args
-    {params, success, error}
 
-  readArrayCache = (name, CachedResource, boundParams) ->
+    deferred = $q.defer()
+    deferred.promise.then success if angular.isFunction success
+    deferred.promise.catch error if angular.isFunction error
+
+    {params, deferred}
+
+  readArrayCache = (name, CachedResource) ->
     ->
-      {params, success, error} = processReadArgs(arguments)
+      {params, deferred: cacheDeferred} = processReadArgs(arguments)
+      httpDeferred = $q.defer()
 
-      resource = CachedResource.$resource[name].apply(CachedResource.$resource, arguments)
-      resource.$httpPromise = resource.$promise
+      arrayInstance = new Array()
+      arrayInstance.$promise = cacheDeferred.promise
+      arrayInstance.$httpPromise = httpDeferred.promise
 
-      params = {} if angular.isFunction params
-      params ?= {}
       cacheArrayEntry = new ResourceCacheArrayEntry(CachedResource.$key, params)
 
-      resource.$httpPromise.then (response) ->
-        cacheArrayEntry.set response.map (instance) ->
-          cacheInstanceParams = {}
-          for attribute, param of boundParams when typeof instance[attribute] != "object" && typeof instance[attribute] != "function"
-            cacheInstanceParams[param] = instance[attribute]
+      resource = CachedResource.$resource[name].apply(CachedResource.$resource, arguments)
+      resource.$promise.then ->
+        cachedResourceInstances = resource.map (resourceInstance) -> new CachedResource resourceInstance
+        arrayInstance.splice(0, arrayInstance.length, cachedResourceInstances...)
+        cacheDeferred.resolve arrayInstance unless cacheArrayEntry.value
+        httpDeferred.resolve arrayInstance
+      resource.$promise.catch (error) ->
+        cacheDeferred.reject error unless cacheArrayEntry.value
+        httpDeferred.reject error
 
-          if Object.keys(cacheInstanceParams).length == 0
+      arrayInstance.$httpPromise.then (response) ->
+        cacheArrayReferences = []
+        for instance in response
+          cacheInstanceParams = instance.$params()
+          if Object.keys(cacheInstanceParams).length is 0
             $log.error """
               instance #{instance} doesn't have any boundParams. Please, make sure you specified them in your resource's initialization, f.e. `{id: "@id"}`, or it won't be cached.
             """
           else
+            cacheArrayReferences.push cacheInstanceParams
             cacheInstanceEntry = new ResourceCacheEntry(CachedResource.$key, cacheInstanceParams)
             cacheInstanceEntry.set instance, false
-
-          cacheInstanceParams
+        cacheArrayEntry.set cacheArrayReferences
 
       if cacheArrayEntry.value
         for cacheInstanceParams in cacheArrayEntry.value
           cacheInstanceEntry = new ResourceCacheEntry(CachedResource.$key, cacheInstanceParams)
-          resource.push new CachedResource cacheInstanceEntry.value
+          arrayInstance.push new CachedResource cacheInstanceEntry.value
 
         # Resolve the promise as the cache is ready
-        deferred = $q.defer()
-        resource.$promise = deferred.promise
-        deferred.resolve resource
+        cacheDeferred.resolve arrayInstance
 
-      resource
+      arrayInstance
 
   readCache = (name, CachedResource) ->
     ->
-      {params, success, error} = processReadArgs(arguments)
-
-      cacheDeferred = $q.defer()
-      cacheDeferred.promise.then success if angular.isFunction success
-      cacheDeferred.promise.catch error if angular.isFunction error
-
+      {params, deferred: cacheDeferred} = processReadArgs(arguments)
       httpDeferred = $q.defer()
 
       instance = new CachedResource
@@ -170,16 +176,24 @@ app.factory '$cachedResource', ['$resource', '$timeout', '$q', '$log', ($resourc
 
     Resource = $resource.call(null, url, paramDefaults, actions)
 
+    isPermissibleBoundValue = (value) ->
+      angular.isDate(value) or angular.isNumber(value) or angular.isString(value)
+
     class CachedResource
+      $cache: true # right now this is just a flag, eventually it could be useful for cache introspection (see https://github.com/goodeggs/angular-cached-resource/issues/8)
       constructor: (attrs) ->
         angular.extend @, attrs
-
+      $params: ->
+        params = {}
+        for attribute, param of boundParams when isPermissibleBoundValue @[attribute]
+          params[param] = @[attribute]
+        params
       @$resource: Resource
       @$key: $key
 
     for name, params of actions
       handler = if params.method is 'GET' and params.isArray
-          readArrayCache(name, CachedResource, boundParams)
+          readArrayCache(name, CachedResource)
         else if params.method is 'GET'
           readCache(name, CachedResource)
         else if params.method in ['POST', 'PUT', 'DELETE']
