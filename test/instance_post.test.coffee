@@ -16,7 +16,7 @@ describe 'CachedResource::post', ->
     localStorage.clear()
 
   describe 'while online', ->
-    it 'saves the resource normally', ->
+    it 'POSTS the entire body of the resource', ->
       $httpBackend.expectPOST('/mock/1', { id: 1, notes: 'this is a saved note' }).respond
         id: 1
         notes: 'this is a saved note'
@@ -24,7 +24,7 @@ describe 'CachedResource::post', ->
       resourceInstance.$save()
       $httpBackend.flush()
 
-    it 'updates the resource from the response', ->
+    it 'modifies existing resource attributes based on the response', ->
       $httpBackend.expectPOST('/mock/1').respond
         id: 1
         notes: 'this is a different note'
