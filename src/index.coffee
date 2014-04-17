@@ -32,6 +32,21 @@ app.factory '$cachedResource', ['$resource', '$timeout', '$q', '$log', ($resourc
 
     {params, deferred}
 
+  # this is kind of like angular.extend(), except that if an attribute
+  # on newObject (or any of its children) is equivalent to the same
+  # attribute on oldObject, we won't overwrite it. This is useful if
+  # you are trying to keep track of deeply nested references to a
+  # resource's attributes from different scopes, for example.
+  modifyObjectInPlace = (oldObject, newObject) ->
+    # the `when` clauses below are horrible hacks that needs to be fixed
+    for key in Object.keys(oldObject) when key[0] isnt '$'
+      delete oldObject[key] unless newObject[key]?
+    for key in Object.keys(newObject) when key[0] isnt '$'
+      if angular.isObject(oldObject[key]) and angular.isObject(newObject[key])
+        modifyObjectInPlace(oldObject[key], newObject[key])
+      else if not angular.equals(oldObject[key], newObject[key])
+        oldObject[key] = newObject[key]
+
   readArrayCache = (name, CachedResource) ->
     ->
       {params, deferred: cacheDeferred} = processReadArgs(arguments)
@@ -144,12 +159,7 @@ app.factory '$cachedResource', ['$resource', '$timeout', '$q', '$log', ($resourc
 
       queueDeferred = $q.defer()
       queueDeferred.promise.then (httpResource) ->
-        for key in Object.keys(resource)
-          continue if key[0] is '$' # this is a horrible hack that needs to be fixed
-          delete resource[key] unless httpResource[key]?
-        for key in Object.keys(httpResource)
-          continue if key[0] is '$' # this is a horrible hack that needs to be fixed
-          resource[key] = httpResource[key]
+        modifyObjectInPlace(resource, httpResource)
         resource.$resolved = true
         deferred.resolve(resource)
       queueDeferred.promise.catch deferred.reject

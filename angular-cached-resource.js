@@ -100,7 +100,7 @@ app = angular.module('ngCachedResource', ['ngResource']);
 
 app.factory('$cachedResource', [
   '$resource', '$timeout', '$q', '$log', function($resource, $timeout, $q, $log) {
-    var processReadArgs, readArrayCache, readCache, resourceManager, writeCache;
+    var modifyObjectInPlace, processReadArgs, readArrayCache, readCache, resourceManager, writeCache;
     resourceManager = new CachedResourceManager($timeout);
     if (resourceManagerListener) {
       document.removeEventListener('online', resourceManagerListener);
@@ -125,6 +125,33 @@ app.factory('$cachedResource', [
         params: params,
         deferred: deferred
       };
+    };
+    modifyObjectInPlace = function(oldObject, newObject) {
+      var key, _i, _j, _len, _len1, _ref, _ref1, _results;
+      _ref = Object.keys(oldObject);
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        key = _ref[_i];
+        if (key[0] !== '$') {
+          if (newObject[key] == null) {
+            delete oldObject[key];
+          }
+        }
+      }
+      _ref1 = Object.keys(newObject);
+      _results = [];
+      for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
+        key = _ref1[_j];
+        if (key[0] !== '$') {
+          if (angular.isObject(oldObject[key]) && angular.isObject(newObject[key])) {
+            _results.push(modifyObjectInPlace(oldObject[key], newObject[key]));
+          } else if (!angular.equals(oldObject[key], newObject[key])) {
+            _results.push(oldObject[key] = newObject[key]);
+          } else {
+            _results.push(void 0);
+          }
+        }
+      }
+      return _results;
     };
     readArrayCache = function(name, CachedResource) {
       return function() {
@@ -249,25 +276,7 @@ app.factory('$cachedResource', [
         }
         queueDeferred = $q.defer();
         queueDeferred.promise.then(function(httpResource) {
-          var key, _i, _j, _len, _len1, _ref1, _ref2;
-          _ref1 = Object.keys(resource);
-          for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
-            key = _ref1[_i];
-            if (key[0] === '$') {
-              continue;
-            }
-            if (httpResource[key] == null) {
-              delete resource[key];
-            }
-          }
-          _ref2 = Object.keys(httpResource);
-          for (_j = 0, _len1 = _ref2.length; _j < _len1; _j++) {
-            key = _ref2[_j];
-            if (key[0] === '$') {
-              continue;
-            }
-            resource[key] = httpResource[key];
-          }
+          modifyObjectInPlace(resource, httpResource);
           resource.$resolved = true;
           return deferred.resolve(resource);
         });
