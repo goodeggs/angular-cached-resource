@@ -146,10 +146,10 @@ app.factory '$cachedResource', ['$resource', '$timeout', '$q', '$log', ($resourc
       queueDeferred.promise.then (httpResource) ->
         for key in Object.keys(resource)
           continue if key[0] is '$' # this is a horrible hack that needs to be fixed
-          if httpResource[key]?
-            resource[key] = httpResource[key]
-          else
-            delete resource[key]
+          delete resource[key] unless httpResource[key]?
+        for key in Object.keys(httpResource)
+          continue if key[0] is '$' # this is a horrible hack that needs to be fixed
+          resource[key] = httpResource[key]
         resource.$resolved = true
         deferred.resolve(resource)
       queueDeferred.promise.catch deferred.reject

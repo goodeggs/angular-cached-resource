@@ -38,6 +38,12 @@ describe 'CachedResource::post', ->
       $httpBackend.flush()
       expect(resourceInstance.notes).to.be.undefined
 
+    it 'adds new resource attributes if the response has them', ->
+      $httpBackend.expectPOST('/mock/1').respond id: 1, notes: 'this is a saved note', animal: 'squid'
+      resourceInstance.$save()
+      $httpBackend.flush()
+      expect(resourceInstance.animal).to.equal 'squid'
+
   describe 'while offline', ->
     it 'allows you to save twice, even if it didn’t succeed the first time', ->
       $httpBackend.expectPOST('/mock/1', { id: 1, notes: 'this is a saved note' }).respond 500
