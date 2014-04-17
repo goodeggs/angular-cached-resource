@@ -22,7 +22,7 @@ describe 'CachedResource::post', ->
       $httpBackend.flush()
 
     it 'modifies existing resource attributes based on the response', ->
-      $httpBackend.expectPOST('/mock/1').respond
+      $httpBackend.whenPOST('/mock/1').respond
         id: 1
         notes: 'this is a different note'
       resourceInstance.$save()
@@ -30,13 +30,13 @@ describe 'CachedResource::post', ->
       expect(resourceInstance.notes).to.equal 'this is a different note'
 
     it 'removes resource attributes if the response does not have them', ->
-      $httpBackend.expectPOST('/mock/1').respond id: 1
+      $httpBackend.whenPOST('/mock/1').respond id: 1
       resourceInstance.$save()
       $httpBackend.flush()
       expect(resourceInstance.notes).to.be.undefined
 
     it 'adds new resource attributes if the response has them', ->
-      $httpBackend.expectPOST('/mock/1').respond id: 1, notes: 'this is a saved note', animal: 'squid'
+      $httpBackend.whenPOST('/mock/1').respond id: 1, notes: 'this is a saved note', animal: 'squid'
       resourceInstance.$save()
       $httpBackend.flush()
       expect(resourceInstance.animal).to.equal 'squid'
