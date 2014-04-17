@@ -17,10 +17,7 @@ describe 'CachedResource::post', ->
 
   describe 'while online', ->
     it 'POSTS the entire body of the resource', ->
-      $httpBackend.expectPOST('/mock/1', { id: 1, notes: 'this is a saved note' }).respond
-        id: 1
-        notes: 'this is a saved note'
-
+      $httpBackend.expectPOST('/mock/1', { id: 1, notes: 'this is a saved note' }).respond 200
       resourceInstance.$save()
       $httpBackend.flush()
 
