@@ -32,6 +32,12 @@ describe 'CachedResource::post', ->
       $httpBackend.flush()
       expect(resourceInstance.notes).to.equal 'this is a different note'
 
+    it 'removes resource attributes if the response does not have them', ->
+      $httpBackend.expectPOST('/mock/1').respond id: 1
+      resourceInstance.$save()
+      $httpBackend.flush()
+      expect(resourceInstance.notes).to.be.undefined
+
   describe 'while offline', ->
     it 'allows you to save twice, even if it didn’t succeed the first time', ->
       $httpBackend.expectPOST('/mock/1', { id: 1, notes: 'this is a saved note' }).respond 500

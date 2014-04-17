@@ -143,8 +143,13 @@ app.factory '$cachedResource', ['$resource', '$timeout', '$q', '$log', ($resourc
       cacheEntry.set(resource, true) unless angular.equals(cacheEntry.data, resource)
 
       queueDeferred = $q.defer()
-      queueDeferred.promise.then (value) ->
-        angular.extend(resource, value)
+      queueDeferred.promise.then (httpResource) ->
+        for key in Object.keys(resource)
+          continue if key[0] is '$' # this is a horrible hack that needs to be fixed
+          if httpResource[key]?
+            resource[key] = httpResource[key]
+          else
+            delete resource[key]
         resource.$resolved = true
         deferred.resolve(resource)
       queueDeferred.promise.catch deferred.reject
