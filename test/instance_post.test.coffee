@@ -8,12 +8,7 @@ describe 'CachedResource::post', ->
       $httpBackend = $injector.get '$httpBackend'
       $timeout = $injector.get '$timeout'
       CachedResource = $cachedResource 'instance-post-test', '/mock/:id', {id: '@id'}
-
-      $httpBackend.expectGET('/mock/1').respond { id: 1, notes: 'this is a note' }
-      resourceInstance = CachedResource.get { id: 1 }
-      $httpBackend.flush()
-
-      resourceInstance.notes = 'this is a saved note'
+      resourceInstance = new CachedResource id: 1, notes: 'this is a saved note'
 
   afterEach ->
     $httpBackend.verifyNoOutstandingExpectation()
