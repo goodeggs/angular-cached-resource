@@ -115,7 +115,7 @@ app = angular.module('ngCachedResource', ['ngResource']);
 
 app.factory('$cachedResource', [
   '$resource', '$timeout', '$q', '$log', function($resource, $timeout, $q, $log) {
-    var modifyObjectInPlace, processReadArgs, readArrayCache, readCache, resourceManager, writeCache;
+    var $cachedResource, modifyObjectInPlace, processReadArgs, readArrayCache, readCache, resourceManager, writeCache;
     resourceManager = new CachedResourceManager($timeout);
     if (resourceManagerListener) {
       document.removeEventListener('online', resourceManagerListener);
@@ -302,7 +302,7 @@ app.factory('$cachedResource', [
         return resource;
       };
     };
-    return function() {
+    $cachedResource = function() {
       var $key, CachedResource, Resource, actions, arg, args, boundParams, handler, isPermissibleBoundValue, name, param, paramDefault, paramDefaults, params, url, _ref;
       args = Array.prototype.slice.call(arguments);
       $key = args.shift();
@@ -368,6 +368,10 @@ app.factory('$cachedResource', [
       resourceManager.flushQueues();
       return CachedResource;
     };
+    $cachedResource.clear = function() {
+      return localStorage.clear();
+    };
+    return $cachedResource;
   }
 ]);
 

@@ -170,7 +170,7 @@ app.factory '$cachedResource', ['$resource', '$timeout', '$q', '$log', ($resourc
 
       resource
 
-  return ->
+  $cachedResource = ->
     # we are mimicking the API of $resource, which is:
     # $resource(url, [paramDefaults], [actions])
     # ...but adding an additional cacheKey param in the beginning, so we have:
@@ -224,6 +224,11 @@ app.factory '$cachedResource', ['$resource', '$timeout', '$q', '$log', ($resourc
     resourceManager.flushQueues()
 
     CachedResource
+
+  $cachedResource.clear = ->
+    localStorage.clear()
+
+  return $cachedResource
 ]
 
 module?.exports = app
