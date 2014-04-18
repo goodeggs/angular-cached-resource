@@ -19,3 +19,8 @@ describe 'a full localStorage cache', ->
     resourceInstance = CachedResource.get id: 42
     $httpBackend.flush()
     expect(resourceInstance.question).to.equal 'The ultimate question of life, the universe, and everything'
+
+  it 'still succeeds at POST requests', ->
+    $httpBackend.expectPOST('/mock/42', player: 'Jackie Robinson').respond 200
+    CachedResource.save {id: 42}, {player: 'Jackie Robinson'}
+    $httpBackend.flush()
