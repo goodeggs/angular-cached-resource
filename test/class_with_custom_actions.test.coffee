@@ -1,4 +1,4 @@
-describe 'resource instance returned by CachedResource.get', ->
+describe 'class with custom actions', ->
   {CachedResource, $httpBackend, resourceInstance} = {}
 
   beforeEach ->
@@ -6,7 +6,7 @@ describe 'resource instance returned by CachedResource.get', ->
     inject ($injector) ->
       $cachedResource = $injector.get '$cachedResource'
       $httpBackend = $injector.get '$httpBackend'
-      CachedResource = $cachedResource 'class-get-test', '/mock/:id', {}, 
+      CachedResource = $cachedResource 'class-with-custom-actions', '/mock/:id', {},
         save:
           method: "POST"
 
