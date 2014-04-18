@@ -24,3 +24,12 @@ describe '$cachedResource.clear()', ->
     it 'removes all cache entries', ->
       $cachedResource.clear()
       expect(localStorage.length).to.equal 0
+
+    describe 'and something else in localStorage', ->
+
+      beforeEach ->
+        localStorage.setItem('shoop', 'de whoop')
+
+      it 'leaves unrelated localStorage entries alone', ->
+        $cachedResource.clear()
+        expect(localStorage.getItem('shoop')).to.equal 'de whoop'

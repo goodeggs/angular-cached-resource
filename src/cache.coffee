@@ -25,3 +25,7 @@ module.exports =
       memoryCache[key] = stringValue
 
     value
+
+  clearAll: ->
+    keys = (localStorage.key i for i in [0...localStorage.length])
+    localStorage.removeItem(key) for key in keys when key.indexOf(LOCAL_STORAGE_PREFIX) is 0

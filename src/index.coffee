@@ -8,6 +8,8 @@ DEFAULT_ACTIONS =
 ResourceCacheEntry = require './resource_cache_entry'
 ResourceCacheArrayEntry = require './resource_cache_array_entry'
 CachedResourceManager = require './cached_resource_manager'
+cache = require './cache'
+
 resourceManagerListener = null
 
 app = angular.module 'ngCachedResource', ['ngResource']
@@ -225,8 +227,7 @@ app.factory '$cachedResource', ['$resource', '$timeout', '$q', '$log', ($resourc
 
     CachedResource
 
-  $cachedResource.clear = ->
-    localStorage.clear()
+  $cachedResource.clear = cache.clearAll
 
   return $cachedResource
 ]
