@@ -389,7 +389,7 @@ app.factory('$cachedResource', [
       resourceManager.flushQueues();
       return CachedResource;
     };
-    $cachedResource.clear = cache.clearAll;
+    $cachedResource.clearAll = cache.clearAll;
     return $cachedResource;
   }
 ]);

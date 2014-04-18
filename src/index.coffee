@@ -227,7 +227,7 @@ app.factory '$cachedResource', ['$resource', '$timeout', '$q', '$log', ($resourc
 
     CachedResource
 
-  $cachedResource.clear = cache.clearAll
+  $cachedResource.clearAll = cache.clearAll
 
   return $cachedResource
 ]
