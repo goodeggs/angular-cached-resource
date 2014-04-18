@@ -1,6 +1,8 @@
 LOCAL_STORAGE_PREFIX = 'cachedResource://'
 
-module.exports = if window.localStorage?
+{localStorage} = window
+
+module.exports = if localStorage?
 
   getItem: (key, fallback) ->
     item = localStorage.getItem("#{LOCAL_STORAGE_PREFIX}#{key}")
