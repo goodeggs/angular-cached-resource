@@ -12,9 +12,9 @@ module.exports = if window.localStorage?
 
 else
 
-  getItem: (key, fallback) -> 
+  getItem: (key, fallback) ->
     fallback
-    
-  setItem: (key, value) -> 
+
+  setItem: (key, value) ->
     value
 
