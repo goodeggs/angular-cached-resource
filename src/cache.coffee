@@ -9,7 +9,10 @@ module.exports = if localStorage?
     if item? then angular.fromJson(item) else fallback
 
   setItem: (key, value) ->
-    localStorage.setItem("#{LOCAL_STORAGE_PREFIX}#{key}", angular.toJson value)
+    try
+      localStorage.setItem("#{LOCAL_STORAGE_PREFIX}#{key}", angular.toJson value)
+    catch
+      # ignore failed write, for now
     value
 
 else
