@@ -95,7 +95,7 @@ npm install angular-cached-resource
 
 ## Details
 
-Asking for a cached resource with `get` or `query` will do the following:
+**Asking for a cached resource with `get` or `query` will do the following:**
 
 1. If the request has not been made previously, it will immediately return a `resource` object,
    just like usual. The request will go through to the server, and when the server responds, the
@@ -105,7 +105,7 @@ Asking for a cached resource with `get` or `query` will do the following:
    is pre-populated from the cache. The request will still attempt to go through to the server,
    and if the server responds, the cache entry will be updated.
 
-Updating a CachedResource object will do the following:
+**Updating a CachedResource object will do the following:**
 
 1. Add the resource update action to a queue.
 2. Immediately attempt to flush the queue by sending all the network requests in the queue.
@@ -113,6 +113,11 @@ Updating a CachedResource object will do the following:
    on the associated resources (only if the queue entry was made after the page was loaded)
 4. If the queue contains requests, attempt to flush it once per minute OR whenever the browser
    sends a [navigator.onOnline][onOnline] event.
+
+**What if localStorage doesn't exist, or if the browser is out of space?**
+
+In either of these cases, `$cachedResource` will make sure all of your requests still happen.
+Things end up working just like the `$resource` module, with none of the caching benefits.
 
 ------
 
