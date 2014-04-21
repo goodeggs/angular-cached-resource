@@ -198,7 +198,7 @@ app.factory('$cachedResource', [
         arrayInstance.$promise = cacheDeferred.promise;
         arrayInstance.$httpPromise = httpDeferred.promise;
         cacheArrayEntry = new ResourceCacheArrayEntry(CachedResource.$key, params);
-        resource = CachedResource.$resource[name].apply(CachedResource.$resource, arguments);
+        resource = CachedResource.$resource[name](params);
         resource.$promise.then(function() {
           var cachedResourceInstances;
           cachedResourceInstances = resource.map(function(resourceInstance) {

@@ -60,7 +60,7 @@ app.factory '$cachedResource', ['$resource', '$timeout', '$q', '$log', ($resourc
 
       cacheArrayEntry = new ResourceCacheArrayEntry(CachedResource.$key, params)
 
-      resource = CachedResource.$resource[name].apply(CachedResource.$resource, arguments)
+      resource = CachedResource.$resource[name](params)
       resource.$promise.then ->
         cachedResourceInstances = resource.map (resourceInstance) -> new CachedResource resourceInstance
         arrayInstance.splice(0, arrayInstance.length, cachedResourceInstances...)
