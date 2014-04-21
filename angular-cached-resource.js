@@ -40,22 +40,37 @@ module.exports = {
     }
     return value;
   },
-  clearAll: function() {
-    var i, key, keys, _i, _len, _results;
-    keys = (function() {
-      var _i, _ref, _results;
-      _results = [];
-      for (i = _i = 0, _ref = localStorage.length; 0 <= _ref ? _i < _ref : _i > _ref; i = 0 <= _ref ? ++_i : --_i) {
-        _results.push(localStorage.key(i));
+  clearAll: function(_arg) {
+    var exceptFor, exception, i, key, keys, skipKey, _i, _j, _k, _len, _len1, _ref, _results;
+    exceptFor = (_arg != null ? _arg : {}).exceptFor;
+    if (exceptFor == null) {
+      exceptFor = [];
+    }
+    exceptFor = exceptFor.map(buildKey);
+    keys = [];
+    for (i = _i = 0, _ref = localStorage.length; 0 <= _ref ? _i < _ref : _i > _ref; i = 0 <= _ref ? ++_i : --_i) {
+      key = localStorage.key(i);
+      if (key.indexOf(LOCAL_STORAGE_PREFIX) !== 0) {
+        continue;
       }
-      return _results;
-    })();
+      skipKey = false;
+      for (_j = 0, _len = exceptFor.length; _j < _len; _j++) {
+        exception = exceptFor[_j];
+        if (!(key.indexOf(exception) === 0)) {
+          continue;
+        }
+        skipKey = true;
+        break;
+      }
+      if (skipKey) {
+        continue;
+      }
+      keys.push(key);
+    }
     _results = [];
-    for (_i = 0, _len = keys.length; _i < _len; _i++) {
-      key = keys[_i];
-      if (key.indexOf(LOCAL_STORAGE_PREFIX) === 0) {
-        _results.push(localStorage.removeItem(key));
-      }
+    for (_k = 0, _len1 = keys.length; _k < _len1; _k++) {
+      key = keys[_k];
+      _results.push(localStorage.removeItem(key));
     }
     return _results;
   }

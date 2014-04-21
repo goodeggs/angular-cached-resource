@@ -25,6 +25,10 @@ describe '$cachedResource.clearAll()', ->
       $cachedResource.clearAll()
       expect(localStorage.length).to.equal 0
 
+    it 'removes all cache entries with exceptions', ->
+      $cachedResource.clearAll exceptFor: ['clearing-cache-animal', 'clearing-cache-vegetable']
+      expect(localStorage.length).to.equal 12
+
     describe 'and something else in localStorage', ->
 
       beforeEach ->
