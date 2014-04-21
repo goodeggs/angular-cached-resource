@@ -2,6 +2,7 @@ describe 'CachedResource.$clear()', ->
   {CachedResource, $cachedResource, $httpBackend} = {}
 
   beforeEach ->
+    localStorage.clear() # TODO this should not be actually necessary
     module('ngCachedResource')
     inject ($injector) ->
       $cachedResource = $injector.get '$cachedResource'
