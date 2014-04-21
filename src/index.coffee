@@ -208,7 +208,7 @@ app.factory '$cachedResource', ['$resource', '$timeout', '$q', '$log', ($resourc
         for attribute, param of boundParams when isPermissibleBoundValue @[attribute]
           params[param] = @[attribute]
         params
-      @$clear: ->
+      @$clearAll: ->
         cache.clear $key
       @$resource: Resource
       @$key: $key

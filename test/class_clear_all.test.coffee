@@ -1,4 +1,4 @@
-describe 'CachedResource.$clear()', ->
+describe 'CachedResource.$clearAll()', ->
   {CachedResource, $cachedResource, $httpBackend} = {}
 
   beforeEach ->
@@ -27,5 +27,5 @@ describe 'CachedResource.$clear()', ->
       $httpBackend.flush()
 
     it 'should remove all entries from the cache', ->
-      CachedResource.$clear()
+      CachedResource.$clearAll()
       expect(localStorage.length).to.equal 0

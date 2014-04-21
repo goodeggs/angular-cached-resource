@@ -408,7 +408,7 @@ app.factory('$cachedResource', [
           return params;
         };
 
-        CachedResource.$clear = function() {
+        CachedResource.$clearAll = function() {
           return cache.clear($key);
         };
 
