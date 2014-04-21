@@ -88,6 +88,10 @@ CachedResourceManager = (function() {
     this.queuesByKey = {};
   }
 
+  CachedResourceManager.prototype.keys = function() {
+    return Object.keys(this.queuesByKey);
+  };
+
   CachedResourceManager.prototype.add = function(CachedResource) {
     return this.queuesByKey[CachedResource.$key] = new ResourceWriteQueue(CachedResource, this.$timeout);
   };
@@ -405,6 +409,11 @@ app.factory('$cachedResource', [
       return CachedResource;
     };
     $cachedResource.clearAll = cache.clearAll;
+    $cachedResource.clearUndefined = function() {
+      return cache.clearAll({
+        exceptFor: resourceManager.keys()
+      });
+    };
     return $cachedResource;
   }
 ]);

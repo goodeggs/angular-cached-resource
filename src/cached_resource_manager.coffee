@@ -4,6 +4,9 @@ class CachedResourceManager
   constructor: (@$timeout) ->
     @queuesByKey = {}
 
+  keys: ->
+    Object.keys @queuesByKey
+
   add: (CachedResource) ->
     @queuesByKey[CachedResource.$key] = new ResourceWriteQueue(CachedResource, @$timeout)
 

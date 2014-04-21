@@ -228,6 +228,8 @@ app.factory '$cachedResource', ['$resource', '$timeout', '$q', '$log', ($resourc
     CachedResource
 
   $cachedResource.clearAll = cache.clearAll
+  $cachedResource.clearUndefined = ->
+    cache.clearAll exceptFor: resourceManager.keys()
 
   return $cachedResource
 ]

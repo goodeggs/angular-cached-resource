@@ -10,6 +10,7 @@ describe '$cachedResource.clearAll()', ->
   afterEach ->
     $httpBackend.verifyNoOutstandingExpectation()
     $httpBackend.verifyNoOutstandingRequest()
+    localStorage.clear()
 
   describe 'with a populated cache', ->
 
