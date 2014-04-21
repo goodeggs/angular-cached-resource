@@ -26,26 +26,25 @@ module.exports =
 
     value
 
-  clear: (key) ->
-    key = buildKey(key)
-    cacheKeys = [0...localStorage.length].map (i) -> localStorage.key(i)
-    localStorage.removeItem cacheKey for cacheKey in cacheKeys when cacheKey.indexOf(key) is 0
+  clear: ({key, exceptFor} = {}) ->
+    key ?= ''
+    key = buildKey key
 
-  clearAll: ({exceptFor} = {}) ->
     exceptFor ?= []
     exceptFor = exceptFor.map buildKey
 
-    keys = []
+    cacheKeys = []
     for i in [0...localStorage.length]
-      key = localStorage.key i
-      continue unless key.indexOf(LOCAL_STORAGE_PREFIX) is 0
+      cacheKey = localStorage.key i
+      continue unless cacheKey.indexOf(key) is 0
 
       skipKey = no
-      for exception in exceptFor when key.indexOf(exception) is 0
+      for exception in exceptFor when cacheKey.indexOf(exception) is 0
         skipKey = yes
         break
+
       continue if skipKey
 
-      keys.push key
+      cacheKeys.push cacheKey
 
-    localStorage.removeItem(key) for key in keys
+    localStorage.removeItem(cacheKey) for cacheKey in cacheKeys

@@ -40,42 +40,27 @@ module.exports = {
     }
     return value;
   },
-  clear: function(key) {
-    var cacheKey, cacheKeys, _i, _j, _len, _ref, _results, _results1;
-    key = buildKey(key);
-    cacheKeys = (function() {
-      _results = [];
-      for (var _i = 0, _ref = localStorage.length; 0 <= _ref ? _i < _ref : _i > _ref; 0 <= _ref ? _i++ : _i--){ _results.push(_i); }
-      return _results;
-    }).apply(this).map(function(i) {
-      return localStorage.key(i);
-    });
-    _results1 = [];
-    for (_j = 0, _len = cacheKeys.length; _j < _len; _j++) {
-      cacheKey = cacheKeys[_j];
-      if (cacheKey.indexOf(key) === 0) {
-        _results1.push(localStorage.removeItem(cacheKey));
-      }
+  clear: function(_arg) {
+    var cacheKey, cacheKeys, exceptFor, exception, i, key, skipKey, _i, _j, _k, _len, _len1, _ref, _ref1, _results;
+    _ref = _arg != null ? _arg : {}, key = _ref.key, exceptFor = _ref.exceptFor;
+    if (key == null) {
+      key = '';
     }
-    return _results1;
-  },
-  clearAll: function(_arg) {
-    var exceptFor, exception, i, key, keys, skipKey, _i, _j, _k, _len, _len1, _ref, _results;
-    exceptFor = (_arg != null ? _arg : {}).exceptFor;
+    key = buildKey(key);
     if (exceptFor == null) {
       exceptFor = [];
     }
     exceptFor = exceptFor.map(buildKey);
-    keys = [];
-    for (i = _i = 0, _ref = localStorage.length; 0 <= _ref ? _i < _ref : _i > _ref; i = 0 <= _ref ? ++_i : --_i) {
-      key = localStorage.key(i);
-      if (key.indexOf(LOCAL_STORAGE_PREFIX) !== 0) {
+    cacheKeys = [];
+    for (i = _i = 0, _ref1 = localStorage.length; 0 <= _ref1 ? _i < _ref1 : _i > _ref1; i = 0 <= _ref1 ? ++_i : --_i) {
+      cacheKey = localStorage.key(i);
+      if (cacheKey.indexOf(key) !== 0) {
         continue;
       }
       skipKey = false;
       for (_j = 0, _len = exceptFor.length; _j < _len; _j++) {
         exception = exceptFor[_j];
-        if (!(key.indexOf(exception) === 0)) {
+        if (!(cacheKey.indexOf(exception) === 0)) {
           continue;
         }
         skipKey = true;
@@ -84,12 +69,12 @@ module.exports = {
       if (skipKey) {
         continue;
       }
-      keys.push(key);
+      cacheKeys.push(cacheKey);
     }
     _results = [];
-    for (_k = 0, _len1 = keys.length; _k < _len1; _k++) {
-      key = keys[_k];
-      _results.push(localStorage.removeItem(key));
+    for (_k = 0, _len1 = cacheKeys.length; _k < _len1; _k++) {
+      cacheKey = cacheKeys[_k];
+      _results.push(localStorage.removeItem(cacheKey));
     }
     return _results;
   }
@@ -235,7 +220,7 @@ app.factory('$cachedResource', [
         arrayInstance = new Array();
         arrayInstance.$promise = cacheDeferred.promise;
         arrayInstance.$httpPromise = httpDeferred.promise;
-        cacheArrayEntry = new ResourceCacheArrayEntry(CachedResource.$key, params);
+        cacheArrayEntry = new ResourceCacheArrayEntry(CachedResource.$key, params).load();
         resource = CachedResource.$resource[name](params);
         resource.$promise.then(function() {
           var cachedResourceInstances;
@@ -264,7 +249,7 @@ app.factory('$cachedResource', [
               $log.error("instance " + instance + " doesn't have any boundParams. Please, make sure you specified them in your resource's initialization, f.e. `{id: \"@id\"}`, or it won't be cached.");
             } else {
               cacheArrayReferences.push(cacheInstanceParams);
-              cacheInstanceEntry = new ResourceCacheEntry(CachedResource.$key, cacheInstanceParams);
+              cacheInstanceEntry = new ResourceCacheEntry(CachedResource.$key, cacheInstanceParams).load();
               cacheInstanceEntry.set(instance, false);
             }
           }
@@ -274,7 +259,7 @@ app.factory('$cachedResource', [
           _ref1 = cacheArrayEntry.value;
           for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
             cacheInstanceParams = _ref1[_i];
-            cacheInstanceEntry = new ResourceCacheEntry(CachedResource.$key, cacheInstanceParams);
+            cacheInstanceEntry = new ResourceCacheEntry(CachedResource.$key, cacheInstanceParams).load();
             arrayInstance.push(new CachedResource(cacheInstanceEntry.value));
           }
           cacheDeferred.resolve(arrayInstance);
@@ -291,7 +276,7 @@ app.factory('$cachedResource', [
           $promise: cacheDeferred.promise,
           $httpPromise: httpDeferred.promise
         });
-        cacheEntry = new ResourceCacheEntry(CachedResource.$key, params);
+        cacheEntry = new ResourceCacheEntry(CachedResource.$key, params).load();
         readHttp = function() {
           var resource;
           resource = CachedResource.$resource[name].call(CachedResource.$resource, params);
@@ -344,7 +329,7 @@ app.factory('$cachedResource', [
         if (angular.isFunction(error)) {
           deferred.promise["catch"](error);
         }
-        cacheEntry = new ResourceCacheEntry(CachedResource.$key, params);
+        cacheEntry = new ResourceCacheEntry(CachedResource.$key, params).load();
         if (!angular.equals(cacheEntry.data, resource)) {
           cacheEntry.set(resource, true);
         }
@@ -408,8 +393,19 @@ app.factory('$cachedResource', [
           return params;
         };
 
-        CachedResource.$clearAll = function() {
-          return cache.clear($key);
+        CachedResource.$clearAll = function(_arg) {
+          var exceptFor;
+          exceptFor = (_arg != null ? _arg : {}).exceptFor;
+          if (exceptFor == null) {
+            exceptFor = [];
+          }
+          exceptFor = exceptFor.map(function(params) {
+            return new ResourceCacheEntry($key, params).key;
+          });
+          return cache.clear({
+            key: $key,
+            exceptFor: exceptFor
+          });
         };
 
         CachedResource.$resource = Resource;
@@ -431,9 +427,9 @@ app.factory('$cachedResource', [
       resourceManager.flushQueues();
       return CachedResource;
     };
-    $cachedResource.clearAll = cache.clearAll;
+    $cachedResource.clearAll = cache.clear;
     $cachedResource.clearUndefined = function() {
-      return cache.clearAll({
+      return cache.clear({
         exceptFor: resourceManager.keys()
       });
     };
@@ -482,7 +478,7 @@ ResourceCacheEntry = (function() {
   ResourceCacheEntry.prototype.defaultValue = {};
 
   function ResourceCacheEntry(resourceKey, params) {
-    var param, paramKeys, _ref;
+    var param, paramKeys;
     this.setKey(resourceKey);
     paramKeys = angular.isObject(params) ? Object.keys(params).sort() : [];
     if (paramKeys.length) {
@@ -496,8 +492,13 @@ ResourceCacheEntry = (function() {
         return _results;
       })()).join('&');
     }
-    _ref = Cache.getItem(this.key, this.defaultValue), this.value = _ref.value, this.dirty = _ref.dirty;
   }
+
+  ResourceCacheEntry.prototype.load = function() {
+    var _ref;
+    _ref = Cache.getItem(this.key, this.defaultValue), this.value = _ref.value, this.dirty = _ref.dirty;
+    return this;
+  };
 
   ResourceCacheEntry.prototype.setKey = function(key) {
     this.key = key;
@@ -647,7 +648,7 @@ ResourceWriteQueue = (function() {
 
   ResourceWriteQueue.prototype._processEntry = function(entry, done) {
     var cacheEntry, onFailure, onSuccess;
-    cacheEntry = new ResourceCacheEntry(this.CachedResource.$key, entry.params);
+    cacheEntry = new ResourceCacheEntry(this.CachedResource.$key, entry.params).load();
     onSuccess = (function(_this) {
       return function(value) {
         var _ref;

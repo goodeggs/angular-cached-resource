@@ -51,7 +51,7 @@ class ResourceWriteQueue
     entry for entry in @queue when angular.equals(params, entry.params)
 
   _processEntry: (entry, done) ->
-    cacheEntry = new ResourceCacheEntry(@CachedResource.$key, entry.params)
+    cacheEntry = new ResourceCacheEntry(@CachedResource.$key, entry.params).load()
     onSuccess = (value) =>
       @removeEntry entry
       cacheEntry.setClean()

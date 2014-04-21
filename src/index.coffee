@@ -58,7 +58,7 @@ app.factory '$cachedResource', ['$resource', '$timeout', '$q', '$log', ($resourc
       arrayInstance.$promise = cacheDeferred.promise
       arrayInstance.$httpPromise = httpDeferred.promise
 
-      cacheArrayEntry = new ResourceCacheArrayEntry(CachedResource.$key, params)
+      cacheArrayEntry = new ResourceCacheArrayEntry(CachedResource.$key, params).load()
 
       resource = CachedResource.$resource[name](params)
       resource.$promise.then ->
@@ -80,13 +80,13 @@ app.factory '$cachedResource', ['$resource', '$timeout', '$q', '$log', ($resourc
             """
           else
             cacheArrayReferences.push cacheInstanceParams
-            cacheInstanceEntry = new ResourceCacheEntry(CachedResource.$key, cacheInstanceParams)
+            cacheInstanceEntry = new ResourceCacheEntry(CachedResource.$key, cacheInstanceParams).load()
             cacheInstanceEntry.set instance, false
         cacheArrayEntry.set cacheArrayReferences
 
       if cacheArrayEntry.value
         for cacheInstanceParams in cacheArrayEntry.value
-          cacheInstanceEntry = new ResourceCacheEntry(CachedResource.$key, cacheInstanceParams)
+          cacheInstanceEntry = new ResourceCacheEntry(CachedResource.$key, cacheInstanceParams).load()
           arrayInstance.push new CachedResource cacheInstanceEntry.value
 
         # Resolve the promise as the cache is ready
@@ -103,7 +103,7 @@ app.factory '$cachedResource', ['$resource', '$timeout', '$q', '$log', ($resourc
         $promise:     cacheDeferred.promise
         $httpPromise: httpDeferred.promise
 
-      cacheEntry = new ResourceCacheEntry(CachedResource.$key, params)
+      cacheEntry = new ResourceCacheEntry(CachedResource.$key, params).load()
 
       readHttp = ->
         resource = CachedResource.$resource[name].call(CachedResource.$resource, params)
@@ -156,7 +156,7 @@ app.factory '$cachedResource', ['$resource', '$timeout', '$q', '$log', ($resourc
       deferred.promise.then success if angular.isFunction(success)
       deferred.promise.catch error if angular.isFunction(error)
 
-      cacheEntry = new ResourceCacheEntry(CachedResource.$key, params)
+      cacheEntry = new ResourceCacheEntry(CachedResource.$key, params).load()
       cacheEntry.set(resource, true) unless angular.equals(cacheEntry.data, resource)
 
       queueDeferred = $q.defer()
@@ -208,8 +208,10 @@ app.factory '$cachedResource', ['$resource', '$timeout', '$q', '$log', ($resourc
         for attribute, param of boundParams when isPermissibleBoundValue @[attribute]
           params[param] = @[attribute]
         params
-      @$clearAll: ->
-        cache.clear $key
+      @$clearAll: ({exceptFor} = {}) ->
+        exceptFor ?= []
+        exceptFor = exceptFor.map (params) -> new ResourceCacheEntry($key, params).key
+        cache.clear {key: $key, exceptFor}
       @$resource: Resource
       @$key: $key
 
@@ -229,9 +231,9 @@ app.factory '$cachedResource', ['$resource', '$timeout', '$q', '$log', ($resourc
 
     CachedResource
 
-  $cachedResource.clearAll = cache.clearAll
+  $cachedResource.clearAll = cache.clear
   $cachedResource.clearUndefined = ->
-    cache.clearAll exceptFor: resourceManager.keys()
+    cache.clear exceptFor: resourceManager.keys()
 
   return $cachedResource
 ]

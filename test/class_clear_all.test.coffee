@@ -29,3 +29,8 @@ describe 'CachedResource.$clearAll()', ->
     it 'should remove all entries from the cache', ->
       CachedResource.$clearAll()
       expect(localStorage.length).to.equal 0
+
+    it 'should remove all entries from the cache except for those specified', ->
+      CachedResource.$clearAll exceptFor: [{name: 'frank'}]
+      expect(localStorage.length).to.equal 1
+      expect(localStorage.getItem('cachedResource://class-clear-test?name=frank')).to.contain 'Donnie Darko'
