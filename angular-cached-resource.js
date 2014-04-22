@@ -406,7 +406,9 @@ app.factory('$cachedResource', [
             exceptFor = [];
           }
           exceptFor = exceptFor.map(function(params) {
-            return new ResourceCacheEntry($key, params).key;
+            var resource;
+            resource = new CachedResource(params);
+            return new ResourceCacheEntry($key, resource.$params()).key;
           });
           return cache.clear({
             key: $key,

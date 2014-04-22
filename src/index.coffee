@@ -210,7 +210,9 @@ app.factory '$cachedResource', ['$resource', '$timeout', '$q', '$log', ($resourc
         params
       @$clearAll: ({exceptFor} = {}) ->
         exceptFor ?= []
-        exceptFor = exceptFor.map (params) -> new ResourceCacheEntry($key, params).key
+        exceptFor = exceptFor.map (params) ->
+          resource = new CachedResource(params)
+          new ResourceCacheEntry($key, resource.$params()).key
         cache.clear {key: $key, exceptFor}
       @$resource: Resource
       @$key: $key
