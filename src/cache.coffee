@@ -2,8 +2,16 @@ LOCAL_STORAGE_PREFIX = 'cachedResource://'
 {localStorage} = window
 
 memoryCache = {}
+
 buildKey = (key) ->
   "#{LOCAL_STORAGE_PREFIX}#{key}"
+
+cacheKeyHasPrefix = (cacheKey, prefix) ->
+  return cacheKey.indexOf(LOCAL_STORAGE_PREFIX) is 0 unless prefix?
+  prefix = buildKey prefix
+  index = cacheKey.indexOf prefix
+  nextChar = cacheKey[prefix.length]
+  index is 0 and (not nextChar? or nextChar in ['?', '/'])
 
 module.exports =
   getItem: (key, fallbackValue) ->
@@ -27,19 +35,15 @@ module.exports =
     value
 
   clear: ({key, exceptFor} = {}) ->
-    key ?= ''
-    key = buildKey key
-
     exceptFor ?= []
-    exceptFor = exceptFor.map buildKey
 
     cacheKeys = []
     for i in [0...localStorage.length]
       cacheKey = localStorage.key i
-      continue unless cacheKey.indexOf(key) is 0
+      continue unless cacheKeyHasPrefix(cacheKey, key)
 
       skipKey = no
-      for exception in exceptFor when cacheKey.indexOf(exception) is 0
+      for exception in exceptFor when cacheKeyHasPrefix(cacheKey, exception)
         skipKey = yes
         break
 
