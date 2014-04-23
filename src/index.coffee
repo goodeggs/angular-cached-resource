@@ -209,10 +209,17 @@ app.factory '$cachedResource', ['$resource', '$timeout', '$q', '$log', ($resourc
           params[param] = @[attribute]
         params
       @$clearAll: ({exceptFor} = {}) ->
-        exceptFor ?= []
-        exceptFor = exceptFor.map (params) ->
-          resource = new CachedResource(params)
-          new ResourceCacheEntry($key, resource.$params()).key
+        if angular.isArray(exceptFor)
+          exceptFor = exceptFor.map (params) ->
+            resource = new CachedResource(params)
+            new ResourceCacheEntry($key, resource.$params()).key
+        else if angular.isObject(exceptFor)
+          cacheArrayEntry = new ResourceCacheArrayEntry($key, exceptFor).load()
+          exceptFor = []
+          exceptFor.push cacheArrayEntry.key
+          if cacheArrayEntry.value
+            for cacheInstanceParams in cacheArrayEntry.value
+              exceptFor.push new ResourceCacheEntry($key, cacheInstanceParams).key
         cache.clear {key: $key, exceptFor}
       @$resource: Resource
       @$key: $key
