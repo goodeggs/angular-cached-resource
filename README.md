@@ -72,6 +72,43 @@ properties:
  - `Resource.$httpPromise`: For all requests, this promise is resolved as soon as the
    corresponding HTTP request responds.
 
+### Clearing the cache
+
+Since there is a 5 megabyte limit on localStorage for most browsers, you'll probably want
+to actively manage the resource instances that are stored. By default, this module never
+removes cache entries, so you'll have to do this by hand. Here are the ways that you can
+accomplish this:
+
+- `localStorage.clear()`: Removes everything in localStorage. This should not break the
+  behavior of this module.
+
+- `$cachedResource.clearAll()`: Removes every single Angular Cached Resource cache entry
+  that's currently stored in localStorage. It will leave all cache entries that were not
+  created by this module. (Note that cache entries are namespaced, so if you add anything
+  to localStorage with a key that begins with `cachedResource://`, it will get deleted by
+  this call).
+
+- `$cachedResource.clearUndefined()`: Removes every Angular Cached Resource cache entry
+  corresponding to a resource that has not been defined since the page was loaded. This
+  is useful if your API changes and you want to make sure that old entries are cleared
+  away.
+
+- `$cachedResource.clearAll({exceptFor: ['foo', 'bar']})`: Removes every Angular Cached
+  Resource entry except for resources with the `foo` or `bar` keys.
+
+If you have a "class" object that you've created with `$cachedResource`, then you can also
+do the following:
+
+- `CachedResource.$clearAll()`: Removes all entries from the cache associated with this
+  particular resource class.
+
+- `CachedResource.$clearAll({exceptFor: [{id: 1}])`: Removes all entries from the cache
+  associated with this particular resource class, except for those with an `id` of 1.
+  (This assumes that `paramDefaults` has an `id` param.)
+
+- `CachedResource.$clearAll({exceptFor: {query: 'search string'}})`: Removes all entries
+  from the cache except those that were returned by the provided query parameters.
+
 ------
 
 ## Installing
