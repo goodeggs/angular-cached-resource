@@ -1,4 +1,4 @@
-ngCachedResource [![NPM version][npm-badge]][npm-link]  [![Build Status][travis-badge]][travis-link]
+Angular Cached Resource [![NPM version][npm-badge]][npm-link]  [![Build Status][travis-badge]][travis-link]
 ==============
 
 An [AngularJS][angular] module to interact with RESTful server-side data sources, even
@@ -29,6 +29,8 @@ Article.save({id: 2}, {contents: "Lorem ipsum dolor..."}, function() {
   // Reaching this callback means it successfully saved.
 });
 ```
+
+Check out the [quick tutorial on the Bites from Good Eggs blog](http://bites.goodeggs.com/open_source/angular-cached-resource/).
 
 -------
 
