@@ -21,7 +21,7 @@ firstArticle.$httpPromise.then(function() {
   // and represents the response from the /articles/1 endpoint
 });
 
-// POST/PUT/DELETE requests:
+// POST/PUT/DELETE/PATCH requests:
 
 // If this fails initially, possibly because of a bad connection, we will
 // try sending it again

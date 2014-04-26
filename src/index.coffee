@@ -229,7 +229,7 @@ app.factory '$cachedResource', ['$resource', '$timeout', '$q', '$log', ($resourc
           readArrayCache(name, CachedResource)
         else if params.method is 'GET'
           readCache(name, CachedResource)
-        else if params.method in ['POST', 'PUT', 'DELETE']
+        else if params.method in ['POST', 'PUT', 'DELETE', 'PATCH']
           writeCache(name, CachedResource)
 
       CachedResource[name] = handler
