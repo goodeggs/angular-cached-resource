@@ -1,4 +1,4 @@
-Angular Cached Resource [![NPM version][npm-badge]][npm-link]  [![Build Status][travis-badge]][travis-link]
+Angular Cached Resource [![Build Status][travis-badge]][travis-link]
 ==============
 
 An [AngularJS][angular] module to interact with RESTful server-side data sources, even
@@ -173,9 +173,6 @@ npm test
 ## License
 
 [MIT](https://github.com/goodeggs/angular-cached-resource/blob/master/LICENSE.md)
-
-[npm-badge]: https://badge.fury.io/js/angular-cached-resource.png
-[npm-link]: http://badge.fury.io/js/angular-cached-resource
 
 [travis-badge]: https://travis-ci.org/goodeggs/angular-cached-resource.png
 [travis-link]: https://travis-ci.org/goodeggs/angular-cached-resource
