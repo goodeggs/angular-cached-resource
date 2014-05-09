@@ -1,5 +1,5 @@
-Angular Cached Resource
-==============
+Cached Resource
+===============
 
 An [AngularJS][angular] module to interact with RESTful server-side data
 sources, even when the browser is offline. Uses HTML5
