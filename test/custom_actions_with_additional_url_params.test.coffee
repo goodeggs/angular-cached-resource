@@ -20,3 +20,8 @@ describe 'custom actions with addtional URL parameters', ->
     $httpBackend.expectPUT('/contacts/C3PO/groups/human_android_relations', { id: 'human_android_relations', location: 'Tattoine'}).respond 200
     Groups.saveByContact { contactId: 'C3PO' }, { id: 'human_android_relations', location: 'Tattoine' }
     $httpBackend.flush()
+
+  it 'sends a request to the custom URL with an array', ->
+    $httpBackend.expectPUT('/contacts/C3PO/groups', [{ id: 'human_android_relations', location: 'Tattoine'}, { id: 'golden_robots', location: 'Hoth' }]).respond 200
+    Groups.saveByContact { contactId: 'C3PO' }, [{ id: 'human_android_relations', location: 'Tattoine' }, { id: 'golden_robots', location: 'Hoth' }]
+    $httpBackend.flush()
