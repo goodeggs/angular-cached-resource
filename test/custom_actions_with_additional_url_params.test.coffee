@@ -1,12 +1,12 @@
 describe 'custom actions with addtional URL parameters', ->
-  {Groups, $httpBackend} = {}
+  {Group, $httpBackend} = {}
 
   beforeEach ->
     module('ngCachedResource')
     inject ($injector) ->
       $cachedResource = $injector.get '$cachedResource'
       $httpBackend = $injector.get '$httpBackend'
-      Groups = $cachedResource 'custom-actions-with-additonal-url-parameters', '/groups/:id', {id: '@id'},
+      Group = $cachedResource 'custom-actions-with-additonal-url-parameters', '/groups/:id', {id: '@id'},
         saveByContact:
           method: "PUT"
           url: '/contacts/:contactId/groups/:id'
@@ -17,11 +17,15 @@ describe 'custom actions with addtional URL parameters', ->
     localStorage.clear()
 
   it 'sends a request to the custom URL', ->
-    $httpBackend.expectPUT('/contacts/C3PO/groups/human_android_relations', { id: 'human_android_relations', location: 'Tattoine'}).respond 200
-    Groups.saveByContact { contactId: 'C3PO' }, { id: 'human_android_relations', location: 'Tattoine' }
+    $httpBackend.expectPUT('/contacts/C-3PO/groups/cybot_galactica', { id: 'cybot_galactica', location: 'Etti IV'}).respond 200
+    Group.saveByContact { contactId: 'C-3PO' }, { id: 'cybot_galactica', location: 'Etti IV' }
     $httpBackend.flush()
 
   it 'sends a request to the custom URL with an array', ->
-    $httpBackend.expectPUT('/contacts/C3PO/groups', [{ id: 'human_android_relations', location: 'Tattoine'}, { id: 'golden_robots', location: 'Hoth' }]).respond 200
-    Groups.saveByContact { contactId: 'C3PO' }, [{ id: 'human_android_relations', location: 'Tattoine' }, { id: 'golden_robots', location: 'Hoth' }]
+    groups = []
+    groups.push new Group id: 'cybot_galactica', location: 'Etti IV'
+    groups.push new Group id: 'rebel_alliance', leader: 'Leia Organa'
+
+    $httpBackend.expectPUT('/contacts/C-3PO/groups', [{ id: 'cybot_galactica', location: 'Etti IV'}, { id: 'rebel_alliance', leader: 'Leia Organa' }]).respond 200
+    Group.saveByContact { contactId: 'C-3PO' }, groups
     $httpBackend.flush()
