@@ -8,22 +8,27 @@ class ResourceWriteQueue
     @key = "#{@CachedResource.$key}/write"
     @queue = Cache.getItem(@key, [])
 
-  enqueue: (params, action, deferred) ->
-    entry = @findEntry {params, action}
-    if not entry?
-      @queue.push {params, action, deferred}
+  enqueue: (params, resourceData, action, deferred) ->
+    resourceParams = if angular.isArray(resourceData)
+      resourceData.map((resource) -> resource.$params())
+    else
+      resourceData.$params()
+
+    write = @findWrite {params, action}
+    if not write?
+      @queue.push {params, resourceParams, action, deferred}
       @_update()
     else
-      entry.deferred?.promise.then (response) ->
+      write.deferred?.promise.then (response) ->
         deferred.resolve response
-      entry.deferred?.promise.catch (error) ->
+      write.deferred?.promise.catch (error) ->
         deferred.reject error
 
-  findEntry: ({action, params}) ->
-    for entry in @queue
-      return entry if action is entry.action and angular.equals(params, entry.params)
+  findWrite: ({action, params}) ->
+    for write in @queue
+      return write if action is write.action and angular.equals(params, write.params)
 
-  removeEntry: ({action, params}) ->
+  removeWrite: ({action, params}) ->
     newQueue = []
     for entry in @queue
       newQueue.push entry unless action is entry.action and angular.equals(params, entry.params)
@@ -37,29 +42,37 @@ class ResourceWriteQueue
 
   flush: ->
     @_setFlushTimeout()
-    @_processEntry(entry) for entry in @queue
+    @_processWrite(write) for write in @queue
 
   processResource: (params, done) ->
     notDone = true
-    for entry in @_entriesForResource(params)
-      @_processEntry entry, =>
-        if notDone and @_entriesForResource(params).length is 0
+    for write in @_writesForResource(params)
+      @_processWrite write, =>
+        if notDone and @_writesForResource(params).length is 0
           notDone = false
           done()
 
-  _entriesForResource: (params) ->
-    entry for entry in @queue when angular.equals(params, entry.params)
+  _writesForResource: (params) ->
+    # TODO FIX FIX FIXME this should compare against individual write.resourceParams, which could be a nested array
+    write for write in @queue when angular.equals(params, write.params)
 
-  _processEntry: (entry, done) ->
-    cacheEntry = new ResourceCacheEntry(@CachedResource.$key, entry.params).load()
+  _processWrite: (write, done) ->
+    if angular.isArray(write.resourceParams)
+      cacheEntries = write.resourceParams.map (resourceParams) =>
+        new ResourceCacheEntry(@CachedResource.$key, resourceParams).load()
+      writeData = cacheEntries.map (cacheEntry) -> cacheEntry.value
+    else
+      cacheEntries = [new ResourceCacheEntry(@CachedResource.$key, write.resourceParams).load()]
+      writeData = cacheEntries[0].value
+
     onSuccess = (value) =>
-      @removeEntry entry
-      cacheEntry.setClean()
-      entry.deferred?.resolve value
+      @removeWrite write
+      cacheEntry.setClean() for cacheEntry in cacheEntries
+      write.deferred?.resolve value
       done() if angular.isFunction(done)
     onFailure = (error) =>
-      entry.deferred?.reject error
-    @CachedResource.$resource[entry.action](entry.params, cacheEntry.value, onSuccess, onFailure)
+      write.deferred?.reject error
+    @CachedResource.$resource[write.action](write.params, writeData, onSuccess, onFailure)
 
   _setFlushTimeout: ->
     if @queue.length > 0 and not @timeoutPromise
@@ -69,9 +82,10 @@ class ResourceWriteQueue
         @_setFlushTimeout()
 
   _update: ->
-    savableQueue = @queue.map (entry) ->
-      params: entry.params
-      action: entry.action
+    savableQueue = @queue.map (write) ->
+      params: write.params
+      resourceParams: write.resourceParams
+      action: write.action
     Cache.setItem @key, savableQueue
 
 module.exports = ResourceWriteQueue

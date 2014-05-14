@@ -21,6 +21,7 @@ module.exports = function(config) {
       'angular-cached-resource.js',
 
       'test/*.test.coffee'
+      // 'test/class_writes_then_reads.test.coffee'
     ],
 
 
