@@ -17,6 +17,6 @@ describe 'custom actions with addtional URL parameters', ->
     localStorage.clear()
 
   it 'sends a request to the custom URL', ->
-    $httpBackend.expectPUT('/contacts/C3PO/groups/human_android_relations').respond 200
-    Groups.saveByContact { contactId: 'C3PO' }, { id: 'human_android_relations' }
+    $httpBackend.expectPUT('/contacts/C3PO/groups/human_android_relations', { id: 'human_android_relations', location: 'Tattoine'}).respond 200
+    Groups.saveByContact { contactId: 'C3PO' }, { id: 'human_android_relations', location: 'Tattoine' }
     $httpBackend.flush()
