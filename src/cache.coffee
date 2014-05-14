@@ -20,9 +20,12 @@ module.exports =
     item = memoryCache[key]
     item ?= localStorage.getItem key
 
-    if item? then angular.fromJson(item) else fallbackValue
+    out = if item? then angular.fromJson(item) else fallbackValue
+    # console.log 'get', key, out
+    out
 
   setItem: (key, value) ->
+    # console.log 'set', key, angular.toJson(value)
     key = buildKey key
     stringValue = angular.toJson value
 

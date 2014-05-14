@@ -25,17 +25,14 @@ cacheKeyHasPrefix = function(cacheKey, prefix) {
 
 module.exports = {
   getItem: function(key, fallbackValue) {
-    var item;
+    var item, out;
     key = buildKey(key);
     item = memoryCache[key];
     if (item == null) {
       item = localStorage.getItem(key);
     }
-    if (item != null) {
-      return angular.fromJson(item);
-    } else {
-      return fallbackValue;
-    }
+    out = item != null ? angular.fromJson(item) : fallbackValue;
+    return out;
   },
   setItem: function(key, value) {
     var stringValue;
@@ -315,41 +312,63 @@ app.factory('$cachedResource', [
     };
     writeCache = function(action, CachedResource) {
       return function() {
-        var args, cacheEntry, deferred, error, instanceMethod, param, params, queue, queueDeferred, resource, success, value, _ref;
+        var args, cacheEntry, data, deferred, error, instanceMethod, isArray, param, params, queue, queueDeferred, resource, success, value, wrapInCachedResource, _i, _len, _ref;
         instanceMethod = this instanceof CachedResource;
         args = Array.prototype.slice.call(arguments);
         params = !instanceMethod && angular.isObject(args[1]) ? args.shift() : instanceMethod && angular.isObject(args[0]) ? args.shift() : {};
-        resource = instanceMethod ? this : new CachedResource(args.shift());
+        data = instanceMethod ? this : args.shift();
         success = args[0], error = args[1];
-        resource.$resolved = false;
-        _ref = resource.$params();
-        for (param in _ref) {
-          value = _ref[param];
-          params[param] = value;
+        isArray = angular.isArray(data);
+        wrapInCachedResource = function(object) {
+          if (object instanceof CachedResource) {
+            return object;
+          } else {
+            return new CachedResource(object);
+          }
+        };
+        if (isArray) {
+          data = data.map(function(o) {
+            return wrapInCachedResource(o);
+          });
+          for (_i = 0, _len = data.length; _i < _len; _i++) {
+            resource = data[_i];
+            cacheEntry = new ResourceCacheEntry(CachedResource.$key, resource.$params()).load();
+            if (!angular.equals(cacheEntry.data, resource)) {
+              cacheEntry.set(resource, true);
+            }
+          }
+        } else {
+          data = wrapInCachedResource(data);
+          _ref = data.$params();
+          for (param in _ref) {
+            value = _ref[param];
+            params[param] = value;
+          }
+          cacheEntry = new ResourceCacheEntry(CachedResource.$key, data.$params()).load();
+          if (!angular.equals(cacheEntry.data, data)) {
+            cacheEntry.set(data, true);
+          }
         }
+        data.$resolved = false;
         deferred = $q.defer();
-        resource.$promise = deferred.promise;
+        data.$promise = deferred.promise;
         if (angular.isFunction(success)) {
           deferred.promise.then(success);
         }
         if (angular.isFunction(error)) {
           deferred.promise["catch"](error);
         }
-        cacheEntry = new ResourceCacheEntry(CachedResource.$key, params).load();
-        if (!angular.equals(cacheEntry.data, resource)) {
-          cacheEntry.set(resource, true);
-        }
         queueDeferred = $q.defer();
         queueDeferred.promise.then(function(httpResource) {
-          modifyObjectInPlace(resource, httpResource);
-          resource.$resolved = true;
-          return deferred.resolve(resource);
+          modifyObjectInPlace(data, httpResource);
+          data.$resolved = true;
+          return deferred.resolve(data);
         });
         queueDeferred.promise["catch"](deferred.reject);
         queue = resourceManager.getQueue(CachedResource);
-        queue.enqueue(params, action, queueDeferred);
+        queue.enqueue(params, data, action, queueDeferred);
         queue.flush();
-        return resource;
+        return data;
       };
     };
     $cachedResource = function() {
@@ -564,44 +583,48 @@ ResourceWriteQueue = (function() {
     this.queue = Cache.getItem(this.key, []);
   }
 
-  ResourceWriteQueue.prototype.enqueue = function(params, action, deferred) {
-    var entry, _ref, _ref1;
-    entry = this.findEntry({
+  ResourceWriteQueue.prototype.enqueue = function(params, resourceData, action, deferred) {
+    var resourceParams, write, _ref, _ref1;
+    resourceParams = angular.isArray(resourceData) ? resourceData.map(function(resource) {
+      return resource.$params();
+    }) : resourceData.$params();
+    write = this.findWrite({
       params: params,
       action: action
     });
-    if (entry == null) {
+    if (write == null) {
       this.queue.push({
         params: params,
+        resourceParams: resourceParams,
         action: action,
         deferred: deferred
       });
       return this._update();
     } else {
-      if ((_ref = entry.deferred) != null) {
+      if ((_ref = write.deferred) != null) {
         _ref.promise.then(function(response) {
           return deferred.resolve(response);
         });
       }
-      return (_ref1 = entry.deferred) != null ? _ref1.promise["catch"](function(error) {
+      return (_ref1 = write.deferred) != null ? _ref1.promise["catch"](function(error) {
         return deferred.reject(error);
       }) : void 0;
     }
   };
 
-  ResourceWriteQueue.prototype.findEntry = function(_arg) {
-    var action, entry, params, _i, _len, _ref;
+  ResourceWriteQueue.prototype.findWrite = function(_arg) {
+    var action, params, write, _i, _len, _ref;
     action = _arg.action, params = _arg.params;
     _ref = this.queue;
     for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-      entry = _ref[_i];
-      if (action === entry.action && angular.equals(params, entry.params)) {
-        return entry;
+      write = _ref[_i];
+      if (action === write.action && angular.equals(params, write.params)) {
+        return write;
       }
     }
   };
 
-  ResourceWriteQueue.prototype.removeEntry = function(_arg) {
+  ResourceWriteQueue.prototype.removeWrite = function(_arg) {
     var action, entry, newQueue, params, _i, _len, _ref;
     action = _arg.action, params = _arg.params;
     newQueue = [];
@@ -621,27 +644,27 @@ ResourceWriteQueue = (function() {
   };
 
   ResourceWriteQueue.prototype.flush = function() {
-    var entry, _i, _len, _ref, _results;
+    var write, _i, _len, _ref, _results;
     this._setFlushTimeout();
     _ref = this.queue;
     _results = [];
     for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-      entry = _ref[_i];
-      _results.push(this._processEntry(entry));
+      write = _ref[_i];
+      _results.push(this._processWrite(write));
     }
     return _results;
   };
 
   ResourceWriteQueue.prototype.processResource = function(params, done) {
-    var entry, notDone, _i, _len, _ref, _results;
+    var notDone, write, _i, _len, _ref, _results;
     notDone = true;
-    _ref = this._entriesForResource(params);
+    _ref = this._writesForResource(params);
     _results = [];
     for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-      entry = _ref[_i];
-      _results.push(this._processEntry(entry, (function(_this) {
+      write = _ref[_i];
+      _results.push(this._processWrite(write, (function(_this) {
         return function() {
-          if (notDone && _this._entriesForResource(params).length === 0) {
+          if (notDone && _this._writesForResource(params).length === 0) {
             notDone = false;
             return done();
           }
@@ -651,28 +674,43 @@ ResourceWriteQueue = (function() {
     return _results;
   };
 
-  ResourceWriteQueue.prototype._entriesForResource = function(params) {
-    var entry, _i, _len, _ref, _results;
+  ResourceWriteQueue.prototype._writesForResource = function(params) {
+    var write, _i, _len, _ref, _results;
     _ref = this.queue;
     _results = [];
     for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-      entry = _ref[_i];
-      if (angular.equals(params, entry.params)) {
-        _results.push(entry);
+      write = _ref[_i];
+      if (angular.equals(params, write.params)) {
+        _results.push(write);
       }
     }
     return _results;
   };
 
-  ResourceWriteQueue.prototype._processEntry = function(entry, done) {
-    var cacheEntry, onFailure, onSuccess;
-    cacheEntry = new ResourceCacheEntry(this.CachedResource.$key, entry.params).load();
+  ResourceWriteQueue.prototype._processWrite = function(write, done) {
+    var cacheEntries, onFailure, onSuccess, writeData;
+    if (angular.isArray(write.resourceParams)) {
+      cacheEntries = write.resourceParams.map((function(_this) {
+        return function(resourceParams) {
+          return new ResourceCacheEntry(_this.CachedResource.$key, resourceParams).load();
+        };
+      })(this));
+      writeData = cacheEntries.map(function(cacheEntry) {
+        return cacheEntry.value;
+      });
+    } else {
+      cacheEntries = [new ResourceCacheEntry(this.CachedResource.$key, write.resourceParams).load()];
+      writeData = cacheEntries[0].value;
+    }
     onSuccess = (function(_this) {
       return function(value) {
-        var _ref;
-        _this.removeEntry(entry);
-        cacheEntry.setClean();
-        if ((_ref = entry.deferred) != null) {
+        var cacheEntry, _i, _len, _ref;
+        _this.removeWrite(write);
+        for (_i = 0, _len = cacheEntries.length; _i < _len; _i++) {
+          cacheEntry = cacheEntries[_i];
+          cacheEntry.setClean();
+        }
+        if ((_ref = write.deferred) != null) {
           _ref.resolve(value);
         }
         if (angular.isFunction(done)) {
@@ -683,10 +721,10 @@ ResourceWriteQueue = (function() {
     onFailure = (function(_this) {
       return function(error) {
         var _ref;
-        return (_ref = entry.deferred) != null ? _ref.reject(error) : void 0;
+        return (_ref = write.deferred) != null ? _ref.reject(error) : void 0;
       };
     })(this);
-    return this.CachedResource.$resource[entry.action](entry.params, cacheEntry.value, onSuccess, onFailure);
+    return this.CachedResource.$resource[write.action](write.params, writeData, onSuccess, onFailure);
   };
 
   ResourceWriteQueue.prototype._setFlushTimeout = function() {
@@ -703,10 +741,11 @@ ResourceWriteQueue = (function() {
 
   ResourceWriteQueue.prototype._update = function() {
     var savableQueue;
-    savableQueue = this.queue.map(function(entry) {
+    savableQueue = this.queue.map(function(write) {
       return {
-        params: entry.params,
-        action: entry.action
+        params: write.params,
+        resourceParams: write.resourceParams,
+        action: write.action
       };
     });
     return Cache.setItem(this.key, savableQueue);

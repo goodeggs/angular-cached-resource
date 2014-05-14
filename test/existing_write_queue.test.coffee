@@ -2,7 +2,7 @@ describe 'an existing write queue', ->
   {$cachedResource, $httpBackend} = {}
 
   beforeEach ->
-    localStorage.setItem 'cachedResource://existing-write-queue-test/write', angular.toJson [{params: {id: 1}, action: 'save'}]
+    localStorage.setItem 'cachedResource://existing-write-queue-test/write', angular.toJson [{params: {id: 1}, resourceParams: {id: 1}, action: 'save'}]
     localStorage.setItem 'cachedResource://existing-write-queue-test?id=1', angular.toJson value: magic: 'from the cache'
 
     module('ngCachedResource')

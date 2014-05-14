@@ -6,7 +6,7 @@ describe 'Class writes, then reads', ->
     inject ($injector) ->
       $cachedResource = $injector.get '$cachedResource'
       $httpBackend = $injector.get '$httpBackend'
-      CachedResource = $cachedResource 'class-writes-then-reads-test', '/mock/:id'
+      CachedResource = $cachedResource 'class-writes-then-reads-test', '/mock/:id', {id: '@id'}
 
   afterEach ->
     $httpBackend.verifyNoOutstandingExpectation()
@@ -16,7 +16,7 @@ describe 'Class writes, then reads', ->
   describe 'when the write was unsuccessful', ->
     beforeEach ->
       $httpBackend.expectPOST('/mock/1').respond 503
-      CachedResource.save {id: 1}, {magic: 'Attempt to save resource'}
+      CachedResource.save {id: 1}, {magic: 'Attempt to save resource', id: 1}
       $httpBackend.flush()
 
     it 'returns a cached, saved version of the resource on read', ->
@@ -32,7 +32,7 @@ describe 'Class writes, then reads', ->
   describe 'when the write was okay', ->
     beforeEach ->
       $httpBackend.expectPOST('/mock/2').respond 200, {id: 2, worked: 'fromWrite'}
-      CachedResource.save {id: 2}, {worked: 'fromWrite'}
+      CachedResource.save {id: 2}, {worked: 'fromWrite', id: 2}
       $httpBackend.flush()
 
     it 'should return the cached saved version of the resource on read', ->

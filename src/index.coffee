@@ -142,35 +142,47 @@ app.factory '$cachedResource', ['$resource', '$timeout', '$q', '$log', ($resourc
           args.shift()
         else
           {}
-      resource = if instanceMethod
-          @
-        else
-          new CachedResource(args.shift())
+      data = if instanceMethod then @ else args.shift()
       [success, error] = args
 
-      resource.$resolved = false
-      params[param] = value for param, value of resource.$params()
+      isArray = angular.isArray(data)
+
+      wrapInCachedResource = (object) ->
+        if object instanceof CachedResource
+          object
+        else
+          new CachedResource object
+
+      if isArray
+        data = data.map((o) -> wrapInCachedResource o)
+        for resource in data
+          cacheEntry = new ResourceCacheEntry(CachedResource.$key, resource.$params()).load()
+          cacheEntry.set(resource, true) unless angular.equals(cacheEntry.data, resource)
+      else
+        data = wrapInCachedResource data
+        params[param] = value for param, value of data.$params()
+        cacheEntry = new ResourceCacheEntry(CachedResource.$key, data.$params()).load()
+        cacheEntry.set(data, true) unless angular.equals(cacheEntry.data, data)
+
+      data.$resolved = false
 
       deferred = $q.defer()
-      resource.$promise = deferred.promise
+      data.$promise = deferred.promise
       deferred.promise.then success if angular.isFunction(success)
       deferred.promise.catch error if angular.isFunction(error)
 
-      cacheEntry = new ResourceCacheEntry(CachedResource.$key, params).load()
-      cacheEntry.set(resource, true) unless angular.equals(cacheEntry.data, resource)
-
       queueDeferred = $q.defer()
       queueDeferred.promise.then (httpResource) ->
-        modifyObjectInPlace(resource, httpResource)
-        resource.$resolved = true
-        deferred.resolve(resource)
+        modifyObjectInPlace(data, httpResource)
+        data.$resolved = true
+        deferred.resolve(data)
       queueDeferred.promise.catch deferred.reject
 
       queue = resourceManager.getQueue(CachedResource)
-      queue.enqueue(params, action, queueDeferred)
+      queue.enqueue(params, data, action, queueDeferred)
       queue.flush()
 
-      resource
+      data
 
   $cachedResource = ->
     # we are mimicking the API of $resource, which is:
