@@ -19,7 +19,9 @@
     "node_modules",
     "bower_components",
     "test",
-    "tests"
+    "tests",
+    "src",
+    "lib"
   ],
   "dependencies": {
     "angular-resource": "~1.2.14",

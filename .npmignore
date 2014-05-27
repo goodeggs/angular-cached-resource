@@ -1,0 +1,5 @@
+.git*
+test/
+bower.json
+angular-cached-resource.js
+angular-cached-resource.min.js
