@@ -1,6 +1,7 @@
 .git*
 test/
 bower.json
+bower_components/
 angular-cached-resource.js
 angular-cached-resource.min.js
 karma.conf.js
