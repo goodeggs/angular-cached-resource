@@ -21,7 +21,8 @@
     "test",
     "tests",
     "src",
-    "lib"
+    "lib",
+    "karma.conf.js"
   ],
   "dependencies": {
     "angular-resource": "~1.2.14",
