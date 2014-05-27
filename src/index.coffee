@@ -220,6 +220,10 @@ app.factory '$cachedResource', ['$resource', '$timeout', '$q', '$log', ($resourc
         for attribute, param of boundParams when isPermissibleBoundValue @[attribute]
           params[param] = @[attribute]
         params
+      $$addToCache: ->
+        entry = new ResourceCacheEntry($key, @$params())
+        entry.set @, yes
+        @
       @$clearAll: ({exceptFor} = {}) ->
         if angular.isArray(exceptFor)
           exceptFor = exceptFor.map (params) ->
@@ -233,6 +237,8 @@ app.factory '$cachedResource', ['$resource', '$timeout', '$q', '$log', ($resourc
             for cacheInstanceParams in cacheArrayEntry.value
               exceptFor.push new ResourceCacheEntry($key, cacheInstanceParams).key
         cache.clear {key: $key, exceptFor}
+      @$addToCache: (attrs) ->
+        new CachedResource(attrs).$$addToCache()
       @$resource: Resource
       @$key: $key
 
