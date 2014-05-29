@@ -1,5 +1,5 @@
 describe 'CachedResource::post', ->
-  {resourceInstance, $httpBackend, $timeout} = {}
+  {CachedResource, resourceInstance, $httpBackend, $timeout} = {}
 
   beforeEach ->
     module('ngCachedResource')
@@ -67,3 +67,15 @@ describe 'CachedResource::post', ->
       $httpBackend.expectPOST('/mock/1', { id: 1, notes: 'this is a doubly saved note', list: [1,2,3] }).respond 500
       resourceInstance.$save()
       $httpBackend.flush()
+
+    it 'allows you to disable retrying when a request fails', inject ($timeout) ->
+      CachedResource.$retryFailedRequests = false
+
+      $httpBackend.expectPOST('/mock/1', { id: 1, notes: 'this is a saved note', list: [1,2,3] }).respond 500
+      resourceInstance.$save()
+      $httpBackend.flush()
+
+      # Force timeouts to finish and ensure we haven't tried to make
+      # another request
+      $timeout.flush()
+      $httpBackend.verifyNoOutstandingRequest()

@@ -460,6 +460,8 @@ app.factory('$cachedResource', [
 
         CachedResource.$key = $key;
 
+        CachedResource.$retryFailedRequests = true;
+
         return CachedResource;
 
       })();
@@ -655,15 +657,16 @@ ResourceWriteQueue = (function() {
   };
 
   ResourceWriteQueue.prototype.flush = function() {
-    var write, _i, _len, _ref, _results;
+    var write, _i, _len, _ref;
     this._setFlushTimeout();
     _ref = this.queue;
-    _results = [];
     for (_i = 0, _len = _ref.length; _i < _len; _i++) {
       write = _ref[_i];
-      _results.push(this._processWrite(write));
+      this._processWrite(write);
     }
-    return _results;
+    if (!this.CachedResource.$retryFailedRequests) {
+      return this.queue = [];
+    }
   };
 
   ResourceWriteQueue.prototype.processResource = function(params, done) {

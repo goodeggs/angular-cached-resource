@@ -241,6 +241,7 @@ app.factory '$cachedResource', ['$resource', '$timeout', '$q', '$log', ($resourc
         new CachedResource(attrs).$$addToCache()
       @$resource: Resource
       @$key: $key
+      @$retryFailedRequests: true
 
     for name, params of actions
       handler = if params.method is 'GET' and params.isArray

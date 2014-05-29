@@ -43,6 +43,7 @@ class ResourceWriteQueue
   flush: ->
     @_setFlushTimeout()
     @_processWrite(write) for write in @queue
+    @queue = [] unless @CachedResource.$retryFailedRequests
 
   processResource: (params, done) ->
     notDone = true
