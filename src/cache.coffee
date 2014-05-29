@@ -13,7 +13,7 @@ cacheKeyHasPrefix = (cacheKey, prefix) ->
   nextChar = cacheKey[prefix.length]
   index is 0 and (not nextChar? or nextChar in ['?', '/'])
 
-module.exports =
+module.exports = ($log) ->
   getItem: (key, fallbackValue) ->
     key = buildKey key
 
@@ -21,7 +21,8 @@ module.exports =
     item ?= localStorage.getItem key
 
     out = if item? then angular.fromJson(item) else fallbackValue
-    # console.log 'get', key, out
+    $log.debug "ngCachedResource", "CACHE GET: #{key}", out
+
     out
 
   setItem: (key, value) ->
@@ -34,6 +35,8 @@ module.exports =
       delete memoryCache[key] if memoryCache[key]?
     catch
       memoryCache[key] = stringValue
+
+    $log.debug "ngCachedResource", "CACHE PUT: #{key}", angular.fromJson angular.toJson value
 
     value
 

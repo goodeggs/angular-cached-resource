@@ -5,16 +5,17 @@ DEFAULT_ACTIONS =
   remove: { method: 'DELETE', }
   delete: { method: 'DELETE', }
 
-ResourceCacheEntry = require './resource_cache_entry'
-ResourceCacheArrayEntry = require './resource_cache_array_entry'
-CachedResourceManager = require './cached_resource_manager'
-cache = require './cache'
-
 resourceManagerListener = null
 
 app = angular.module 'ngCachedResource', ['ngResource']
 
 app.factory '$cachedResource', ['$resource', '$timeout', '$q', '$log', ($resource, $timeout, $q, $log) ->
+
+  ResourceCacheEntry = require('./resource_cache_entry')($log)
+  ResourceCacheArrayEntry = require('./resource_cache_array_entry')($log)
+  CachedResourceManager = require('./cached_resource_manager')($log)
+  cache = require('./cache')($log)
+
   resourceManager = new CachedResourceManager($timeout)
 
   document.removeEventListener 'online', resourceManagerListener if resourceManagerListener

@@ -1,9 +1,7 @@
-ResourceCacheEntry = require './resource_cache_entry'
+module.exports = ($log) ->
+  ResourceCacheEntry = require('./resource_cache_entry')($log)
 
-class ResourceCacheArrayEntry extends ResourceCacheEntry
-  defaultValue: []
+  class ResourceCacheArrayEntry extends ResourceCacheEntry
+    defaultValue: []
 
-  setKey: (key) -> @key = "#{key}/array"
-
-module.exports = ResourceCacheArrayEntry
-
+    setKey: (key) -> @key = "#{key}/array"

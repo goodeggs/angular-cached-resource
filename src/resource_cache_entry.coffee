@@ -1,29 +1,28 @@
-Cache = require './cache'
+module.exports = ($log) ->
+  Cache = require('./cache')($log)
 
-class ResourceCacheEntry
-  defaultValue: {}
+  class ResourceCacheEntry
+    defaultValue: {}
 
-  constructor: (resourceKey, params) ->
-    @setKey(resourceKey)
+    constructor: (resourceKey, params) ->
+      @setKey(resourceKey)
 
-    paramKeys = if angular.isObject(params) then Object.keys(params).sort() else []
-    if paramKeys.length
-      @key += '?' + ("#{param}=#{params[param]}" for param in paramKeys).join('&')
+      paramKeys = if angular.isObject(params) then Object.keys(params).sort() else []
+      if paramKeys.length
+        @key += '?' + ("#{param}=#{params[param]}" for param in paramKeys).join('&')
 
-  load: ->
-    {@value, @dirty} = Cache.getItem(@key, @defaultValue)
-    @
+    load: ->
+      {@value, @dirty} = Cache.getItem(@key, @defaultValue)
+      @
 
-  setKey: (@key) ->
+    setKey: (@key) ->
 
-  set: (@value, @dirty) ->
-    @_update()
+    set: (@value, @dirty) ->
+      @_update()
 
-  setClean: ->
-    @dirty = false
-    @_update()
+    setClean: ->
+      @dirty = false
+      @_update()
 
-  _update: ->
-    Cache.setItem @key, {@value, @dirty}
-
-module.exports = ResourceCacheEntry
+    _update: ->
+      Cache.setItem @key, {@value, @dirty}
