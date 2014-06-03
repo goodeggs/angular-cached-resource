@@ -1,13 +1,13 @@
 CACHE_RETRY_TIMEOUT = 60000 # one minute
 
-module.exports = ($log) ->
-  ResourceCacheEntry = require('./resource_cache_entry')($log)
-  Cache = require('./cache')($log)
+module.exports = (debug) ->
+  ResourceCacheEntry = require('./resource_cache_entry')(debug)
+  Cache = require('./cache')(debug)
 
 
   class ResourceWriteQueue
     logStatusOfRequest: (status, action, params, data) ->
-      $log.debug("ngCachedResource", "#{action} for #{@key} #{angular.toJson(params)} #{status}", data)
+      debug("ngCachedResource", "#{action} for #{@key} #{angular.toJson(params)} #{status}", data)
 
     constructor: (@CachedResource, @$timeout) ->
       @key = "#{@CachedResource.$key}/write"

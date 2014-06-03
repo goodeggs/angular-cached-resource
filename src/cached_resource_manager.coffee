@@ -1,5 +1,5 @@
-module.exports = ($log) ->
-  ResourceWriteQueue = require('./resource_write_queue')($log)
+module.exports = (debug) ->
+  ResourceWriteQueue = require('./resource_write_queue')(debug)
 
   class CachedResourceManager
     constructor: (@$timeout) ->

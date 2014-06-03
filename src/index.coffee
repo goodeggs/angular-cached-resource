@@ -7,14 +7,21 @@ DEFAULT_ACTIONS =
 
 resourceManagerListener = null
 
-app = angular.module 'ngCachedResource', ['ngResource']
+module?.exports = app = angular.module 'ngCachedResource', ['ngResource']
+app.provider '$cachedResource', class $cachedResourceProvider
+  constructor: ->
+    @debugMode = off
+    @$get = $cachedResourceFactory
+  setDebugMode: (@debugMode = on) ->
 
-app.factory '$cachedResource', ['$resource', '$timeout', '$q', '$log', ($resource, $timeout, $q, $log) ->
+$cachedResourceFactory = ['$resource', '$timeout', '$q', '$log', ($resource, $timeout, $q, $log) ->
 
-  ResourceCacheEntry = require('./resource_cache_entry')($log)
-  ResourceCacheArrayEntry = require('./resource_cache_array_entry')($log)
-  CachedResourceManager = require('./cached_resource_manager')($log)
-  cache = require('./cache')($log)
+  debug = if $cachedResourceProvider.debugMode? then $log.debug.bind($log, 'ngCachedResource') else (->)
+
+  ResourceCacheEntry = require('./resource_cache_entry')(debug)
+  ResourceCacheArrayEntry = require('./resource_cache_array_entry')(debug)
+  CachedResourceManager = require('./cached_resource_manager')(debug)
+  cache = require('./cache')(debug)
 
   resourceManager = new CachedResourceManager($timeout)
 
@@ -265,5 +272,3 @@ app.factory '$cachedResource', ['$resource', '$timeout', '$q', '$log', ($resourc
 
   return $cachedResource
 ]
-
-module?.exports = app
