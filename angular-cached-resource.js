@@ -747,7 +747,12 @@ module.exports = function(debug) {
       onFailure = (function(_this) {
         return function(error) {
           var _ref;
-          _this.logStatusOfRequest("failed with error " + (angular.toJson(error)), write.action, write.resourceParams, writeData);
+          if (error && error.status >= 400 && error.status < 500) {
+            _this.removeWrite(write);
+            _this.logStatusOfRequest("failed with error " + (angular.toJson(error)) + "; removed from queue", write.action, write.resourceParams, writeData);
+          } else {
+            _this.logStatusOfRequest("failed with error " + (angular.toJson(error)) + "; still in queue", write.action, write.resourceParams, writeData);
+          }
           return (_ref = write.deferred) != null ? _ref.reject(error) : void 0;
         };
       })(this);

@@ -1,14 +1,13 @@
 # for reference: https://github.com/goodeggs/angular-cached-resource/pull/6
 
 describe 'attempting to save a resource after a resource with the same cache key previously failed to save', ->
-  {$cachedResource, $httpBackend, $timeout} = {}
+  {$cachedResource, $httpBackend} = {}
 
   beforeEach ->
     module('ngCachedResource')
     inject ($injector) ->
       $cachedResource = $injector.get '$cachedResource'
       $httpBackend = $injector.get '$httpBackend'
-      $timeout = $injector.get '$timeout'
       CachedResource = $cachedResource 'save-fail-retry', '/mock/:id', {id: '@id'}
 
       $httpBackend.expectGET('/mock/1').respond { id: 1, notes: 'this is a note' }

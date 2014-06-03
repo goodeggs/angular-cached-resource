@@ -80,7 +80,11 @@ module.exports = (debug) ->
         write.deferred?.resolve value
         done() if angular.isFunction(done)
       onFailure = (error) =>
-        @logStatusOfRequest("failed with error #{angular.toJson error}", write.action, write.resourceParams, writeData)
+        if error and error.status >= 400 and error.status < 500
+          @removeWrite write
+          @logStatusOfRequest("failed with error #{angular.toJson error}; removed from queue", write.action, write.resourceParams, writeData)
+        else
+          @logStatusOfRequest("failed with error #{angular.toJson error}; still in queue", write.action, write.resourceParams, writeData)
         write.deferred?.reject error
       @CachedResource.$resource[write.action](write.params, writeData, onSuccess, onFailure)
 

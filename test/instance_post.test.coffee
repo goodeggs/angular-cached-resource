@@ -67,3 +67,9 @@ describe 'CachedResource::post', ->
       $httpBackend.expectPOST('/mock/1', { id: 1, notes: 'this is a doubly saved note', list: [1,2,3] }).respond 500
       resourceInstance.$save()
       $httpBackend.flush()
+
+    it 'stops trying to save the second resource if the server responds with a 400-style error', ->
+      $httpBackend.expectPOST('/mock/1', { id: 1, notes: 'this is a saved note', list: [1,2,3] }).respond 409
+      resourceInstance.$save()
+      $httpBackend.flush()
+      $timeout.flush()
