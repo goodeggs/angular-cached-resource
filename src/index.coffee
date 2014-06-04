@@ -6,17 +6,18 @@ DEFAULT_ACTIONS =
   delete: { method: 'DELETE', }
 
 resourceManagerListener = null
+debugMode = off
 
 module?.exports = app = angular.module 'ngCachedResource', ['ngResource']
 app.provider '$cachedResource', class $cachedResourceProvider
   constructor: ->
-    @debugMode = off
     @$get = $cachedResourceFactory
-  setDebugMode: (@debugMode = on) ->
+  setDebugMode: (newSetting = on) ->
+    debugMode = newSetting
 
 $cachedResourceFactory = ['$resource', '$timeout', '$q', '$log', ($resource, $timeout, $q, $log) ->
 
-  debug = if $cachedResourceProvider.debugMode? then $log.debug.bind($log, 'ngCachedResource') else (->)
+  debug = if debugMode then $log.debug.bind($log, 'ngCachedResource') else (->)
 
   ResourceCacheEntry = require('./resource_cache_entry')(debug)
   ResourceCacheArrayEntry = require('./resource_cache_array_entry')(debug)
