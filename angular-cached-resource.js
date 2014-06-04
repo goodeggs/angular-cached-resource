@@ -177,7 +177,7 @@ app.provider('$cachedResource', $cachedResourceProvider = (function() {
 $cachedResourceFactory = [
   '$resource', '$timeout', '$q', '$log', function($resource, $timeout, $q, $log) {
     var $cachedResource, CachedResourceManager, ResourceCacheArrayEntry, ResourceCacheEntry, cache, debug, modifyObjectInPlace, processReadArgs, readArrayCache, readCache, resourceManager, writeCache;
-    debug = debugMode ? $log.debug.bind($log, 'ngCachedResource') : (function() {});
+    debug = debugMode ? angular.bind($log, $log.debug, 'ngCachedResource') : (function() {});
     ResourceCacheEntry = require('./resource_cache_entry')(debug);
     ResourceCacheArrayEntry = require('./resource_cache_array_entry')(debug);
     CachedResourceManager = require('./cached_resource_manager')(debug);

@@ -17,7 +17,7 @@ app.provider '$cachedResource', class $cachedResourceProvider
 
 $cachedResourceFactory = ['$resource', '$timeout', '$q', '$log', ($resource, $timeout, $q, $log) ->
 
-  debug = if debugMode then $log.debug.bind($log, 'ngCachedResource') else (->)
+  debug = if debugMode then angular.bind($log, $log.debug, 'ngCachedResource') else (->)
 
   ResourceCacheEntry = require('./resource_cache_entry')(debug)
   ResourceCacheArrayEntry = require('./resource_cache_array_entry')(debug)
