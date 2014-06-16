@@ -24,7 +24,7 @@ the core [ngResource][ngResource] module, which it requires as a dependency.
 
 ## News
 
-It looks like this sort of functionality might be built into Angular 2.0.
+It looks like this sort of functionality might be built into the upcoming Angular 2.0.
 [Check out the design document here](https://docs.google.com/document/d/1DMacL7iwjSMPP0ytZfugpU4v0PWUK0BT6lhyaVEmlBQ/edit#).
 
 ----
