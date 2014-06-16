@@ -22,6 +22,11 @@ the core [ngResource][ngResource] module, which it requires as a dependency.
   separately so you can request it from the cache individually, too.
 * Works as a drop-in replacement for [Angular's $resource][ngResource] module.
 
+## News
+
+It looks like this sort of functionality might be built into Angular 2.0.
+[Check out the design document here](https://docs.google.com/document/d/1DMacL7iwjSMPP0ytZfugpU4v0PWUK0BT6lhyaVEmlBQ/edit#).
+
 ----
 
 ## A simple example
