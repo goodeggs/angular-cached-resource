@@ -7,6 +7,7 @@ describe 'CachedResource.$clearAll()', ->
     inject ($injector) ->
       $cachedResource = $injector.get '$cachedResource'
       $httpBackend = $injector.get '$httpBackend'
+    CachedResource = $cachedResource 'class-clear-test', '/animals/:name', {name: '@name'}
 
   afterEach ->
     $httpBackend.verifyNoOutstandingExpectation()
@@ -26,7 +27,6 @@ describe 'CachedResource.$clearAll()', ->
         { name: 'liger', from: ['Lion', 'Tiger'] }
         { name: 'groler-bear', from: ['Grizzly Bear', 'Polar Bear'] }
       ]
-      CachedResource = $cachedResource 'class-clear-test', '/animals/:name', {name: '@name'}
       rabbits = CachedResource.query type: 'fictional-rabbits'
       combos = CachedResource.query type: 'combos'
       $httpBackend.flush()
@@ -51,3 +51,21 @@ describe 'CachedResource.$clearAll()', ->
       expect(localStorage.getItem('cachedResource://class-clear-test/array?type=combos')).to.contain 'liger'
       expect(localStorage.getItem('cachedResource://class-clear-test?name=liger')).to.contain 'Lion'
       expect(localStorage.getItem('cachedResource://class-clear-test?name=groler-bear')).to.contain 'Grizzly'
+
+    describe 'and with pending writes', ->
+
+      beforeEach ->
+        $httpBackend.whenPOST('/animals/chinchilla').respond 500
+        chinchilla = new CachedResource(name: 'chinchilla', fuzziness: 10)
+        chinchilla.$save()
+        $httpBackend.flush()
+
+      it 'should not remove pending write from cache', ->
+        CachedResource.$clearAll()
+        expect(localStorage.length).to.equal 2
+        expect(localStorage.getItem 'cachedResource://class-clear-test/write').to.contain 'chinchilla'
+        expect(localStorage.getItem 'cachedResource://class-clear-test?name=chinchilla').to.contain 'fuzziness'
+
+      it 'should remove pending write from cache if clearPendingWrites is set', ->
+        CachedResource.$clearAll clearPendingWrites: yes
+        expect(localStorage.length).to.equal 0

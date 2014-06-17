@@ -109,16 +109,24 @@ A CachedResource "class" object. This is a swap-in replacement for an object
 created by the `$resource` factory, with the following additional properties:
 
 - **Resource.$clearAll(** [options] **)**<br>
-  Clears all items from the cache associated with this resource. Accepts the
-  following argument:
+  Clears all items from the cache associated with this resource. Accepts one
+  argument, described below. This mechanism is slated to change in the next
+  minor version of Cached Resource; take a look at
+  [issue #8](https://github.com/goodeggs/angular-cached-resource/issues/8)
+  for more details.
 
   - **options**, `Object`, *optional*<br>
-    For now, `options` accepts a single key, `exceptFor`, which will limit the
-    resources that are cleared from the cache. `exceptFor` can be an `Array` or
-    an `Object`. If it is an `Array`, the function will remove every cache item
-    except for the ones whose keys match the provided keys. If it is an
-    `Object`, the function will remove every cache item except for those
-    returned by a query that matches the provided parameters.
+    `options` may contain the following keys:
+      - `exceptFor`, which will limit the resources that are cleared from the
+        cache. `exceptFor` can be an `Array` or an `Object`. If it is an
+        `Array`, the function will remove every cache item except for the
+        ones whose keys match the provided keys. If it is an `Object`, the
+        function will remove every cache item except for those returned by a
+        query that matches the provided parameters.
+      - `clearPendingWrites`, a boolean. Default is `false`. If `true`, then
+        the function will also remove cached instances that have a pending
+        write to the server.
+
 
 In addition, the following properties exist on CachedResource "instance" objects:
 
@@ -140,14 +148,16 @@ hand. Here are the ways that you can accomplish this:
 
 - **[localStorage.clear()][localStorageClear]**<br>
   Removes everything in localStorage. This will not break the behavior of
-  this module.
+  this module, except that it will prevent any pending write from actually
+  occurring.
 
 - **$cachedResource.clearAll()**<br>
   Removes every single Angular Cached Resource cache entry that's currently
   stored in localStorage. It will leave all cache entries that were not created
   by this module. (Note: cache entries are namespaced, so if you add anything
   to localStorage with a key that begins with `cachedResource://`, it will get
-  deleted by this call).
+  deleted by this call). It will also leave any resource instances that have a
+  pending write to the server.
 
 - **$cachedResource.clearUndefined()**<br>
   Removes every Angular Cached Resource cache entry corresponding to a resource
@@ -156,14 +166,19 @@ hand. Here are the ways that you can accomplish this:
 
 - **$cachedResource.clearAll({exceptFor: ['foo', 'bar']})**<br>
   Removes every Angular Cached Resource entry except for resources with the
-  `foo` or `bar` keys.
+  `foo` or `bar` keys, or resource instances that have a pending write to the
+  server.
+
+- **$cachedResource.clearAll({clearPendingWrites: true})**<br>
+  Removes every Angular Cached Resource entry, including those that have a
+  pending write to the server.
 
 If you have a "class" object that you've created with `$cachedResource`, then
 you can also do the following:
 
 - **CachedResource.$clearAll()**<br>
   Removes all entries from the cache associated with this particular resource
-  class.
+  class, except for resource instances that have a pending write to the server.
 
 - **CachedResource.$clearAll({exceptFor: [{id: 1}])**<br>
   Removes all entries from the cache associated with this particular resource
@@ -173,6 +188,10 @@ you can also do the following:
 - **CachedResource.$clearAll({exceptFor: {query: 'search string'}})**<br>
   Removes all entries from the cache except those that were returned by the
   provided query parameters.
+
+- **CachedResource.$clearAll({clearPendingWrites: true})**<br>
+  Removes all instances of CachedResource from the cache, including those that
+  have a pending write to the server.
 
 ------
 

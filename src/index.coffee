@@ -233,19 +233,26 @@ $cachedResourceFactory = ['$resource', '$timeout', '$q', '$log', ($resource, $ti
         entry = new ResourceCacheEntry($key, @$params())
         entry.set @, yes
         @
-      @$clearAll: ({exceptFor} = {}) ->
-        if angular.isArray(exceptFor)
-          exceptFor = exceptFor.map (params) ->
-            resource = new CachedResource(params)
-            new ResourceCacheEntry($key, resource.$params()).key
-        else if angular.isObject(exceptFor)
+      @$clearAll: ({exceptFor, clearPendingWrites} = {}) ->
+        exceptForKeys = []
+
+        if angular.isObject(exceptFor) # FYI this is going to change soon; see https://github.com/goodeggs/angular-cached-resource/issues/8
           cacheArrayEntry = new ResourceCacheArrayEntry($key, exceptFor).load()
-          exceptFor = []
-          exceptFor.push cacheArrayEntry.key
+          exceptForKeys.push cacheArrayEntry.key
           if cacheArrayEntry.value
-            for cacheInstanceParams in cacheArrayEntry.value
-              exceptFor.push new ResourceCacheEntry($key, cacheInstanceParams).key
-        cache.clear {key: $key, exceptFor}
+            exceptFor = (params for params in cacheArrayEntry.value)
+
+        exceptFor ?= []
+        unless clearPendingWrites
+          {queue, key} = resourceManager.getQueue(CachedResource)
+          exceptForKeys.push key
+          exceptFor.push resourceParams for {resourceParams} in queue
+
+        for params in exceptFor
+          resource = new CachedResource(params)
+          exceptForKeys.push new ResourceCacheEntry($key, resource.$params()).key
+
+        cache.clear {key: $key, exceptFor: exceptForKeys}
       @$addToCache: (attrs) ->
         new CachedResource(attrs).$$addToCache()
       @$resource: Resource
@@ -267,9 +274,8 @@ $cachedResourceFactory = ['$resource', '$timeout', '$q', '$log', ($resource, $ti
 
     CachedResource
 
-  $cachedResource.clearAll = cache.clear
-  $cachedResource.clearUndefined = ->
-    cache.clear exceptFor: resourceManager.keys()
+  for fn in ['clearAll', 'clearUndefined']
+    $cachedResource[fn] = angular.bind resourceManager, resourceManager[fn]
 
   return $cachedResource
 ]
