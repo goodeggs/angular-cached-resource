@@ -1,27 +1,31 @@
 module.exports = (debug) ->
-  ResourceWriteQueue = require('./resource_write_queue')(debug)
-  cache = require('./cache')(debug)
+  buildCachedResourceClass = require('./build_cached_resource_class')
+  Cache = require('./cache')(debug)
 
   class CachedResourceManager
-    constructor: (@$timeout) ->
+    constructor: ($resource, $timeout, $q) ->
       @byKey = {}
+      @build = angular.bind(@, buildCachedResourceClass, $resource, $timeout, $q, debug)
 
     keys: ->
       Object.keys @byKey
 
-    add: (CachedResource) ->
-      queue = new ResourceWriteQueue(CachedResource, @$timeout)
-      @byKey[CachedResource.$key] = {resource: CachedResource, queue}
+    add: ->
+      args = Array::slice.call arguments
+      CachedResource = @build(args)
 
-    getQueue: (CachedResource) ->
-      @byKey[CachedResource.$key].queue
+      @byKey[CachedResource.$key] = CachedResource
+      @flushQueues()
+
+      CachedResource
 
     flushQueues: ->
-      queue.flush() for key, {queue} of @byKey
+      CachedResource.$writes.flush() for key, CachedResource of @byKey
 
     clearAll: ({exceptFor, clearPendingWrites} = {}) ->
       exceptFor ?= []
-      resource.$clearAll({clearPendingWrites}) for key, {resource} of @byKey when key not in exceptFor
+      for key, CachedResource of @byKey when key not in exceptFor
+        CachedResource.$clearAll({clearPendingWrites})
 
     clearUndefined: ->
-      cache.clear exceptFor: @keys()
+      Cache.clear exceptFor: @keys()
