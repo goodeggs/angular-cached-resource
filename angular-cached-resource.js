@@ -141,10 +141,15 @@ module.exports = buildCachedResourceClass = function($resource, $timeout, $q, de
   CachedResource.$writes = new ResourceWriteQueue(CachedResource, $timeout);
   for (name in actions) {
     params = actions[name];
-    handler = params.method === 'GET' && params.isArray ? readArrayCache($q, debug, name, CachedResource) : params.method === 'GET' ? readCache($q, debug, name, CachedResource) : (_ref = params.method) === 'POST' || _ref === 'PUT' || _ref === 'DELETE' || _ref === 'PATCH' ? writeCache($q, debug, name, CachedResource) : void 0;
-    CachedResource[name] = handler;
-    if (params.method !== 'GET') {
-      CachedResource.prototype["$" + name] = handler;
+    if (params.cache !== false) {
+      handler = params.method === 'GET' && params.isArray ? readArrayCache($q, debug, name, CachedResource) : params.method === 'GET' ? readCache($q, debug, name, CachedResource) : (_ref = params.method) === 'POST' || _ref === 'PUT' || _ref === 'DELETE' || _ref === 'PATCH' ? writeCache($q, debug, name, CachedResource) : void 0;
+      CachedResource[name] = handler;
+      if (params.method !== 'GET') {
+        CachedResource.prototype["$" + name] = handler;
+      }
+    } else {
+      CachedResource[name] = Resource[name];
+      CachedResource.prototype["$" + name] = Resource.prototype["$" + name];
     }
   }
   return CachedResource;

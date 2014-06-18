@@ -100,8 +100,9 @@ $cachedResource(cacheKey, url, [paramDefaults], [actions]);
   [$resource][ngResource] factory.
 
 - **actions**, `Object`, _optional_<br>
-  Exactly matches the API for the `actions` param of the
-  [$resource][ngResource] factory.
+  Mostly matches the API for the `actions` param of the
+  [$resource][ngResource] factory. Takes an additonal `cache` param (Boolean,
+  default `true`) that determines if this action uses caching.
 
 ### Returns
 

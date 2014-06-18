@@ -77,14 +77,18 @@ module.exports = buildCachedResourceClass = ($resource, $timeout, $q, debug, arg
   CachedResource.$writes = new ResourceWriteQueue(CachedResource, $timeout)
 
   for name, params of actions
-    handler = if params.method is 'GET' and params.isArray
-        readArrayCache($q, debug, name, CachedResource)
-      else if params.method is 'GET'
-        readCache($q, debug, name, CachedResource)
-      else if params.method in ['POST', 'PUT', 'DELETE', 'PATCH']
-        writeCache($q, debug, name, CachedResource)
+    unless params.cache is false
+      handler = if params.method is 'GET' and params.isArray
+          readArrayCache($q, debug, name, CachedResource)
+        else if params.method is 'GET'
+          readCache($q, debug, name, CachedResource)
+        else if params.method in ['POST', 'PUT', 'DELETE', 'PATCH']
+          writeCache($q, debug, name, CachedResource)
 
-    CachedResource[name] = handler
-    CachedResource::["$#{name}"] = handler unless params.method is 'GET'
+      CachedResource[name] = handler
+      CachedResource::["$#{name}"] = handler unless params.method is 'GET'
+    else
+      CachedResource[name] = Resource[name]
+      CachedResource::["$#{name}"] = Resource::["$#{name}"]
 
   CachedResource
