@@ -633,6 +633,7 @@ module.exports = function(debug) {
       this.$timeout = $timeout;
       this.key = "" + this.CachedResource.$key + "/write";
       this.queue = Cache.getItem(this.key, []);
+      this.count = 0;
     }
 
     ResourceWriteQueue.prototype.enqueue = function(params, resourceData, action, deferred) {
@@ -809,7 +810,8 @@ module.exports = function(debug) {
           action: write.action
         };
       });
-      return Cache.setItem(this.key, savableQueue);
+      Cache.setItem(this.key, savableQueue);
+      return this.count = savableQueue.length;
     };
 
     return ResourceWriteQueue;

@@ -4,7 +4,6 @@ module.exports = (debug) ->
   ResourceCacheEntry = require('./resource_cache_entry')(debug)
   Cache = require('./cache')(debug)
 
-
   class ResourceWriteQueue
     logStatusOfRequest: (status, action, params, data) ->
       debug("ngCachedResource", "#{action} for #{@key} #{angular.toJson(params)} #{status}", data)
@@ -12,6 +11,7 @@ module.exports = (debug) ->
     constructor: (@CachedResource, @$timeout) ->
       @key = "#{@CachedResource.$key}/write"
       @queue = Cache.getItem(@key, [])
+      @count = 0
 
     enqueue: (params, resourceData, action, deferred) ->
       @logStatusOfRequest('enqueued', action, params, resourceData)
@@ -101,3 +101,4 @@ module.exports = (debug) ->
         resourceParams: write.resourceParams
         action: write.action
       Cache.setItem @key, savableQueue
+      @count = savableQueue.length
