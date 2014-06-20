@@ -1,7 +1,7 @@
 modifyObjectInPlace = require './modify_object_in_place'
 
-module.exports = writeCache = ($q, debug, action, CachedResource) ->
-  ResourceCacheEntry = require('./resource_cache_entry')(debug)
+module.exports = writeCache = ($q, log, action, CachedResource) ->
+  ResourceCacheEntry = require('./resource_cache_entry')(log)
 
   ->
     # according to the ngResource documentation:

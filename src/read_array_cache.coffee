@@ -1,8 +1,8 @@
 processReadArgs = require './process_read_args'
 
-module.exports = readArrayCache = ($q, debug, name, CachedResource) ->
-  ResourceCacheEntry = require('./resource_cache_entry')(debug)
-  ResourceCacheArrayEntry = require('./resource_cache_array_entry')(debug)
+module.exports = readArrayCache = ($q, log, name, CachedResource) ->
+  ResourceCacheEntry = require('./resource_cache_entry')(log)
+  ResourceCacheArrayEntry = require('./resource_cache_array_entry')(log)
 
   ->
     {params, deferred: cacheDeferred} = processReadArgs($q, arguments)
@@ -19,7 +19,7 @@ module.exports = readArrayCache = ($q, debug, name, CachedResource) ->
       for instance in response
         cacheInstanceParams = instance.$params()
         if Object.keys(cacheInstanceParams).length is 0
-          $log.error """
+          log.error """
             instance #{instance} doesn't have any boundParams. Please, make sure you specified them in your resource's initialization, f.e. `{id: "@id"}`, or it won't be cached.
           """
         else

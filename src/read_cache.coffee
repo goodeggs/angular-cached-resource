@@ -1,7 +1,7 @@
 processReadArgs = require './process_read_args'
 
-module.exports = readCache = ($q, debug, name, CachedResource) ->
-  ResourceCacheEntry = require('./resource_cache_entry')(debug)
+module.exports = readCache = ($q, log, name, CachedResource) ->
+  ResourceCacheEntry = require('./resource_cache_entry')(log)
 
   ->
     {params, deferred: cacheDeferred} = processReadArgs($q, arguments)

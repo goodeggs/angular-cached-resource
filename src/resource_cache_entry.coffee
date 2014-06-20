@@ -1,5 +1,5 @@
-module.exports = (debug) ->
-  Cache = require('./cache')(debug)
+module.exports = (log) ->
+  Cache = require('./cache')(log)
 
   class ResourceCacheEntry
     defaultValue: {}

@@ -10,9 +10,11 @@ app.provider '$cachedResource', class $cachedResourceProvider
 
 $cachedResourceFactory = ['$resource', '$timeout', '$q', '$log', ($resource, $timeout, $q, $log) ->
 
-  debug = if debugMode then angular.bind($log, $log.debug, 'ngCachedResource') else (->)
+  log =
+    debug: if debugMode then angular.bind($log, $log.debug, 'ngCachedResource') else (->)
+    error: angular.bind($log, $log.error, 'ngCachedResource')
 
-  CachedResourceManager = require('./cached_resource_manager')(debug)
+  CachedResourceManager = require('./cached_resource_manager')(log)
   resourceManager = new CachedResourceManager($resource, $timeout, $q)
 
   document.removeEventListener 'online', resourceManagerListener if resourceManagerListener

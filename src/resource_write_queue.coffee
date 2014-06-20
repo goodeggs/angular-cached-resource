@@ -1,8 +1,8 @@
 CACHE_RETRY_TIMEOUT = 60000 # one minute
 
-module.exports = (debug, $q) ->
-  ResourceCacheEntry = require('./resource_cache_entry')(debug)
-  Cache = require('./cache')(debug)
+module.exports = (log, $q) ->
+  ResourceCacheEntry = require('./resource_cache_entry')(log)
+  Cache = require('./cache')(log)
 
   # this could be a lot nicer with ES6 WeakMaps
   # (http://www.nczonline.net/blog/2014/01/21/private-instance-members-with-weakmaps-in-javascript/)
@@ -18,7 +18,7 @@ module.exports = (debug, $q) ->
 
   class ResourceWriteQueue
     logStatusOfRequest: (status, action, params, data) ->
-      debug("ngCachedResource", "#{action} for #{@key} #{angular.toJson(params)} #{status}", data)
+      log.debug("ngCachedResource", "#{action} for #{@key} #{angular.toJson(params)} #{status}", data)
 
     constructor: (@CachedResource, @$timeout) ->
       @key = "#{@CachedResource.$key}/write"

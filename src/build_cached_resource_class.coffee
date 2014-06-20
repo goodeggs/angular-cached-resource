@@ -9,11 +9,11 @@ readArrayCache = require './read_array_cache'
 readCache = require './read_cache'
 writeCache = require './write_cache'
 
-module.exports = buildCachedResourceClass = ($resource, $timeout, $q, debug, args) ->
-  ResourceCacheEntry = require('./resource_cache_entry')(debug)
-  ResourceCacheArrayEntry = require('./resource_cache_array_entry')(debug)
-  ResourceWriteQueue = require('./resource_write_queue')(debug, $q)
-  Cache = require('./cache')(debug)
+module.exports = buildCachedResourceClass = ($resource, $timeout, $q, log, args) ->
+  ResourceCacheEntry = require('./resource_cache_entry')(log)
+  ResourceCacheArrayEntry = require('./resource_cache_array_entry')(log)
+  ResourceWriteQueue = require('./resource_write_queue')(log, $q)
+  Cache = require('./cache')(log)
 
   resourceManager = @
   $key = args.shift()
@@ -79,11 +79,11 @@ module.exports = buildCachedResourceClass = ($resource, $timeout, $q, debug, arg
   for name, params of actions
     unless params.cache is false
       handler = if params.method is 'GET' and params.isArray
-          readArrayCache($q, debug, name, CachedResource)
+          readArrayCache($q, log, name, CachedResource)
         else if params.method is 'GET'
-          readCache($q, debug, name, CachedResource)
+          readCache($q, log, name, CachedResource)
         else if params.method in ['POST', 'PUT', 'DELETE', 'PATCH']
-          writeCache($q, debug, name, CachedResource)
+          writeCache($q, log, name, CachedResource)
 
       CachedResource[name] = handler
       CachedResource::["$#{name}"] = handler unless params.method is 'GET'

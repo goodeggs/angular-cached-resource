@@ -1,5 +1,5 @@
-module.exports = (debug) ->
-  ResourceCacheEntry = require('./resource_cache_entry')(debug)
+module.exports = (log) ->
+  ResourceCacheEntry = require('./resource_cache_entry')(log)
 
   class ResourceCacheArrayEntry extends ResourceCacheEntry
     defaultValue: []

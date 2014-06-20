@@ -1,11 +1,11 @@
-module.exports = (debug) ->
+module.exports = (log) ->
   buildCachedResourceClass = require('./build_cached_resource_class')
-  Cache = require('./cache')(debug)
+  Cache = require('./cache')(log)
 
   class CachedResourceManager
     constructor: ($resource, $timeout, $q) ->
       @byKey = {}
-      @build = angular.bind(@, buildCachedResourceClass, $resource, $timeout, $q, debug)
+      @build = angular.bind(@, buildCachedResourceClass, $resource, $timeout, $q, log)
 
     keys: ->
       Object.keys @byKey
