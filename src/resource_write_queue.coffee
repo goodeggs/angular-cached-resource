@@ -1,8 +1,20 @@
 CACHE_RETRY_TIMEOUT = 60000 # one minute
 
-module.exports = (debug) ->
+module.exports = (debug, $q) ->
   ResourceCacheEntry = require('./resource_cache_entry')(debug)
   Cache = require('./cache')(debug)
+
+  # this could be a lot nicer with ES6 WeakMaps
+  # (http://www.nczonline.net/blog/2014/01/21/private-instance-members-with-weakmaps-in-javascript/)
+  # but till then this is to maintain private instance members
+  flushQueueDeferreds = {}
+  resetDeferred = (queue) ->
+    deferred = $q.defer()
+    flushQueueDeferreds[queue.key] = deferred
+    queue.promise = deferred.promise
+    deferred
+  resolveDeferred = (queue) ->
+    flushQueueDeferreds[queue.key].resolve()
 
   class ResourceWriteQueue
     logStatusOfRequest: (status, action, params, data) ->
@@ -12,8 +24,10 @@ module.exports = (debug) ->
       @key = "#{@CachedResource.$key}/write"
       @queue = Cache.getItem(@key, [])
       @count = 0
+      resetDeferred(@).resolve() # initialize the queue with a resolved promise
 
     enqueue: (params, resourceData, action, deferred) ->
+      resetDeferred(@) if @count is 0
       @logStatusOfRequest('enqueued', action, params, resourceData)
       resourceParams = if angular.isArray(resourceData)
         resourceData.map((resource) -> resource.$params())
@@ -46,7 +60,10 @@ module.exports = (debug) ->
 
       @_update()
 
-    flush: ->
+      resolveDeferred @ if @count is 0
+
+    flush: (done) ->
+      @promise.then done if angular.isFunction(done)
       @_setFlushTimeout()
       @_processWrite(write) for write in @queue
 

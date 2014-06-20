@@ -31,7 +31,7 @@ module.exports = buildCachedResourceClass = function($resource, $timeout, $q, de
   var $key, Cache, CachedResource, Resource, ResourceCacheArrayEntry, ResourceCacheEntry, ResourceWriteQueue, actions, arg, boundParams, handler, isPermissibleBoundValue, name, param, paramDefault, paramDefaults, params, resourceManager, url, _ref;
   ResourceCacheEntry = require('./resource_cache_entry')(debug);
   ResourceCacheArrayEntry = require('./resource_cache_array_entry')(debug);
-  ResourceWriteQueue = require('./resource_write_queue')(debug);
+  ResourceWriteQueue = require('./resource_write_queue')(debug, $q);
   Cache = require('./cache')(debug);
   resourceManager = this;
   $key = args.shift();
@@ -431,31 +431,13 @@ module.exports = readArrayCache = function($q, debug, name, CachedResource) {
   ResourceCacheEntry = require('./resource_cache_entry')(debug);
   ResourceCacheArrayEntry = require('./resource_cache_array_entry')(debug);
   return function() {
-    var arrayInstance, cacheArrayEntry, cacheDeferred, cacheInstanceEntry, cacheInstanceParams, httpDeferred, params, resource, _i, _len, _ref, _ref1;
+    var arrayInstance, cacheArrayEntry, cacheDeferred, cacheInstanceEntry, cacheInstanceParams, httpDeferred, params, readHttp, _i, _len, _ref, _ref1;
     _ref = processReadArgs($q, arguments), params = _ref.params, cacheDeferred = _ref.deferred;
     httpDeferred = $q.defer();
     arrayInstance = new Array();
     arrayInstance.$promise = cacheDeferred.promise;
     arrayInstance.$httpPromise = httpDeferred.promise;
     cacheArrayEntry = new ResourceCacheArrayEntry(CachedResource.$key, params).load();
-    resource = CachedResource.$resource[name](params);
-    resource.$promise.then(function() {
-      var cachedResourceInstances;
-      cachedResourceInstances = resource.map(function(resourceInstance) {
-        return new CachedResource(resourceInstance);
-      });
-      arrayInstance.splice.apply(arrayInstance, [0, arrayInstance.length].concat(__slice.call(cachedResourceInstances)));
-      if (!cacheArrayEntry.value) {
-        cacheDeferred.resolve(arrayInstance);
-      }
-      return httpDeferred.resolve(arrayInstance);
-    });
-    resource.$promise["catch"](function(error) {
-      if (!cacheArrayEntry.value) {
-        cacheDeferred.reject(error);
-      }
-      return httpDeferred.reject(error);
-    });
     arrayInstance.$httpPromise.then(function(response) {
       var cacheArrayReferences, cacheInstanceEntry, cacheInstanceParams, instance, _i, _len;
       cacheArrayReferences = [];
@@ -472,6 +454,32 @@ module.exports = readArrayCache = function($q, debug, name, CachedResource) {
       }
       return cacheArrayEntry.set(cacheArrayReferences);
     });
+    readHttp = function() {
+      var resource;
+      resource = CachedResource.$resource[name](params);
+      resource.$promise.then(function() {
+        var cachedResourceInstances;
+        cachedResourceInstances = resource.map(function(resourceInstance) {
+          return new CachedResource(resourceInstance);
+        });
+        arrayInstance.splice.apply(arrayInstance, [0, arrayInstance.length].concat(__slice.call(cachedResourceInstances)));
+        if (!cacheArrayEntry.value) {
+          cacheDeferred.resolve(arrayInstance);
+        }
+        return httpDeferred.resolve(arrayInstance);
+      });
+      return resource.$promise["catch"](function(error) {
+        if (!cacheArrayEntry.value) {
+          cacheDeferred.reject(error);
+        }
+        return httpDeferred.reject(error);
+      });
+    };
+    if (CachedResource.$writes.count > 0) {
+      CachedResource.$writes.flush(readHttp);
+    } else {
+      readHttp();
+    }
     if (cacheArrayEntry.value) {
       _ref1 = cacheArrayEntry.value;
       for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
@@ -624,10 +632,21 @@ var CACHE_RETRY_TIMEOUT;
 
 CACHE_RETRY_TIMEOUT = 60000;
 
-module.exports = function(debug) {
-  var Cache, ResourceCacheEntry, ResourceWriteQueue;
+module.exports = function(debug, $q) {
+  var Cache, ResourceCacheEntry, ResourceWriteQueue, flushQueueDeferreds, resetDeferred, resolveDeferred;
   ResourceCacheEntry = require('./resource_cache_entry')(debug);
   Cache = require('./cache')(debug);
+  flushQueueDeferreds = {};
+  resetDeferred = function(queue) {
+    var deferred;
+    deferred = $q.defer();
+    flushQueueDeferreds[queue.key] = deferred;
+    queue.promise = deferred.promise;
+    return deferred;
+  };
+  resolveDeferred = function(queue) {
+    return flushQueueDeferreds[queue.key].resolve();
+  };
   return ResourceWriteQueue = (function() {
     ResourceWriteQueue.prototype.logStatusOfRequest = function(status, action, params, data) {
       return debug("ngCachedResource", "" + action + " for " + this.key + " " + (angular.toJson(params)) + " " + status, data);
@@ -639,10 +658,14 @@ module.exports = function(debug) {
       this.key = "" + this.CachedResource.$key + "/write";
       this.queue = Cache.getItem(this.key, []);
       this.count = 0;
+      resetDeferred(this).resolve();
     }
 
     ResourceWriteQueue.prototype.enqueue = function(params, resourceData, action, deferred) {
       var resourceParams, write, _ref, _ref1;
+      if (this.count === 0) {
+        resetDeferred(this);
+      }
       this.logStatusOfRequest('enqueued', action, params, resourceData);
       resourceParams = angular.isArray(resourceData) ? resourceData.map(function(resource) {
         return resource.$params();
@@ -699,11 +722,17 @@ module.exports = function(debug) {
         this.$timeout.cancel(this.timeoutPromise);
         delete this.timeoutPromise;
       }
-      return this._update();
+      this._update();
+      if (this.count === 0) {
+        return resolveDeferred(this);
+      }
     };
 
-    ResourceWriteQueue.prototype.flush = function() {
+    ResourceWriteQueue.prototype.flush = function(done) {
       var write, _i, _len, _ref, _results;
+      if (angular.isFunction(done)) {
+        this.promise.then(done);
+      }
       this._setFlushTimeout();
       _ref = this.queue;
       _results = [];

@@ -14,16 +14,6 @@ module.exports = readArrayCache = ($q, debug, name, CachedResource) ->
 
     cacheArrayEntry = new ResourceCacheArrayEntry(CachedResource.$key, params).load()
 
-    resource = CachedResource.$resource[name](params)
-    resource.$promise.then ->
-      cachedResourceInstances = resource.map (resourceInstance) -> new CachedResource resourceInstance
-      arrayInstance.splice(0, arrayInstance.length, cachedResourceInstances...)
-      cacheDeferred.resolve arrayInstance unless cacheArrayEntry.value
-      httpDeferred.resolve arrayInstance
-    resource.$promise.catch (error) ->
-      cacheDeferred.reject error unless cacheArrayEntry.value
-      httpDeferred.reject error
-
     arrayInstance.$httpPromise.then (response) ->
       cacheArrayReferences = []
       for instance in response
@@ -37,6 +27,22 @@ module.exports = readArrayCache = ($q, debug, name, CachedResource) ->
           cacheInstanceEntry = new ResourceCacheEntry(CachedResource.$key, cacheInstanceParams).load()
           cacheInstanceEntry.set instance, false
       cacheArrayEntry.set cacheArrayReferences
+
+    readHttp = ->
+      resource = CachedResource.$resource[name](params)
+      resource.$promise.then ->
+        cachedResourceInstances = resource.map (resourceInstance) -> new CachedResource resourceInstance
+        arrayInstance.splice(0, arrayInstance.length, cachedResourceInstances...)
+        cacheDeferred.resolve arrayInstance unless cacheArrayEntry.value
+        httpDeferred.resolve arrayInstance
+      resource.$promise.catch (error) ->
+        cacheDeferred.reject error unless cacheArrayEntry.value
+        httpDeferred.reject error
+
+    if CachedResource.$writes.count > 0
+      CachedResource.$writes.flush readHttp
+    else
+      readHttp()
 
     if cacheArrayEntry.value
       for cacheInstanceParams in cacheArrayEntry.value

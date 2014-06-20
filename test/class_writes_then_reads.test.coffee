@@ -29,6 +29,17 @@ describe 'Class writes, then reads', ->
 
       expect(resourceInstance).to.have.property 'magic', 'Resource saved'
 
+    it 'defers response for isArray query on the same resource until write is successful', ->
+      resourceArray = CachedResource.query {herp: 'derp'}
+      expect(resourceArray).to.have.length 0
+
+      $httpBackend.expectPOST('/mock/1').respond 200
+      $httpBackend.expectGET('/mock?herp=derp').respond [{id: 1, magic: 'fromRead'}]
+      $httpBackend.flush()
+
+      expect(resourceArray).to.have.length 1
+      expect(resourceArray[0]).to.have.property 'magic', 'fromRead'
+
   describe 'when the write was okay', ->
     beforeEach ->
       $httpBackend.expectPOST('/mock/2').respond 200, {id: 2, worked: 'fromWrite'}

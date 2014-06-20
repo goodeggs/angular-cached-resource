@@ -12,7 +12,7 @@ writeCache = require './write_cache'
 module.exports = buildCachedResourceClass = ($resource, $timeout, $q, debug, args) ->
   ResourceCacheEntry = require('./resource_cache_entry')(debug)
   ResourceCacheArrayEntry = require('./resource_cache_array_entry')(debug)
-  ResourceWriteQueue = require('./resource_write_queue')(debug)
+  ResourceWriteQueue = require('./resource_write_queue')(debug, $q)
   Cache = require('./cache')(debug)
 
   resourceManager = @
