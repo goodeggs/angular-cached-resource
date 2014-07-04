@@ -18,7 +18,8 @@ describe 'adding resources to cache', ->
 
     it '$addToCache', ->
       Computer.$addToCache {sn: '12-23921-FF2', type: 'HOLMES IV'}
-      expect(angular.fromJson(localStorage.getItem('cachedResource://computer?sn=12-23921-FF2')).value).to.deep.equal {sn: '12-23921-FF2', type: 'HOLMES IV'}
+      item = localStorage.getItem('cachedResource://computer?sn=12-23921-FF2')
+      expect(angular.fromJson(item).value).to.deep.equal {sn: '12-23921-FF2', type: 'HOLMES IV'}
 
   describe 'with an instance method', ->
     {computer} = {}

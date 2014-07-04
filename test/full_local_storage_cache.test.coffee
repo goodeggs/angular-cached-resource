@@ -1,4 +1,16 @@
-describe 'a full localStorage cache', ->
+# can we mock localStorage? if not (ie Firefox), this test is not gonna work...
+localStorageIsMockable = do ->
+  temp = window.localStorage.setItem
+  window.localStorage.setItem = -> 'test'
+  conditional = try
+      window.localStorage.setItem() is 'test'
+    catch
+      false
+  window.localStorage.setItem = temp
+  conditional
+
+conditionallyDescribe = if localStorageIsMockable then describe else xdescribe
+conditionallyDescribe 'a full localStorage cache', ->
   {CachedResource, $httpBackend} = {}
 
   beforeEach ->
@@ -24,3 +36,4 @@ describe 'a full localStorage cache', ->
     $httpBackend.expectPOST('/mock/42', player: 'Jackie Robinson').respond 200
     CachedResource.save {id: 42}, {player: 'Jackie Robinson'}
     $httpBackend.flush()
+
