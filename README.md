@@ -245,7 +245,7 @@ npm test
 
 [MIT](https://github.com/goodeggs/angular-cached-resource/blob/master/LICENSE.md)
 
-[travis-badge]: https://travis-ci.org/goodeggs/angular-cached-resource.png
+[travis-badge]: https://travis-ci.org/goodeggs/angular-cached-resource.svg?branch=master
 [travis-link]: https://travis-ci.org/goodeggs/angular-cached-resource
 
 [angular]: http://angularjs.org/
