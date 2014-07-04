@@ -28,7 +28,7 @@
   },
   "main": "lib/index.js",
   "scripts": {
-    "test": "./node_modules/karma/bin/karma start",
+    "test": "./node_modules/karma/bin/karma start --single-run",
     "prepublish": "bower -sj install",
     "compile": "coffee --bare --compile --output lib/ src/",
     "link": "browserify lib/index.js > angular-cached-resource.js",
