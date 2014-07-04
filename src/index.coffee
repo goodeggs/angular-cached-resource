@@ -37,7 +37,7 @@ $cachedResourceFactory = ['$resource', '$timeout', '$q', '$log', ($resource, $ti
 
   $cachedResource = ->
     resourceManager.add.apply resourceManager, arguments
-  for fn in ['clearAll', 'clearUndefined']
+  for fn in ['clearCache', 'clearUndefined']
     $cachedResource[fn] = angular.bind resourceManager, resourceManager[fn]
   return $cachedResource
 
