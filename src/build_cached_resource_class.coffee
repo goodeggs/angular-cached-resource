@@ -49,7 +49,7 @@ module.exports = buildCachedResourceClass = ($resource, $timeout, $q, log, args)
       entry = new ResourceCacheEntry($key, @$params())
       entry.set @, yes
       @
-    @$clearAll: ({exceptFor, clearPendingWrites} = {}) ->
+    @$clearCache: ({exceptFor, clearPendingWrites} = {}) ->
       exceptForKeys = []
 
       if angular.isObject(exceptFor) # FYI this is going to change soon; see https://github.com/goodeggs/angular-cached-resource/issues/8

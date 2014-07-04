@@ -22,10 +22,10 @@ module.exports = (log) ->
     flushQueues: ->
       CachedResource.$writes.flush() for key, CachedResource of @byKey
 
-    clearAll: ({exceptFor, clearPendingWrites} = {}) ->
+    clearCache: ({exceptFor, clearPendingWrites} = {}) ->
       exceptFor ?= []
       for key, CachedResource of @byKey when key not in exceptFor
-        CachedResource.$clearAll({clearPendingWrites})
+        CachedResource.$clearCache({clearPendingWrites})
 
     clearUndefined: ->
       Cache.clear exceptFor: @keys()
