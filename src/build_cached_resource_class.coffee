@@ -52,7 +52,7 @@ module.exports = buildCachedResourceClass = ($resource, $timeout, $q, log, args)
       entry.set @, dirty
       @
 
-    @$clearAll: ({exceptFor, clearPendingWrites} = {}) ->
+    @$clearCache: ({exceptFor, clearPendingWrites} = {}) ->
       exceptForKeys = []
 
       if angular.isArray(exceptFor)
