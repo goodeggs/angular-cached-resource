@@ -28,7 +28,7 @@ readCache = require('./read_cache');
 writeCache = require('./write_cache');
 
 module.exports = buildCachedResourceClass = function($resource, $timeout, $q, log, args) {
-  var $key, Cache, CachedResource, Resource, ResourceCacheArrayEntry, ResourceCacheEntry, ResourceWriteQueue, actions, arg, boundParams, handler, isPermissibleBoundValue, name, param, paramDefault, paramDefaults, params, resourceManager, url, _ref;
+  var $key, Cache, CachedResource, Resource, ResourceCacheArrayEntry, ResourceCacheEntry, ResourceWriteQueue, actions, arg, boundParams, handler, isPermissibleBoundValue, method, name, param, paramDefault, paramDefaults, params, resourceManager, url;
   ResourceCacheEntry = require('./resource_cache_entry')(log);
   ResourceCacheArrayEntry = require('./resource_cache_array_entry')(log);
   ResourceWriteQueue = require('./resource_write_queue')(log, $q);
@@ -141,10 +141,11 @@ module.exports = buildCachedResourceClass = function($resource, $timeout, $q, lo
   CachedResource.$writes = new ResourceWriteQueue(CachedResource, $timeout);
   for (name in actions) {
     params = actions[name];
+    method = params.method.toUpperCase();
     if (params.cache !== false) {
-      handler = params.method === 'GET' && params.isArray ? readArrayCache($q, log, name, CachedResource) : params.method === 'GET' ? readCache($q, log, name, CachedResource) : (_ref = params.method) === 'POST' || _ref === 'PUT' || _ref === 'DELETE' || _ref === 'PATCH' ? writeCache($q, log, name, CachedResource) : void 0;
+      handler = method === 'GET' && params.isArray ? readArrayCache($q, log, name, CachedResource) : method === 'GET' ? readCache($q, log, name, CachedResource) : method === 'POST' || method === 'PUT' || method === 'DELETE' || method === 'PATCH' ? writeCache($q, log, name, CachedResource) : void 0;
       CachedResource[name] = handler;
-      if (params.method !== 'GET') {
+      if (method !== 'GET') {
         CachedResource.prototype["$" + name] = handler;
       }
     } else {
