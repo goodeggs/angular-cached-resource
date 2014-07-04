@@ -26,7 +26,6 @@ module.exports = (log) ->
     out
 
   setItem: (key, value) ->
-    # console.log 'set', key, angular.toJson(value)
     key = buildKey key
     stringValue = angular.toJson value
 
