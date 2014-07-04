@@ -1,10 +1,11 @@
 module.exports = (config) ->
 
   config.set
+    singleRun: yes
+
     frameworks: [
       'mocha'
       'sinon-chai'
-      'browserify'
     ]
 
     files: [
@@ -12,7 +13,7 @@ module.exports = (config) ->
       'bower_components/angular-mocks/angular-mocks.js'
       'bower_components/angular-resource/angular-resource.js'
 
-      'src/index.coffee'
+      'angular-cached-resource.js'
 
       'test/*.test.coffee'
     ]
@@ -23,10 +24,3 @@ module.exports = (config) ->
 
     preprocessors:
       '**/*.coffee': ['coffee']
-      'src/**/*.coffee': ['browserify']
-
-    browserify:
-      extensions: ['.coffee']
-      transform: ['coffeeify']
-      watch: yes
-      debug: yes

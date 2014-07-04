@@ -17,18 +17,20 @@
   "bugs": "https://github.com/goodeggs/angular-cached-resource/issues",
   "devDependencies": {
     "coffee-script": ">=1.7.x",
+    "bower": "^1.3.1",
+    "browserify": "^3.32.0",
+    "coffeeify": "^0.6.0",
+    "uglify-js": "^2.4.12",
     "karma": "^0.12.16",
     "karma-coffee-preprocessor": "^0.1.3",
     "karma-phantomjs-launcher": "^0.1.2",
     "karma-mocha": "^0.1.1",
-    "uglify-js": "^2.4.12",
-    "browserify": "^3.32.0",
-    "bower": "^1.3.1",
-    "karma-sinon-chai": "^0.1.5"
+    "karma-sinon-chai": "^0.1.5",
+    "karma-browserify": "^0.2.1"
   },
   "main": "lib/index.js",
   "scripts": {
-    "test": "./node_modules/karma/bin/karma start --single-run",
+    "test": "./node_modules/karma/bin/karma start ./karma.full.conf.coffee",
     "prepublish": "bower -sj install",
     "compile": "coffee --bare --compile --output lib/ src/",
     "link": "browserify lib/index.js > angular-cached-resource.js",
