@@ -9,6 +9,8 @@ describe 'class with custom actions', ->
       CachedResource = $cachedResource 'class-with-custom-actions', '/mock/:id', {id: '@id'},
         charge:
           method: "PATCH"
+        kiai:
+          method: "put"
 
   afterEach ->
     $httpBackend.verifyNoOutstandingExpectation()
@@ -25,6 +27,12 @@ describe 'class with custom actions', ->
     CachedResource.charge id: 1, amount: '$77.00'
     $httpBackend.flush()
 
+  it "has custom PUT action, even though the action was described in lowercase", ->
+    $httpBackend.expectPUT('/mock/1', {id: 1, sound: 'Hi-ya!'}).respond 200
+    expect( CachedResource ).to.have.property 'kiai'
+    CachedResource.kiai id: 1, sound: 'Hi-ya!'
+    $httpBackend.flush()
+
   describe 'resourceInstance', ->
     {resourceInstance} = {}
 
@@ -39,4 +47,10 @@ describe 'class with custom actions', ->
       $httpBackend.expectPATCH('/mock/1', {id: 1, amount: '$77.00'}).respond 200
       expect( resourceInstance ).to.have.property '$charge'
       resourceInstance.$charge()
+      $httpBackend.flush()
+
+    it "has custom PUT action, even though the action was described in lowercase", ->
+      $httpBackend.expectPUT('/mock/1', {id: 1, amount: '$77.00'}).respond 200
+      expect( resourceInstance ).to.have.property '$kiai'
+      resourceInstance.$kiai()
       $httpBackend.flush()
