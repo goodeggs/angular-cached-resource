@@ -54,7 +54,7 @@ module.exports = buildCachedResourceClass = ($resource, $timeout, $q, log, args)
 
       if angular.isObject(exceptFor) # FYI this is going to change soon; see https://github.com/goodeggs/angular-cached-resource/issues/8
         cacheArrayEntry = new ResourceCacheArrayEntry($key, exceptFor).load()
-        exceptForKeys.push cacheArrayEntry.key
+        exceptForKeys.push cacheArrayEntry.fullCacheKey()
         if cacheArrayEntry.value
           exceptFor = (params for params in cacheArrayEntry.value)
 
@@ -66,11 +66,15 @@ module.exports = buildCachedResourceClass = ($resource, $timeout, $q, log, args)
 
       for params in exceptFor
         resource = new CachedResource(params)
-        exceptForKeys.push new ResourceCacheEntry($key, resource.$params()).key
+        exceptForKeys.push new ResourceCacheEntry($key, resource.$params()).fullCacheKey()
 
       Cache.clear {key: $key, exceptFor: exceptForKeys}
     @$addToCache: (attrs) ->
       new CachedResource(attrs).$$addToCache()
+    @$addArrayToCache: (attrs, instances) ->
+      instances = instances.map (instance) ->
+        new CachedResource(instance)
+      new ResourceCacheArrayEntry($key, attrs).addInstances instances, yes
     @$resource: Resource
     @$key: $key
 

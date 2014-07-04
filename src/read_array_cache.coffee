@@ -14,19 +14,8 @@ module.exports = readArrayCache = ($q, log, name, CachedResource) ->
 
     cacheArrayEntry = new ResourceCacheArrayEntry(CachedResource.$key, params).load()
 
-    arrayInstance.$httpPromise.then (response) ->
-      cacheArrayReferences = []
-      for instance in response
-        cacheInstanceParams = instance.$params()
-        if Object.keys(cacheInstanceParams).length is 0
-          log.error """
-            instance #{instance} doesn't have any boundParams. Please, make sure you specified them in your resource's initialization, f.e. `{id: "@id"}`, or it won't be cached.
-          """
-        else
-          cacheArrayReferences.push cacheInstanceParams
-          cacheInstanceEntry = new ResourceCacheEntry(CachedResource.$key, cacheInstanceParams).load()
-          cacheInstanceEntry.set instance, false
-      cacheArrayEntry.set cacheArrayReferences
+    arrayInstance.$httpPromise.then (instances) ->
+      cacheArrayEntry.addInstances(instances, false)
 
     readHttp = ->
       resource = CachedResource.$resource[name](params)

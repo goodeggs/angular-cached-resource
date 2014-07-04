@@ -131,6 +131,10 @@ module.exports = buildCachedResourceClass = function($resource, $timeout, $q, lo
       return new CachedResource(attrs).$$addToCache();
     };
 
+    CachedResource.$addArrayToCache = function(attrs, instances) {
+      return new ResourceCacheArrayEntry($key, attrs).addInstances(instances);
+    };
+
     CachedResource.$resource = Resource;
 
     CachedResource.$key = $key;
@@ -442,21 +446,8 @@ module.exports = readArrayCache = function($q, log, name, CachedResource) {
     arrayInstance.$promise = cacheDeferred.promise;
     arrayInstance.$httpPromise = httpDeferred.promise;
     cacheArrayEntry = new ResourceCacheArrayEntry(CachedResource.$key, params).load();
-    arrayInstance.$httpPromise.then(function(response) {
-      var cacheArrayReferences, cacheInstanceEntry, cacheInstanceParams, instance, _i, _len;
-      cacheArrayReferences = [];
-      for (_i = 0, _len = response.length; _i < _len; _i++) {
-        instance = response[_i];
-        cacheInstanceParams = instance.$params();
-        if (Object.keys(cacheInstanceParams).length === 0) {
-          log.error("instance " + instance + " doesn't have any boundParams. Please, make sure you specified them in your resource's initialization, f.e. `{id: \"@id\"}`, or it won't be cached.");
-        } else {
-          cacheArrayReferences.push(cacheInstanceParams);
-          cacheInstanceEntry = new ResourceCacheEntry(CachedResource.$key, cacheInstanceParams).load();
-          cacheInstanceEntry.set(instance, false);
-        }
-      }
-      return cacheArrayEntry.set(cacheArrayReferences);
+    arrayInstance.$httpPromise.then(function(instances) {
+      return cacheArrayEntry.addInstances(instances, false);
     });
     readHttp = function() {
       var resource;
@@ -563,8 +554,25 @@ module.exports = function(log) {
 
     ResourceCacheArrayEntry.prototype.defaultValue = [];
 
-    ResourceCacheArrayEntry.prototype.setKey = function(key) {
-      return this.key = "" + key + "/array";
+    ResourceCacheArrayEntry.prototype.cacheKey = function() {
+      return "" + this.key + "/array";
+    };
+
+    ResourceCacheArrayEntry.prototype.addInstances = function(instances, dirty) {
+      var cacheArrayReferences, cacheInstanceEntry, cacheInstanceParams, instance, _i, _len;
+      cacheArrayReferences = [];
+      for (_i = 0, _len = instances.length; _i < _len; _i++) {
+        instance = instances[_i];
+        cacheInstanceParams = instance.$params();
+        if (Object.keys(cacheInstanceParams).length === 0) {
+          log.error("instance " + instance + " doesn't have any boundParams. Please, make sure you specified them in your resource's initialization, f.e. `{id: \"@id\"}`, or it won't be cached.");
+        } else {
+          cacheArrayReferences.push(cacheInstanceParams);
+          cacheInstanceEntry = new ResourceCacheEntry(this.key, cacheInstanceParams).load();
+          cacheInstanceEntry.set(instance, dirty);
+        }
+      }
+      return this.set(cacheArrayReferences, dirty);
     };
 
     return ResourceCacheArrayEntry;
@@ -580,9 +588,13 @@ module.exports = function(log) {
   return ResourceCacheEntry = (function() {
     ResourceCacheEntry.prototype.defaultValue = {};
 
-    function ResourceCacheEntry(resourceKey, params) {
+    ResourceCacheEntry.prototype.cacheKey = function() {
+      return this.key;
+    };
+
+    function ResourceCacheEntry(key, params) {
       var param, paramKeys;
-      this.setKey(resourceKey);
+      this.key = key;
       paramKeys = angular.isObject(params) ? Object.keys(params).sort() : [];
       if (paramKeys.length) {
         this.key += '?' + ((function() {
@@ -603,10 +615,6 @@ module.exports = function(log) {
       return this;
     };
 
-    ResourceCacheEntry.prototype.setKey = function(key) {
-      this.key = key;
-    };
-
     ResourceCacheEntry.prototype.set = function(value, dirty) {
       this.value = value;
       this.dirty = dirty;
@@ -619,7 +627,7 @@ module.exports = function(log) {
     };
 
     ResourceCacheEntry.prototype._update = function() {
-      return Cache.setItem(this.key, {
+      return Cache.setItem(this.cacheKey(), {
         value: this.value,
         dirty: this.dirty
       });
