@@ -1,6 +1,6 @@
 module.exports = (config) ->
 
-  config.set
+  options =
     singleRun: yes
 
     frameworks: [
@@ -18,9 +18,21 @@ module.exports = (config) ->
       'test/*.test.coffee'
     ]
 
-    browsers: [
-      'PhantomJS'
-    ]
-
     preprocessors:
       '**/*.coffee': ['coffee']
+
+    browsers:
+      if process.env.CI is 'true'
+        [
+          'PhantomJS'
+        ]
+      else
+        [
+          'PhantomJS'
+          'Chrome'
+          'Firefox'
+          'Safari'
+        ]
+
+
+  config.set options
