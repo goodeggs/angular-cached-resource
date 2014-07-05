@@ -3,19 +3,19 @@ module.exports = (log) ->
 
   class ResourceCacheEntry
     defaultValue: {}
+    cacheKeyPrefix: -> @key
 
-    constructor: (resourceKey, params) ->
-      @setKey(resourceKey)
+    fullCacheKey: ->
+      @cacheKeyPrefix() + @cacheKeyParams
 
+    constructor: (@key, params) ->
       paramKeys = if angular.isObject(params) then Object.keys(params).sort() else []
       if paramKeys.length
-        @key += '?' + ("#{param}=#{params[param]}" for param in paramKeys).join('&')
+        @cacheKeyParams = '?' + ("#{param}=#{params[param]}" for param in paramKeys).join('&')
 
     load: ->
-      {@value, @dirty} = Cache.getItem(@key, @defaultValue)
+      {@value, @dirty} = Cache.getItem(@fullCacheKey(), @defaultValue)
       @
-
-    setKey: (@key) ->
 
     set: (@value, @dirty) ->
       @_update()
@@ -25,4 +25,4 @@ module.exports = (log) ->
       @_update()
 
     _update: ->
-      Cache.setItem @key, {@value, @dirty}
+      Cache.setItem @fullCacheKey(), {@value, @dirty}
