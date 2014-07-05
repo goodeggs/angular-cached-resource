@@ -91,7 +91,7 @@ module.exports = buildCachedResourceClass = function($resource, $timeout, $q, lo
       exceptForKeys = [];
       if (angular.isObject(exceptFor)) {
         cacheArrayEntry = new ResourceCacheArrayEntry($key, exceptFor).load();
-        exceptForKeys.push(cacheArrayEntry.key);
+        exceptForKeys.push(cacheArrayEntry.fullCacheKey());
         if (cacheArrayEntry.value) {
           exceptFor = (function() {
             var _i, _len, _ref1, _results;
@@ -119,7 +119,7 @@ module.exports = buildCachedResourceClass = function($resource, $timeout, $q, lo
       for (_j = 0, _len1 = exceptFor.length; _j < _len1; _j++) {
         params = exceptFor[_j];
         resource = new CachedResource(params);
-        exceptForKeys.push(new ResourceCacheEntry($key, resource.$params()).key);
+        exceptForKeys.push(new ResourceCacheEntry($key, resource.$params()).fullCacheKey());
       }
       return Cache.clear({
         key: $key,
@@ -132,7 +132,10 @@ module.exports = buildCachedResourceClass = function($resource, $timeout, $q, lo
     };
 
     CachedResource.$addArrayToCache = function(attrs, instances) {
-      return new ResourceCacheArrayEntry($key, attrs).addInstances(instances);
+      instances = instances.map(function(instance) {
+        return new CachedResource(instance);
+      });
+      return new ResourceCacheArrayEntry($key, attrs).addInstances(instances, true);
     };
 
     CachedResource.$resource = Resource;
@@ -554,7 +557,7 @@ module.exports = function(log) {
 
     ResourceCacheArrayEntry.prototype.defaultValue = [];
 
-    ResourceCacheArrayEntry.prototype.cacheKey = function() {
+    ResourceCacheArrayEntry.prototype.cacheKeyPrefix = function() {
       return "" + this.key + "/array";
     };
 
@@ -588,8 +591,12 @@ module.exports = function(log) {
   return ResourceCacheEntry = (function() {
     ResourceCacheEntry.prototype.defaultValue = {};
 
-    ResourceCacheEntry.prototype.cacheKey = function() {
+    ResourceCacheEntry.prototype.cacheKeyPrefix = function() {
       return this.key;
+    };
+
+    ResourceCacheEntry.prototype.fullCacheKey = function() {
+      return this.cacheKeyPrefix() + this.cacheKeyParams;
     };
 
     function ResourceCacheEntry(key, params) {
@@ -597,7 +604,7 @@ module.exports = function(log) {
       this.key = key;
       paramKeys = angular.isObject(params) ? Object.keys(params).sort() : [];
       if (paramKeys.length) {
-        this.key += '?' + ((function() {
+        this.cacheKeyParams = '?' + ((function() {
           var _i, _len, _results;
           _results = [];
           for (_i = 0, _len = paramKeys.length; _i < _len; _i++) {
@@ -611,7 +618,7 @@ module.exports = function(log) {
 
     ResourceCacheEntry.prototype.load = function() {
       var _ref;
-      _ref = Cache.getItem(this.key, this.defaultValue), this.value = _ref.value, this.dirty = _ref.dirty;
+      _ref = Cache.getItem(this.fullCacheKey(), this.defaultValue), this.value = _ref.value, this.dirty = _ref.dirty;
       return this;
     };
 
@@ -627,7 +634,7 @@ module.exports = function(log) {
     };
 
     ResourceCacheEntry.prototype._update = function() {
-      return Cache.setItem(this.cacheKey(), {
+      return Cache.setItem(this.fullCacheKey(), {
         value: this.value,
         dirty: this.dirty
       });
