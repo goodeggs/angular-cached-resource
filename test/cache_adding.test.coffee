@@ -31,5 +31,7 @@ describe 'adding resources to cache', ->
 
     beforeEach ->
       computer = new Computer {sn: '424242-42424242', name: 'Deep Thought'}
+
+    it 'has an $$addToCache method', ->
       computer.$$addToCache()
-      expect(anglar.fromJson(localStorage.getItem('cachedResource://computer?sn=424242-42424242')).value).to.deep.equal {sn: '424242-42424242', name: 'Deep Thought'}
+      expect(angular.fromJson(localStorage.getItem('cachedResource://computer?sn=424242-42424242')).value).to.deep.equal {sn: '424242-42424242', name: 'Deep Thought'}
