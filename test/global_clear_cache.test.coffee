@@ -1,4 +1,4 @@
-describe '$cachedResource.clearAll()', ->
+describe '$cachedResource.clearCache()', ->
   {$cachedResource, $httpBackend} = {}
 
   beforeEach ->
@@ -23,11 +23,11 @@ describe '$cachedResource.clearAll()', ->
           $httpBackend.flush()
 
     it 'removes all cache entries', ->
-      $cachedResource.clearAll()
+      $cachedResource.clearCache()
       expect(localStorage.length).to.equal 0
 
     it 'removes all cache entries with exceptions', ->
-      $cachedResource.clearAll exceptFor: ['clearing-cache-animal', 'clearing-cache-vegetable']
+      $cachedResource.clearCache exceptFor: ['clearing-cache-animal', 'clearing-cache-vegetable']
       expect(localStorage.length).to.equal 12
 
     describe 'and something else in localStorage', ->
@@ -36,7 +36,7 @@ describe '$cachedResource.clearAll()', ->
         localStorage.setItem('shoop', 'de whoop')
 
       it 'leaves unrelated localStorage entries alone', ->
-        $cachedResource.clearAll()
+        $cachedResource.clearCache()
         expect(localStorage.getItem('shoop')).to.equal 'de whoop'
 
     describe 'and with pending writes', ->
@@ -49,7 +49,7 @@ describe '$cachedResource.clearAll()', ->
         $httpBackend.flush()
 
       it 'should not remove pending write from cache', ->
-        $cachedResource.clearAll()
+        $cachedResource.clearCache()
         expect(localStorage.length).to.equal 2
         expect(localStorage.getItem 'cachedResource://clearing-cache-phase/write').to.contain '1'
         expect(localStorage.getItem 'cachedResource://clearing-cache-phase?id=1').to.contain 'plasma'

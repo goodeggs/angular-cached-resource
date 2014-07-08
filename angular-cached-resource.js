@@ -85,7 +85,7 @@ module.exports = buildCachedResourceClass = function($resource, $timeout, $q, lo
       return this;
     };
 
-    CachedResource.$clearAll = function(_arg) {
+    CachedResource.$clearCache = function(_arg) {
       var cacheArrayEntry, clearPendingWrites, exceptFor, exceptForKeys, key, params, queue, resource, resourceParams, _i, _j, _len, _len1, _ref, _ref1;
       _ref = _arg != null ? _arg : {}, exceptFor = _ref.exceptFor, clearPendingWrites = _ref.clearPendingWrites;
       exceptForKeys = [];
@@ -290,7 +290,7 @@ module.exports = function(log) {
       return _results;
     };
 
-    CachedResourceManager.prototype.clearAll = function(_arg) {
+    CachedResourceManager.prototype.clearCache = function(_arg) {
       var CachedResource, clearPendingWrites, exceptFor, key, _ref, _ref1, _results;
       _ref = _arg != null ? _arg : {}, exceptFor = _ref.exceptFor, clearPendingWrites = _ref.clearPendingWrites;
       if (exceptFor == null) {
@@ -301,7 +301,7 @@ module.exports = function(log) {
       for (key in _ref1) {
         CachedResource = _ref1[key];
         if (__indexOf.call(exceptFor, key) < 0) {
-          _results.push(CachedResource.$clearAll({
+          _results.push(CachedResource.$clearCache({
             clearPendingWrites: clearPendingWrites
           }));
         }
@@ -367,7 +367,7 @@ $cachedResourceFactory = [
     $cachedResource = function() {
       return resourceManager.add.apply(resourceManager, arguments);
     };
-    _ref = ['clearAll', 'clearUndefined'];
+    _ref = ['clearCache', 'clearUndefined'];
     for (_i = 0, _len = _ref.length; _i < _len; _i++) {
       fn = _ref[_i];
       $cachedResource[fn] = angular.bind(resourceManager, resourceManager[fn]);
