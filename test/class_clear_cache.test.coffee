@@ -17,19 +17,16 @@ describe 'CachedResource.$clearCache()', ->
   describe 'with a populated cache', ->
 
     beforeEach ->
-      $httpBackend.whenGET('/animals?type=fictional-rabbits').respond 200, [
+      CachedResource.$addArrayToCache type: 'fictional-rabbits', [
         { name: 'white-rabbit', source: 'Alice In Wonderland' }
         { name: 'peppy-hare', source: 'Starfox' }
         { name: 'energizer-bunny', source: 'Energizer' }
         { name: 'frank', source: 'Donnie Darko' }
       ]
-      $httpBackend.whenGET('/animals?type=combos').respond 200, [
+      CachedResource.$addArrayToCache type: 'combos', [
         { name: 'liger', from: ['Lion', 'Tiger'] }
         { name: 'groler-bear', from: ['Grizzly Bear', 'Polar Bear'] }
       ]
-      rabbits = CachedResource.query type: 'fictional-rabbits'
-      combos = CachedResource.query type: 'combos'
-      $httpBackend.flush()
 
     it 'should remove all entries from the cache', ->
       CachedResource.$clearCache()
