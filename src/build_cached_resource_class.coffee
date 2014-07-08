@@ -45,9 +45,9 @@ module.exports = buildCachedResourceClass = ($resource, $timeout, $q, log, args)
       for attribute, param of boundParams when isPermissibleBoundValue @[attribute]
         params[param] = @[attribute]
       params
-    $$addToCache: ->
+    $$addToCache: (dirty = false) ->
       entry = new ResourceCacheEntry($key, @$params())
-      entry.set @, yes
+      entry.set @, dirty
       @
     @$clearAll: ({exceptFor, clearPendingWrites} = {}) ->
       exceptForKeys = []
@@ -69,12 +69,12 @@ module.exports = buildCachedResourceClass = ($resource, $timeout, $q, log, args)
         exceptForKeys.push new ResourceCacheEntry($key, resource.$params()).fullCacheKey()
 
       Cache.clear {key: $key, exceptFor: exceptForKeys}
-    @$addToCache: (attrs) ->
-      new CachedResource(attrs).$$addToCache()
-    @$addArrayToCache: (attrs, instances) ->
+    @$addToCache: (attrs, dirty) ->
+      new CachedResource(attrs).$$addToCache(dirty)
+    @$addArrayToCache: (attrs, instances, dirty = false) ->
       instances = instances.map (instance) ->
         new CachedResource(instance)
-      new ResourceCacheArrayEntry($key, attrs).addInstances instances, yes
+      new ResourceCacheArrayEntry($key, attrs).addInstances instances, dirty
     @$resource: Resource
     @$key: $key
 

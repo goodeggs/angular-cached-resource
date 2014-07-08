@@ -1,8 +1,19 @@
 processReadArgs = require './process_read_args'
+modifyObjectInPlace = require './modify_object_in_place'
 
 module.exports = readArrayCache = ($q, log, name, CachedResource) ->
   ResourceCacheEntry = require('./resource_cache_entry')(log)
   ResourceCacheArrayEntry = require('./resource_cache_array_entry')(log)
+
+  first = (array, params) ->
+    found = null
+
+    for item in array
+      if Object.keys(params).every((key) -> item[key] is params[key])
+        found = item
+        break
+
+    found
 
   ->
     {params, deferred: cacheDeferred} = processReadArgs($q, arguments)
@@ -19,9 +30,21 @@ module.exports = readArrayCache = ($q, log, name, CachedResource) ->
 
     readHttp = ->
       resource = CachedResource.$resource[name](params)
-      resource.$promise.then ->
-        cachedResourceInstances = resource.map (resourceInstance) -> new CachedResource resourceInstance
-        arrayInstance.splice(0, arrayInstance.length, cachedResourceInstances...)
+      resource.$promise.then (response) ->
+        newArrayInstance = new Array()
+
+        response.map (resourceInstance) ->
+          resourceInstance = new CachedResource resourceInstance
+          existingInstance = first(arrayInstance, resourceInstance.$params())
+
+          if existingInstance
+            modifyObjectInPlace(existingInstance, resourceInstance)
+            newArrayInstance.push existingInstance
+          else
+            newArrayInstance.push resourceInstance
+
+        arrayInstance.splice(0, arrayInstance.length, newArrayInstance...)
+
         cacheDeferred.resolve arrayInstance unless cacheArrayEntry.value
         httpDeferred.resolve arrayInstance
       resource.$promise.catch (error) ->

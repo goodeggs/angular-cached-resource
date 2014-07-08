@@ -1,4 +1,5 @@
 processReadArgs = require './process_read_args'
+modifyObjectInPlace = require './modify_object_in_place'
 
 module.exports = readCache = ($q, log, name, CachedResource) ->
   ResourceCacheEntry = require('./resource_cache_entry')(log)
@@ -16,7 +17,8 @@ module.exports = readCache = ($q, log, name, CachedResource) ->
     readHttp = ->
       resource = CachedResource.$resource[name].call(CachedResource.$resource, params)
       resource.$promise.then (response) ->
-        angular.extend(instance, response)
+        modifyObjectInPlace(instance, response)
+
         cacheDeferred.resolve instance unless cacheEntry.value
         httpDeferred.resolve instance
         cacheEntry.set response, false
