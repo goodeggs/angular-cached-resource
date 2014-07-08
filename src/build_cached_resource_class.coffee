@@ -71,10 +71,10 @@ module.exports = buildCachedResourceClass = ($resource, $timeout, $q, log, args)
       Cache.clear {key: $key, exceptFor: exceptForKeys}
     @$addToCache: (attrs, dirty) ->
       new CachedResource(attrs).$$addToCache(dirty)
-    @$addArrayToCache: (attrs, instances) ->
+    @$addArrayToCache: (attrs, instances, dirty = false) ->
       instances = instances.map (instance) ->
         new CachedResource(instance)
-      new ResourceCacheArrayEntry($key, attrs).addInstances instances, yes
+      new ResourceCacheArrayEntry($key, attrs).addInstances instances, dirty
     @$resource: Resource
     @$key: $key
 
