@@ -31,7 +31,7 @@ module.exports = (config) ->
           'PhantomJS'
           'Chrome'
           'Firefox'
-          'Safari'
+#          'Safari'
         ]
 
 

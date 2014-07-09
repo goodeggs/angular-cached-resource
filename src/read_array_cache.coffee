@@ -9,7 +9,8 @@ module.exports = readArrayCache = ($q, log, name, CachedResource) ->
     found = null
 
     for item in array
-      if Object.keys(params).every((key) -> item[key] is params[key])
+      itemParams = item.$params()
+      if Object.keys(params).every((key) -> itemParams[key] is params[key])
         found = item
         break
 

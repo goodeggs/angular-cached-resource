@@ -453,12 +453,13 @@ module.exports = readArrayCache = function($q, log, name, CachedResource) {
   ResourceCacheEntry = require('./resource_cache_entry')(log);
   ResourceCacheArrayEntry = require('./resource_cache_array_entry')(log);
   first = function(array, params) {
-    var found, item, _i, _len;
+    var found, item, itemParams, _i, _len;
     found = null;
     for (_i = 0, _len = array.length; _i < _len; _i++) {
       item = array[_i];
+      itemParams = item.$params();
       if (Object.keys(params).every(function(key) {
-        return item[key] === params[key];
+        return itemParams[key] === params[key];
       })) {
         found = item;
         break;
