@@ -69,3 +69,34 @@ describe 'CachedResource.$clearAll()', ->
       it 'should remove pending write from cache if clearPendingWrites is set', ->
         CachedResource.$clearAll clearPendingWrites: yes
         expect(localStorage.length).to.equal 0
+
+  describe 'cached resource with parameters that do not match the underlying object', ->
+    {RouteResource, easy, hard} = {}
+
+    beforeEach ->
+      RouteResource = $cachedResource 'route-resource', '/routes/:routeId', {routeId: '@_id'}
+
+    describe 'populated cache', ->
+      beforeEach ->
+        $httpBackend.whenGET('/routes?type=easy').respond 200, [
+          { _id: 1, style: 'direct' }
+          { _id: 2, style: 'teleportation' }
+        ]
+        $httpBackend.whenGET('/routes?type=hard').respond 200, [
+          { _id: 3, style: 'crawl' }
+        ]
+
+        easy = RouteResource.query type: 'easy'
+        hard = RouteResource.query type: 'hard'
+        $httpBackend.flush()
+
+      it 'should remove all entries from the cache', ->
+        RouteResource.$clearAll()
+        expect(localStorage.length).to.equal 0
+
+      it 'should remove all entries from the cache except for those specified by a key', ->
+        RouteResource.$clearAll exceptFor: {type: 'easy'}
+        expect(localStorage.length).to.equal 3
+        expect(localStorage.getItem('cachedResource://route-resource/array?type=easy')).to.contain 1
+        expect(localStorage.getItem('cachedResource://route-resource?routeId=1')).to.contain 'direct'
+        expect(localStorage.getItem('cachedResource://route-resource?routeId=2')).to.contain 'teleportation'

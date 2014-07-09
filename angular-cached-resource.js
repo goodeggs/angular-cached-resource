@@ -89,10 +89,14 @@ module.exports = buildCachedResourceClass = function($resource, $timeout, $q, lo
     };
 
     CachedResource.$clearAll = function(_arg) {
-      var cacheArrayEntry, clearPendingWrites, exceptFor, exceptForKeys, key, params, queue, resource, resourceParams, _i, _j, _len, _len1, _ref, _ref1;
+      var cacheArrayEntry, clearPendingWrites, exceptFor, exceptForKeys, key, params, queue, resourceParams, _i, _j, _len, _len1, _ref, _ref1;
       _ref = _arg != null ? _arg : {}, exceptFor = _ref.exceptFor, clearPendingWrites = _ref.clearPendingWrites;
       exceptForKeys = [];
-      if (angular.isObject(exceptFor)) {
+      if (angular.isArray(exceptFor)) {
+        exceptFor = exceptFor.map(function(entry) {
+          return new CachedResource(entry).$params();
+        });
+      } else if (angular.isObject(exceptFor)) {
         cacheArrayEntry = new ResourceCacheArrayEntry($key, exceptFor).load();
         exceptForKeys.push(cacheArrayEntry.fullCacheKey());
         if (cacheArrayEntry.value) {
@@ -121,8 +125,7 @@ module.exports = buildCachedResourceClass = function($resource, $timeout, $q, lo
       }
       for (_j = 0, _len1 = exceptFor.length; _j < _len1; _j++) {
         params = exceptFor[_j];
-        resource = new CachedResource(params);
-        exceptForKeys.push(new ResourceCacheEntry($key, resource.$params()).fullCacheKey());
+        exceptForKeys.push(new ResourceCacheEntry($key, params).fullCacheKey());
       }
       return Cache.clear({
         key: $key,
