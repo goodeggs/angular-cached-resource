@@ -32,6 +32,11 @@ It looks like this sort of functionality might be built into the upcoming Angula
 ## A simple example
 
 ```javascript
+
+// Register your module with ngCachedResource
+angular.module('myApp', ['ngCachedResource']);
+
+// Define a resource
 var Article = $cachedResource('article', '/articles/:id', {id: "@id"});
 
 // GET requests:
