@@ -10,9 +10,14 @@ app.provider '$cachedResource', class $cachedResourceProvider
 
 $cachedResourceFactory = ['$resource', '$timeout', '$q', '$log', ($resource, $timeout, $q, $log) ->
 
+  bindLogFunction = (logFunction) ->
+    (message...) ->
+      message.unshift 'ngCachedResource'
+      $log[logFunction].apply($log, message)
+
   log =
-    debug: if debugMode then angular.bind($log, $log.debug, 'ngCachedResource') else (->)
-    error: angular.bind($log, $log.error, 'ngCachedResource')
+    debug: if debugMode then bindLogFunction('debug') else (->)
+    error: bindLogFunction 'error'
 
   CachedResourceManager = require('./cached_resource_manager')(log)
   resourceManager = new CachedResourceManager($resource, $timeout, $q)
