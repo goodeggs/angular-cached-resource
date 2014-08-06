@@ -18,7 +18,7 @@ module.exports = (log, $q) ->
 
   class ResourceWriteQueue
     logStatusOfRequest: (status, action, params, data) ->
-      log.debug("ngCachedResource", "#{action} for #{@key} #{angular.toJson(params)} #{status} (queue length: #{@count})", data)
+      log.debug("#{action} for #{@key} #{angular.toJson(params)} #{status} (queue length: #{@count})", data)
 
     constructor: (@CachedResource, @$timeout) ->
       @key = "#{@CachedResource.$key}/write"
@@ -28,7 +28,6 @@ module.exports = (log, $q) ->
 
     enqueue: (params, resourceData, action, deferred) ->
       resetDeferred(@) if @count is 0
-      @logStatusOfRequest('enqueued', action, params, resourceData)
       resourceParams = if angular.isArray(resourceData)
         resourceData.map((resource) -> resource.$params())
       else
@@ -43,6 +42,7 @@ module.exports = (log, $q) ->
           deferred.resolve response
         write.deferred?.promise.catch (error) ->
           deferred.reject error
+      @logStatusOfRequest('enqueued', action, params, resourceData)
 
     findWrite: ({action, params}) ->
       for write in @queue
@@ -88,13 +88,11 @@ module.exports = (log, $q) ->
         cacheEntries = [new ResourceCacheEntry(@CachedResource.$key, write.resourceParams).load()]
         writeData = cacheEntries[0].value
 
-      @logStatusOfRequest('processed', write.action, write.resourceParams, writeData)
-
       onSuccess = (value) =>
-        @logStatusOfRequest('succeeded', write.action, write.resourceParams, writeData)
         @removeWrite write
         cacheEntry.setClean() for cacheEntry in cacheEntries
         write.deferred?.resolve value
+        @logStatusOfRequest('succeeded', write.action, write.resourceParams, writeData)
         done() if angular.isFunction(done)
       onFailure = (error) =>
         if error and error.status >= 400 and error.status < 500
@@ -104,6 +102,7 @@ module.exports = (log, $q) ->
           @logStatusOfRequest("failed with error #{angular.toJson error}; still in queue", write.action, write.resourceParams, writeData)
         write.deferred?.reject error
       @CachedResource.$resource[write.action](write.params, writeData, onSuccess, onFailure)
+      @logStatusOfRequest('processed', write.action, write.resourceParams, writeData)
 
     _setFlushTimeout: ->
       if @queue.length > 0 and not @timeoutPromise

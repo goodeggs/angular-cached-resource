@@ -705,7 +705,7 @@ module.exports = function(log, $q) {
   };
   return ResourceWriteQueue = (function() {
     ResourceWriteQueue.prototype.logStatusOfRequest = function(status, action, params, data) {
-      return log.debug("ngCachedResource", "" + action + " for " + this.key + " " + (angular.toJson(params)) + " " + status + " (queue length: " + this.count + ")", data);
+      return log.debug("" + action + " for " + this.key + " " + (angular.toJson(params)) + " " + status + " (queue length: " + this.count + ")", data);
     };
 
     function ResourceWriteQueue(CachedResource, $timeout) {
@@ -722,7 +722,6 @@ module.exports = function(log, $q) {
       if (this.count === 0) {
         resetDeferred(this);
       }
-      this.logStatusOfRequest('enqueued', action, params, resourceData);
       resourceParams = angular.isArray(resourceData) ? resourceData.map(function(resource) {
         return resource.$params();
       }) : resourceData.$params();
@@ -737,17 +736,20 @@ module.exports = function(log, $q) {
           action: action,
           deferred: deferred
         });
-        return this._update();
+        this._update();
       } else {
         if ((_ref = write.deferred) != null) {
           _ref.promise.then(function(response) {
             return deferred.resolve(response);
           });
         }
-        return (_ref1 = write.deferred) != null ? _ref1.promise["catch"](function(error) {
-          return deferred.reject(error);
-        }) : void 0;
+        if ((_ref1 = write.deferred) != null) {
+          _ref1.promise["catch"](function(error) {
+            return deferred.reject(error);
+          });
+        }
       }
+      return this.logStatusOfRequest('enqueued', action, params, resourceData);
     };
 
     ResourceWriteQueue.prototype.findWrite = function(_arg) {
@@ -846,11 +848,9 @@ module.exports = function(log, $q) {
         cacheEntries = [new ResourceCacheEntry(this.CachedResource.$key, write.resourceParams).load()];
         writeData = cacheEntries[0].value;
       }
-      this.logStatusOfRequest('processed', write.action, write.resourceParams, writeData);
       onSuccess = (function(_this) {
         return function(value) {
           var cacheEntry, _i, _len, _ref;
-          _this.logStatusOfRequest('succeeded', write.action, write.resourceParams, writeData);
           _this.removeWrite(write);
           for (_i = 0, _len = cacheEntries.length; _i < _len; _i++) {
             cacheEntry = cacheEntries[_i];
@@ -859,6 +859,7 @@ module.exports = function(log, $q) {
           if ((_ref = write.deferred) != null) {
             _ref.resolve(value);
           }
+          _this.logStatusOfRequest('succeeded', write.action, write.resourceParams, writeData);
           if (angular.isFunction(done)) {
             return done();
           }
@@ -876,7 +877,8 @@ module.exports = function(log, $q) {
           return (_ref = write.deferred) != null ? _ref.reject(error) : void 0;
         };
       })(this);
-      return this.CachedResource.$resource[write.action](write.params, writeData, onSuccess, onFailure);
+      this.CachedResource.$resource[write.action](write.params, writeData, onSuccess, onFailure);
+      return this.logStatusOfRequest('processed', write.action, write.resourceParams, writeData);
     };
 
     ResourceWriteQueue.prototype._setFlushTimeout = function() {
