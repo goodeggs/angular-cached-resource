@@ -18,7 +18,7 @@ module.exports = (log, $q) ->
 
   class ResourceWriteQueue
     logStatusOfRequest: (status, action, params, data) ->
-      log.debug("ngCachedResource", "#{action} for #{@key} #{angular.toJson(params)} #{status}", data)
+      log.debug("ngCachedResource", "#{action} for #{@key} #{angular.toJson(params)} #{status} (queue length: #{@count})", data)
 
     constructor: (@CachedResource, @$timeout) ->
       @key = "#{@CachedResource.$key}/write"

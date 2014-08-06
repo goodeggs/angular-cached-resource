@@ -705,7 +705,7 @@ module.exports = function(log, $q) {
   };
   return ResourceWriteQueue = (function() {
     ResourceWriteQueue.prototype.logStatusOfRequest = function(status, action, params, data) {
-      return log.debug("ngCachedResource", "" + action + " for " + this.key + " " + (angular.toJson(params)) + " " + status, data);
+      return log.debug("ngCachedResource", "" + action + " for " + this.key + " " + (angular.toJson(params)) + " " + status + " (queue length: " + this.count + ")", data);
     };
 
     function ResourceWriteQueue(CachedResource, $timeout) {
