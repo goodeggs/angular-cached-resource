@@ -24,6 +24,10 @@ describe 'CachedResource.get cache population from an isArray request', ->
       CachedResource.query()
       $httpBackend.flush()
 
+    describe 'the cache key', ->
+      it 'should not include parameters', ->
+        expect(localStorage.getItem 'cachedResource://class-get-array-test/array').to.exist
+
     describe 'making a request against a cached resource', ->
       {resourceInstance} = {}
 

@@ -12,6 +12,8 @@ module.exports = (log) ->
       paramKeys = if angular.isObject(params) then Object.keys(params).sort() else []
       if paramKeys.length
         @cacheKeyParams = '?' + ("#{param}=#{params[param]}" for param in paramKeys).join('&')
+      else
+        @cacheKeyParams = ''
 
     load: ->
       {@value, @dirty} = Cache.getItem(@fullCacheKey(), @defaultValue)

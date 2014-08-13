@@ -659,6 +659,8 @@ module.exports = function(log) {
           }
           return _results;
         })()).join('&');
+      } else {
+        this.cacheKeyParams = '';
       }
     }
 
