@@ -11,11 +11,18 @@ describe 'an existing write queue', ->
       $httpBackend = $injector.get '$httpBackend'
 
   afterEach ->
+    localStorage.clear()
     $httpBackend.verifyNoOutstandingExpectation()
     $httpBackend.verifyNoOutstandingRequest()
-    localStorage.clear()
 
   it 'saves the item that was stored in the cache', ->
     $httpBackend.expectPOST('/mock/1', magic: 'from the cache').respond 200
     $cachedResource 'existing-write-queue-test', '/mock/:id'
+    $httpBackend.flush()
+
+  it 'only writes each item once when multiple cachedResources are created', ->
+    # there was a bug by which each call the create a cachedResource would resend the write queue for prior cachedResources
+    $httpBackend.expectPOST('/mock/1', magic: 'from the cache').respond 200
+    $cachedResource 'existing-write-queue-test', '/mock/:id'
+    $cachedResource 'existing-write-queue-test2', '/mock/:id'
     $httpBackend.flush()
