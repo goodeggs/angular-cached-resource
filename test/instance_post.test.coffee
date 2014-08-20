@@ -57,6 +57,20 @@ describe 'CachedResource::post', ->
       $httpBackend.flush()
       expect(resourceInstance.list).to.equal oldListRef, 'expected lists to point to the same memory location'
 
+    it 'does not replace resource attributes that have not been written to local storage and exist in the response', ->
+      $httpBackend.whenPOST('/mock/1').respond
+        id: 1
+        notes: 'this is a saved note'
+        list: [1,2,3]
+        animal: 'squid'
+
+      resourceInstance.notes = 'this is a saved note'
+      savingInstance = resourceInstance.$save()
+      resourceInstance.notes = 'work in progress'
+      # post goes through after local changes after requesting a save
+      $httpBackend.flush()
+      expect(resourceInstance.notes).to.equal 'work in progress'
+
   describe 'while offline', ->
     it 'allows you to save twice, even if it didn’t succeed the first time', ->
       $httpBackend.expectPOST('/mock/1', { id: 1, notes: 'this is a saved note', list: [1,2,3] }).respond 500
