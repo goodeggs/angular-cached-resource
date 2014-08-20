@@ -18,16 +18,17 @@ module.exports = (log, $q) ->
 
   class ResourceWriteQueue
     logStatusOfRequest: (status, action, params, data) ->
-      log.debug("#{action} for #{@key} #{angular.toJson(params)} #{status} (queue length: #{@count})", data)
+      log.debug("#{action} for #{@key} #{angular.toJson(params)} #{status} (queue length: #{@queue.length})", data)
 
     constructor: (@CachedResource, @$timeout) ->
       @key = "#{@CachedResource.$key}/write"
       @queue = Cache.getItem(@key, [])
-      @count = 0
-      resetDeferred(@).resolve() # initialize the queue with a resolved promise
+      resetDeferred(@)
+      if @queue.length is 0
+        resolveDeferred(@) # initialize the queue with a resolved promise
 
     enqueue: (params, resourceData, action, deferred) ->
-      resetDeferred(@) if @count is 0
+      resetDeferred(@) if @queue.length is 0
       resourceParams = if angular.isArray(resourceData)
         resourceData.map((resource) -> resource.$params())
       else
@@ -60,7 +61,7 @@ module.exports = (log, $q) ->
 
       @_update()
 
-      resolveDeferred @ if @count is 0
+      resolveDeferred @ if @queue.length is 0
 
     flush: (done) ->
       @promise.then done if angular.isFunction(done)
@@ -117,4 +118,3 @@ module.exports = (log, $q) ->
         resourceParams: write.resourceParams
         action: write.action
       Cache.setItem @key, savableQueue
-      @count = savableQueue.length

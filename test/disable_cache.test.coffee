@@ -20,13 +20,13 @@ describe 'disabling cache for certain actions', ->
       $httpBackend.expectPUT('/goats/houdini/bleat').respond 500
       Goat.bleat name: 'houdini'
       $httpBackend.flush()
-      expect(Goat.$writes.count).to.equal 0
+      expect(Goat.$writes.queue.length).to.equal 0
 
     it 'caches when kicking', ->
       $httpBackend.expectPUT('/goats/houdini/kick').respond 500
       Goat.kick name: 'houdini'
       $httpBackend.flush()
-      expect(Goat.$writes.count).to.equal 1
+      expect(Goat.$writes.queue.length).to.equal 1
 
   describe 'Goat instance', ->
     {houdini} = {}
@@ -38,10 +38,10 @@ describe 'disabling cache for certain actions', ->
       $httpBackend.expectPUT('/goats/houdini/bleat').respond 500
       houdini.$bleat()
       $httpBackend.flush()
-      expect(Goat.$writes.count).to.equal 0
+      expect(Goat.$writes.queue.length).to.equal 0
 
     it 'caches when kicking', ->
       $httpBackend.expectPUT('/goats/houdini/kick').respond 500
       houdini.$kick()
       $httpBackend.flush()
-      expect(Goat.$writes.count).to.equal 1
+      expect(Goat.$writes.queue.length).to.equal 1
