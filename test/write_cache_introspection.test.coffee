@@ -17,7 +17,7 @@ describe 'write cache introspection', ->
   describe 'before write', ->
 
     it 'has 0 pending writes', ->
-      expect(Album.$writes.count).to.equal 0
+      expect(Album.$writes.queue.length).to.equal 0
 
     it 'has a promise that resolves immediately', ->
       wasInPromise = false
@@ -38,12 +38,12 @@ describe 'write cache introspection', ->
       $httpBackend.whenPOST('/album/1').respond 200
 
     it 'has 1 pending write before the response', ->
-      expect(Album.$writes.count).to.equal 1
+      expect(Album.$writes.queue.length).to.equal 1
       $httpBackend.flush()
 
     it 'has 0 pending writes after the response', ->
       $httpBackend.flush()
-      expect(Album.$writes.count).to.equal 0
+      expect(Album.$writes.queue.length).to.equal 0
 
     it 'has a promise that resolves after the request completes', ->
       wasInPromise = false

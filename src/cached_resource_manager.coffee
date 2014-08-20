@@ -15,7 +15,7 @@ module.exports = (log) ->
       CachedResource = @build(args)
 
       @byKey[CachedResource.$key] = CachedResource
-      @flushQueues()
+      CachedResource.$writes.flush()
 
       CachedResource
 

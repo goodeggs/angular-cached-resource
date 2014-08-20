@@ -19,7 +19,10 @@ module.exports = (log) ->
       {@value, @dirty} = Cache.getItem(@fullCacheKey(), @defaultValue)
       @
 
-    set: (@value, @dirty) ->
+    set: (@value, dirty) ->
+      if @dirty and !dirty
+        log.error "unexpectedly setting a clean entry (load) over a dirty entry (pending write)"
+      @dirty = dirty
       @_update()
 
     setClean: ->

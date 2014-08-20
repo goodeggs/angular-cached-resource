@@ -52,10 +52,7 @@ module.exports = readArrayCache = ($q, log, name, CachedResource) ->
         cacheDeferred.reject error unless cacheArrayEntry.value
         httpDeferred.reject error
 
-    if CachedResource.$writes.count > 0
-      CachedResource.$writes.flush readHttp
-    else
-      readHttp()
+    CachedResource.$writes.flush readHttp
 
     if cacheArrayEntry.value
       for cacheInstanceParams in cacheArrayEntry.value
