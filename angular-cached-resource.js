@@ -28,12 +28,11 @@ readCache = require('./read_cache');
 writeCache = require('./write_cache');
 
 module.exports = buildCachedResourceClass = function($resource, $timeout, $q, log, args) {
-  var $key, Cache, CachedResource, Resource, ResourceCacheArrayEntry, ResourceCacheEntry, ResourceWriteQueue, actions, arg, boundParams, handler, isPermissibleBoundValue, method, name, param, paramDefault, paramDefaults, params, resourceManager, url;
+  var $key, Cache, CachedResource, Resource, ResourceCacheArrayEntry, ResourceCacheEntry, ResourceWriteQueue, actions, arg, boundParams, handler, isPermissibleBoundValue, method, name, param, paramDefault, paramDefaults, params, url;
   ResourceCacheEntry = require('./resource_cache_entry')(log);
   ResourceCacheArrayEntry = require('./resource_cache_array_entry')(log);
   ResourceWriteQueue = require('./resource_write_queue')(log, $q);
   Cache = require('./cache')(log);
-  resourceManager = this;
   $key = args.shift();
   url = args.shift();
   while (args.length) {
@@ -561,13 +560,13 @@ module.exports = readCache = function($q, log, name, CachedResource) {
     readHttp = function() {
       var resource;
       resource = CachedResource.$resource[name].call(CachedResource.$resource, params);
-      resource.$promise.then(function(response) {
-        modifyObjectInPlace(instance, response);
+      resource.$promise.then(function(httpResponse) {
+        modifyObjectInPlace(instance, httpResponse);
         if (!cacheEntry.value) {
           cacheDeferred.resolve(instance);
         }
         httpDeferred.resolve(instance);
-        return cacheEntry.set(response, false);
+        return cacheEntry.set(httpResponse, false);
       });
       return resource.$promise["catch"](function(error) {
         if (!cacheEntry.value) {
