@@ -25,29 +25,108 @@ describe 'CachedResource.$clearCache()', ->
       combos = CachedResource.query type: 'combos'
       $httpBackend.flush()
 
-    it 'should remove all entries from the cache', ->
-      CachedResource.$clearCache()
-      expect(localStorage.length).to.equal 0
+    describe "when called with no arguments", ->
+      it 'should remove all entries from the cache', ->
+        CachedResource.$clearCache()
+        expect(localStorage.length).to.equal 0
 
-    it 'should remove all entries from the cache except for those specified by a key', ->
-      CachedResource.$clearCache exceptFor: [{name: 'frank'}]
-      expect(localStorage.length).to.equal 1
-      expect(localStorage.getItem('cachedResource://class-clear-test?name=frank')).to.contain 'Donnie Darko'
+    describe "when called with `exceptFor` argument", ->
+      it 'should remove all entries from the cache, except for those with given parameters', ->
+        CachedResource.$clearCache({
+          exceptFor: [{name: 'frank'}]
+        })
+        expect(localStorage.length).to.equal 1
+        expect(localStorage.getItem('cachedResource://class-clear-test?name=frank')).to.contain 'Donnie Darko'
 
-    it 'should remove all entries from the cache except for those specified by resource instance', ->
-      CachedResource.$clearCache exceptFor: rabbits[0...1]
-      expect(localStorage.length).to.equal 1
-      expect(localStorage.getItem('cachedResource://class-clear-test?name=white-rabbit')).to.contain 'Alice In Wonderland'
+        CachedResource.$clearCache({
+          exceptFor: {name: 'frank'}
+        })
+        expect(localStorage.length).to.equal 1
+        expect(localStorage.getItem('cachedResource://class-clear-test?name=frank')).to.contain 'Donnie Darko'
 
-    it 'should remove all entries from the cache except for those in an array specified by key', ->
-      CachedResource.$clearCache exceptFor: type: 'combos'
-      expect(localStorage.length).to.equal 3
-      expect(localStorage.getItem('cachedResource://class-clear-test/array?type=combos')).to.contain 'liger'
-      expect(localStorage.getItem('cachedResource://class-clear-test?name=liger')).to.contain 'Lion'
-      expect(localStorage.getItem('cachedResource://class-clear-test?name=groler-bear')).to.contain 'Grizzly'
+      it 'should remove all entries from the cache, except for those specified by resource instance', ->
+        CachedResource.$clearCache({
+          exceptFor: rabbits[0...1]
+        })
+        expect(localStorage.length).to.equal 1
+        expect(localStorage.getItem('cachedResource://class-clear-test?name=white-rabbit')).to.contain 'Alice In Wonderland'
+
+        CachedResource.$clearCache({
+          exceptFor: rabbits[0]
+        })
+        expect(localStorage.length).to.equal 1
+        expect(localStorage.getItem('cachedResource://class-clear-test?name=white-rabbit')).to.contain 'Alice In Wonderland'
+
+      describe "and with `isArray: true, clearChildren: true` argument", ->
+        it 'should remove all entries from the cache, except for the given array (but entries stored in that array will be cleared anyway)', ->
+          CachedResource.$clearCache({
+            exceptFor: {type: 'combos'},
+            isArray: true,
+            clearChildren: true
+          })
+          expect(localStorage.length).to.equal 1
+          expect(localStorage.getItem('cachedResource://class-clear-test/array?type=combos')).to.contain 'liger'
+          expect(localStorage.getItem('cachedResource://class-clear-test?name=liger')).to.equal null
+          expect(localStorage.getItem('cachedResource://class-clear-test?name=groler-bear')).to.equal null
+
+      describe "and with `isArray: true, clearChildren: false` argument", ->
+        it 'should remove all entries from the cache, except for the given array and entries stored in that array', ->
+          CachedResource.$clearCache({
+            exceptFor: {type: 'combos'},
+            isArray: true,
+            clearChildren: false
+          })
+          expect(localStorage.length).to.equal 3
+          expect(localStorage.getItem('cachedResource://class-clear-test/array?type=combos')).to.contain 'liger'
+          expect(localStorage.getItem('cachedResource://class-clear-test?name=liger')).to.contain 'Lion'
+          expect(localStorage.getItem('cachedResource://class-clear-test?name=groler-bear')).to.contain 'Grizzly'
+
+    describe "when called with `where` argument", ->
+      it 'should remove entries with given parameters', ->
+        CachedResource.$clearCache({
+          where: [{name: 'frank'}]
+        })
+        expect(localStorage.getItem('cachedResource://class-clear-test?name=frank')).to.equal null
+
+        CachedResource.$clearCache({
+          where: {name: 'frank'}
+        })
+        expect(localStorage.getItem('cachedResource://class-clear-test?name=frank')).to.equal null
+
+      it 'should remove entries specified by resource instance', ->
+        CachedResource.$clearCache({
+          where: rabbits[0...1]
+        })
+        expect(localStorage.getItem('cachedResource://class-clear-test?name=white-rabbit')).to.equal null
+
+        CachedResource.$clearCache({
+          where: rabbits[0]
+        })
+        expect(localStorage.getItem('cachedResource://class-clear-test?name=white-rabbit')).to.equal null
+
+      describe "and with `isArray: true, clearChildren: true` arguments", ->
+        it 'should remove given array entry and all entries stored in that array', ->
+          CachedResource.$clearCache({
+            where: {type: 'combos'},
+            isArray: true,
+            clearChildren: true
+          })
+          expect(localStorage.getItem('cachedResource://class-clear-test/array?type=combos')).to.equal null
+          expect(localStorage.getItem('cachedResource://class-clear-test?name=liger')).to.equal null
+          expect(localStorage.getItem('cachedResource://class-clear-test?name=groler-bear')).to.equal null
+
+      describe "and with `isArray: true, clearChildren: false` arguments", ->
+        it 'should remove given array entry, but not the entries stored in that array', ->
+          CachedResource.$clearCache({
+            where: {type: 'combos'},
+            isArray: true,
+            clearChildren: false
+          })
+          expect(localStorage.getItem('cachedResource://class-clear-test/array?type=combos')).to.equal null
+          expect(localStorage.getItem('cachedResource://class-clear-test?name=liger')).to.contain 'Lion'
+          expect(localStorage.getItem('cachedResource://class-clear-test?name=groler-bear')).to.contain 'Grizzly'
 
     describe 'and with pending writes', ->
-
       beforeEach ->
         $httpBackend.whenPOST('/animals/chinchilla').respond 500
         chinchilla = new CachedResource(name: 'chinchilla', fuzziness: 10)
@@ -84,13 +163,15 @@ describe 'CachedResource.$clearCache()', ->
         hard = RouteResource.query type: 'hard'
         $httpBackend.flush()
 
-      it 'should remove all entries from the cache', ->
-        RouteResource.$clearCache()
-        expect(localStorage.length).to.equal 0
+      describe "when called with no arguments", ->
+        it 'should remove all entries from the cache', ->
+          RouteResource.$clearCache()
+          expect(localStorage.length).to.equal 0
 
-      it 'should remove all entries from the cache except for those specified by a key', ->
-        RouteResource.$clearCache exceptFor: {type: 'easy'}
-        expect(localStorage.length).to.equal 3
-        expect(localStorage.getItem('cachedResource://route-resource/array?type=easy')).to.contain 1
-        expect(localStorage.getItem('cachedResource://route-resource?routeId=1')).to.contain 'direct'
-        expect(localStorage.getItem('cachedResource://route-resource?routeId=2')).to.contain 'teleportation'
+      describe "when called with `exceptFor, isArray: true` arguments", ->
+        it 'should remove all entries from the cache, except for the specified array and entries stored in that array', ->
+          RouteResource.$clearCache exceptFor: {type: 'easy'}, isArray: true
+          expect(localStorage.length).to.equal 3
+          expect(localStorage.getItem('cachedResource://route-resource/array?type=easy')).to.contain 1
+          expect(localStorage.getItem('cachedResource://route-resource?routeId=1')).to.contain 'direct'
+          expect(localStorage.getItem('cachedResource://route-resource?routeId=2')).to.contain 'teleportation'

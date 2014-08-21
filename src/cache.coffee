@@ -30,24 +30,29 @@ class Cache
 
     value
 
-  clear: ({key, exceptFor} = {}) ->
-    exceptFor ?= []
+  clear: ({key, exceptFor, where} = {}) ->
+    return @$log.error "Using where and exceptFor arguments at once in clear() method is forbidden!" if where && exceptFor
 
-    cacheKeys = []
-    for i in [0...localStorage.length]
-      cacheKey = localStorage.key i
-      continue unless @_cacheKeyHasPrefix(cacheKey, key)
+    if exceptFor
+      exceptFor ?= []
 
-      skipKey = no
-      for exception in exceptFor when @_cacheKeyHasPrefix(cacheKey, exception)
-        skipKey = yes
-        break
+      cacheKeys = []
+      for i in [0...localStorage.length]
+        cacheKey = localStorage.key i
+        continue unless @_cacheKeyHasPrefix(cacheKey, key)
 
-      continue if skipKey
+        skipKey = no
+        for exception in exceptFor when @_cacheKeyHasPrefix(cacheKey, exception)
+          skipKey = yes
+          break
 
-      cacheKeys.push cacheKey
+        continue if skipKey
+        cacheKeys.push cacheKey
 
-    localStorage.removeItem(cacheKey) for cacheKey in cacheKeys
+      localStorage.removeItem(cacheKey) for cacheKey in cacheKeys
+    else
+      for cacheKey in where
+        localStorage.removeItem @_buildKey cacheKey
 
   _buildKey: (key) ->
     "#{@localStoragePrefix}#{key}"
