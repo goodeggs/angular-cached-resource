@@ -2,17 +2,11 @@ describe 'CachedResource.post', ->
   {CachedResource, $httpBackend, $timeout} = {}
 
   beforeEach ->
-    module('ngCachedResource')
     inject ($injector) ->
       $cachedResource = $injector.get '$cachedResource'
       $httpBackend = $injector.get '$httpBackend'
       $timeout = $injector.get '$timeout'
       CachedResource = $cachedResource 'class-save-test', '/mock/:id'
-
-  afterEach ->
-    $httpBackend.verifyNoOutstandingExpectation()
-    $httpBackend.verifyNoOutstandingRequest()
-    localStorage.clear()
 
   describe 'while online', ->
     it 'saves the resource normally', (done) ->

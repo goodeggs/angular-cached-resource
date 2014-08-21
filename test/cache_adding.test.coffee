@@ -3,16 +3,10 @@ describe 'adding resources to cache', ->
   {Computer, $httpBackend} = {}
 
   beforeEach ->
-    module('ngCachedResource')
     inject ($injector) ->
       $cachedResource = $injector.get '$cachedResource'
       $httpBackend = $injector.get '$httpBackend'
       Computer = $cachedResource 'computer', '/computer/:sn', {sn: '@sn'},
-
-  afterEach ->
-    $httpBackend.verifyNoOutstandingExpectation()
-    $httpBackend.verifyNoOutstandingRequest()
-    localStorage.clear()
 
   describe 'with a class method', ->
 

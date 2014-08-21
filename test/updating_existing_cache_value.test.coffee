@@ -2,16 +2,10 @@ describe 'Updating existing cache value', ->
   {CachedResource, $httpBackend, $cachedResource, $timeout} = {}
 
   beforeEach ->
-    module('ngCachedResource')
     inject ($injector) ->
       $cachedResource = $injector.get '$cachedResource'
       $httpBackend = $injector.get '$httpBackend'
       $timeout = $injector.get '$timeout'
-
-  afterEach ->
-    $httpBackend.verifyNoOutstandingExpectation()
-    $httpBackend.verifyNoOutstandingRequest()
-    localStorage.clear()
 
   describe 'bound parameters match route parameters', ->
 

@@ -52,28 +52,59 @@ module.exports = buildCachedResourceClass = ($resource, $timeout, $q, log, args)
       entry.set @, dirty
       @
 
-    @$clearAll: ({exceptFor, clearPendingWrites} = {}) ->
-      exceptForKeys = []
+    @$clearCache: ({where, exceptFor, clearPendingWrites, isArray, clearChildren} = {}) ->
+      where ?= null
+      exceptFor ?= null
+      clearPendingWrites ?= false
+      isArray ?= false
+      clearChildren ?= false
 
-      if angular.isArray(exceptFor)
-        exceptFor = exceptFor.map (entry) ->
+      return log.error "Using where and exceptFor arguments at once in $clearCache() method is forbidden!" if where && exceptFor
+
+      cacheKeys = []
+
+      translateParamsArrayToEntries = (entries) ->
+        entries ||= []
+
+        # Translate where and exceptFor objects to array of objects.
+        # f.e. `{where: {id: 2}}` to `{where: [{id: 2}]}`
+        entries = [entries] unless angular.isArray(entries)
+
+        entries.map (entry) ->
           new CachedResource(entry).$params()
-      else if angular.isObject(exceptFor) # FYI this is going to change soon; see https://github.com/goodeggs/angular-cached-resource/issues/8
-        cacheArrayEntry = new ResourceCacheArrayEntry($key, exceptFor).load()
-        exceptForKeys.push cacheArrayEntry.fullCacheKey()
-        if cacheArrayEntry.value
-          exceptFor = (params for params in cacheArrayEntry.value)
 
-      exceptFor ?= []
-      unless clearPendingWrites
+      translateEntriesToCacheKeys = (params_objects) ->
+        params_objects.map (params) ->
+          new ResourceCacheEntry($key, params).fullCacheKey()
+
+      translateParamsArrayToCacheKeys = (entries) ->
+        translateEntriesToCacheKeys translateParamsArrayToEntries entries
+
+      if exceptFor || where
+        if isArray
+          cacheArrayEntry = new ResourceCacheArrayEntry($key, exceptFor || where).load()
+          cacheKeys.push cacheArrayEntry.fullCacheKey()
+
+          if cacheArrayEntry.value && ((exceptFor && !clearChildren) || (where && clearChildren))
+            entries = (params for params in cacheArrayEntry.value)
+            cacheKeys = cacheKeys.concat(translateEntriesToCacheKeys(entries)) if entries
+        else
+          cacheKeys = translateParamsArrayToCacheKeys(where || exceptFor)
+
+      if !clearPendingWrites && !where
         {queue, key} = CachedResource.$writes
-        exceptForKeys.push key
-        exceptFor.push resourceParams for {resourceParams} in queue
+        cacheKeys.push key
+        entries = queue.map (resource) -> resource.resourceParams
+        cacheKeys = cacheKeys.concat translateEntriesToCacheKeys(entries)
+      else if clearPendingWrites && where
+        log.debug "TODO if clearPendingWrites && where"
+        # TODO clear only those writes, which match :where parameter
 
-      for params in exceptFor
-        exceptForKeys.push new ResourceCacheEntry($key, params).fullCacheKey()
+      if where
+        Cache.clear {key: $key, where: cacheKeys}
+      else
+        Cache.clear {key: $key, exceptFor: cacheKeys}
 
-      Cache.clear {key: $key, exceptFor: exceptForKeys}
 
     @$addToCache: (attrs, dirty) ->
       new CachedResource(attrs).$$addToCache(dirty)

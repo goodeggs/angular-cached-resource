@@ -36,9 +36,9 @@
   "scripts": {
     "test": "./node_modules/karma/bin/karma start ./karma.full.conf.coffee",
     "prepublish": "bower -sj install",
-    "compile": "coffee --bare --compile --output lib/ src/",
-    "link": "browserify lib/index.js > angular-cached-resource.js",
-    "minify": "uglifyjs angular-cached-resource.js > angular-cached-resource.min.js",
+    "compile": "./node_modules/coffee-script/bin/coffee --bare --compile --output lib/ src/",
+    "link": "./node_modules/browserify/bin/cmd.js lib/index.js > angular-cached-resource.js",
+    "minify": "./node_modules/uglify-js/bin/uglifyjs angular-cached-resource.js > angular-cached-resource.min.js",
     "build": "npm run compile && npm run link && npm run minify",
     "pretest": "npm run build"
   }

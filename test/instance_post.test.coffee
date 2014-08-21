@@ -2,18 +2,12 @@ describe 'CachedResource::post', ->
   {resourceInstance, $httpBackend, $timeout} = {}
 
   beforeEach ->
-    module('ngCachedResource')
     inject ($injector) ->
       $cachedResource = $injector.get '$cachedResource'
       $httpBackend = $injector.get '$httpBackend'
       $timeout = $injector.get '$timeout'
       CachedResource = $cachedResource 'instance-post-test', '/mock/:id', {id: '@id'}
       resourceInstance = new CachedResource id: 1, notes: 'this is a saved note', list: [1,2,3]
-
-  afterEach ->
-    $httpBackend.verifyNoOutstandingExpectation()
-    $httpBackend.verifyNoOutstandingRequest()
-    localStorage.clear()
 
   describe 'while online', ->
     it 'POSTS the entire body of the resource', ->

@@ -2,17 +2,11 @@ describe 'CachedResource.get array resource collections with callback', ->
   {$httpBackend, CachedResource} = {}
 
   beforeEach ->
-    module('ngCachedResource')
     inject ($injector) ->
       $cachedResource = $injector.get '$cachedResource'
       $httpBackend = $injector.get '$httpBackend'
       CachedResource = $cachedResource 'class-get-array-callback-test', '/colors/:color',
         color: '@color'
-
-  afterEach ->
-    $httpBackend.verifyNoOutstandingExpectation()
-    $httpBackend.verifyNoOutstandingRequest()
-    localStorage.clear()
 
   it 'only calls the callback once', ->
     $httpBackend.expectGET('/colors').respond [

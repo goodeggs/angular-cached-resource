@@ -87,49 +87,89 @@ module.exports = buildCachedResourceClass = function($resource, $timeout, $q, lo
       return this;
     };
 
-    CachedResource.$clearAll = function(_arg) {
-      var cacheArrayEntry, clearPendingWrites, exceptFor, exceptForKeys, key, params, queue, resourceParams, _i, _j, _len, _len1, _ref, _ref1;
-      _ref = _arg != null ? _arg : {}, exceptFor = _ref.exceptFor, clearPendingWrites = _ref.clearPendingWrites;
-      exceptForKeys = [];
-      if (angular.isArray(exceptFor)) {
-        exceptFor = exceptFor.map(function(entry) {
-          return new CachedResource(entry).$params();
-        });
-      } else if (angular.isObject(exceptFor)) {
-        cacheArrayEntry = new ResourceCacheArrayEntry($key, exceptFor).load();
-        exceptForKeys.push(cacheArrayEntry.fullCacheKey());
-        if (cacheArrayEntry.value) {
-          exceptFor = (function() {
-            var _i, _len, _ref1, _results;
-            _ref1 = cacheArrayEntry.value;
-            _results = [];
-            for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
-              params = _ref1[_i];
-              _results.push(params);
-            }
-            return _results;
-          })();
-        }
+    CachedResource.$clearCache = function(_arg) {
+      var cacheArrayEntry, cacheKeys, clearChildren, clearPendingWrites, entries, exceptFor, isArray, key, params, queue, translateEntriesToCacheKeys, translateParamsArrayToCacheKeys, translateParamsArrayToEntries, where, _ref, _ref1;
+      _ref = _arg != null ? _arg : {}, where = _ref.where, exceptFor = _ref.exceptFor, clearPendingWrites = _ref.clearPendingWrites, isArray = _ref.isArray, clearChildren = _ref.clearChildren;
+      if (where == null) {
+        where = null;
       }
       if (exceptFor == null) {
-        exceptFor = [];
+        exceptFor = null;
       }
-      if (!clearPendingWrites) {
-        _ref1 = CachedResource.$writes, queue = _ref1.queue, key = _ref1.key;
-        exceptForKeys.push(key);
-        for (_i = 0, _len = queue.length; _i < _len; _i++) {
-          resourceParams = queue[_i].resourceParams;
-          exceptFor.push(resourceParams);
+      if (clearPendingWrites == null) {
+        clearPendingWrites = false;
+      }
+      if (isArray == null) {
+        isArray = false;
+      }
+      if (clearChildren == null) {
+        clearChildren = false;
+      }
+      if (where && exceptFor) {
+        return log.error("Using where and exceptFor arguments at once in $clearCache() method is forbidden!");
+      }
+      cacheKeys = [];
+      translateParamsArrayToEntries = function(entries) {
+        entries || (entries = []);
+        if (!angular.isArray(entries)) {
+          entries = [entries];
+        }
+        return entries.map(function(entry) {
+          return new CachedResource(entry).$params();
+        });
+      };
+      translateEntriesToCacheKeys = function(params_objects) {
+        return params_objects.map(function(params) {
+          return new ResourceCacheEntry($key, params).fullCacheKey();
+        });
+      };
+      translateParamsArrayToCacheKeys = function(entries) {
+        return translateEntriesToCacheKeys(translateParamsArrayToEntries(entries));
+      };
+      if (exceptFor || where) {
+        if (isArray) {
+          cacheArrayEntry = new ResourceCacheArrayEntry($key, exceptFor || where).load();
+          cacheKeys.push(cacheArrayEntry.fullCacheKey());
+          if (cacheArrayEntry.value && ((exceptFor && !clearChildren) || (where && clearChildren))) {
+            entries = (function() {
+              var _i, _len, _ref1, _results;
+              _ref1 = cacheArrayEntry.value;
+              _results = [];
+              for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
+                params = _ref1[_i];
+                _results.push(params);
+              }
+              return _results;
+            })();
+            if (entries) {
+              cacheKeys = cacheKeys.concat(translateEntriesToCacheKeys(entries));
+            }
+          }
+        } else {
+          cacheKeys = translateParamsArrayToCacheKeys(where || exceptFor);
         }
       }
-      for (_j = 0, _len1 = exceptFor.length; _j < _len1; _j++) {
-        params = exceptFor[_j];
-        exceptForKeys.push(new ResourceCacheEntry($key, params).fullCacheKey());
+      if (!clearPendingWrites && !where) {
+        _ref1 = CachedResource.$writes, queue = _ref1.queue, key = _ref1.key;
+        cacheKeys.push(key);
+        entries = queue.map(function(resource) {
+          return resource.resourceParams;
+        });
+        cacheKeys = cacheKeys.concat(translateEntriesToCacheKeys(entries));
+      } else if (clearPendingWrites && where) {
+        log.debug("TODO if clearPendingWrites && where");
       }
-      return Cache.clear({
-        key: $key,
-        exceptFor: exceptForKeys
-      });
+      if (where) {
+        return Cache.clear({
+          key: $key,
+          where: cacheKeys
+        });
+      } else {
+        return Cache.clear({
+          key: $key,
+          exceptFor: cacheKeys
+        });
+      }
     };
 
     CachedResource.$addToCache = function(attrs, dirty) {
@@ -225,37 +265,49 @@ module.exports = function(log) {
       return value;
     },
     clear: function(_arg) {
-      var cacheKey, cacheKeys, exceptFor, exception, i, key, skipKey, _i, _j, _k, _len, _len1, _ref, _ref1, _results;
-      _ref = _arg != null ? _arg : {}, key = _ref.key, exceptFor = _ref.exceptFor;
-      if (exceptFor == null) {
-        exceptFor = [];
+      var cacheKey, cacheKeys, exceptFor, exception, i, key, skipKey, where, _i, _j, _k, _l, _len, _len1, _len2, _ref, _ref1, _results, _results1;
+      _ref = _arg != null ? _arg : {}, key = _ref.key, exceptFor = _ref.exceptFor, where = _ref.where;
+      if (where && exceptFor) {
+        return log.error("Using where and exceptFor arguments at once in clear() method is forbidden!");
       }
-      cacheKeys = [];
-      for (i = _i = 0, _ref1 = localStorage.length; 0 <= _ref1 ? _i < _ref1 : _i > _ref1; i = 0 <= _ref1 ? ++_i : --_i) {
-        cacheKey = localStorage.key(i);
-        if (!cacheKeyHasPrefix(cacheKey, key)) {
-          continue;
+      if (exceptFor) {
+        if (exceptFor == null) {
+          exceptFor = [];
         }
-        skipKey = false;
-        for (_j = 0, _len = exceptFor.length; _j < _len; _j++) {
-          exception = exceptFor[_j];
-          if (!(cacheKeyHasPrefix(cacheKey, exception))) {
+        cacheKeys = [];
+        for (i = _i = 0, _ref1 = localStorage.length; 0 <= _ref1 ? _i < _ref1 : _i > _ref1; i = 0 <= _ref1 ? ++_i : --_i) {
+          cacheKey = localStorage.key(i);
+          if (!cacheKeyHasPrefix(cacheKey, key)) {
             continue;
           }
-          skipKey = true;
-          break;
+          skipKey = false;
+          for (_j = 0, _len = exceptFor.length; _j < _len; _j++) {
+            exception = exceptFor[_j];
+            if (!(cacheKeyHasPrefix(cacheKey, exception))) {
+              continue;
+            }
+            skipKey = true;
+            break;
+          }
+          if (skipKey) {
+            continue;
+          }
+          cacheKeys.push(cacheKey);
         }
-        if (skipKey) {
-          continue;
+        _results = [];
+        for (_k = 0, _len1 = cacheKeys.length; _k < _len1; _k++) {
+          cacheKey = cacheKeys[_k];
+          _results.push(localStorage.removeItem(cacheKey));
         }
-        cacheKeys.push(cacheKey);
+        return _results;
+      } else {
+        _results1 = [];
+        for (_l = 0, _len2 = where.length; _l < _len2; _l++) {
+          cacheKey = where[_l];
+          _results1.push(localStorage.removeItem(LOCAL_STORAGE_PREFIX + cacheKey));
+        }
+        return _results1;
       }
-      _results = [];
-      for (_k = 0, _len1 = cacheKeys.length; _k < _len1; _k++) {
-        cacheKey = cacheKeys[_k];
-        _results.push(localStorage.removeItem(cacheKey));
-      }
-      return _results;
     }
   };
 };
@@ -298,7 +350,7 @@ module.exports = function(log) {
       return _results;
     };
 
-    CachedResourceManager.prototype.clearAll = function(_arg) {
+    CachedResourceManager.prototype.clearCache = function(_arg) {
       var CachedResource, clearPendingWrites, exceptFor, key, _ref, _ref1, _results;
       _ref = _arg != null ? _arg : {}, exceptFor = _ref.exceptFor, clearPendingWrites = _ref.clearPendingWrites;
       if (exceptFor == null) {
@@ -309,7 +361,7 @@ module.exports = function(log) {
       for (key in _ref1) {
         CachedResource = _ref1[key];
         if (__indexOf.call(exceptFor, key) < 0) {
-          _results.push(CachedResource.$clearAll({
+          _results.push(CachedResource.$clearCache({
             clearPendingWrites: clearPendingWrites
           }));
         }
@@ -384,7 +436,7 @@ $cachedResourceFactory = [
     $cachedResource = function() {
       return resourceManager.add.apply(resourceManager, arguments);
     };
-    _ref = ['clearAll', 'clearUndefined'];
+    _ref = ['clearCache', 'clearUndefined'];
     for (_i = 0, _len = _ref.length; _i < _len; _i++) {
       fn = _ref[_i];
       $cachedResource[fn] = angular.bind(resourceManager, resourceManager[fn]);

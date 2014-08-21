@@ -15,6 +15,7 @@ module.exports = (config) ->
 
       'angular-cached-resource.js'
 
+      'test/_config.coffee'
       'test/*.test.coffee'
     ]
 

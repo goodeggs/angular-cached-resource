@@ -2,7 +2,6 @@ describe 'class with custom actions', ->
   {CachedResource, $httpBackend} = {}
 
   beforeEach ->
-    module('ngCachedResource')
     inject ($injector) ->
       $cachedResource = $injector.get '$cachedResource'
       $httpBackend = $injector.get '$httpBackend'
@@ -11,11 +10,6 @@ describe 'class with custom actions', ->
           method: "PATCH"
         kiai:
           method: "put"
-
-  afterEach ->
-    $httpBackend.verifyNoOutstandingExpectation()
-    $httpBackend.verifyNoOutstandingRequest()
-    localStorage.clear()
 
   it "has default actions", ->
     for action in ['get', 'query', 'save', 'remove', 'delete']
