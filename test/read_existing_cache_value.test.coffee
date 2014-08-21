@@ -2,17 +2,11 @@ describe 'Read existing cache value', ->
   {CachedResource, $httpBackend, $timeout} = {}
 
   beforeEach ->
-    module('ngCachedResource')
     inject ($injector) ->
       $cachedResource = $injector.get '$cachedResource'
       $httpBackend = $injector.get '$httpBackend'
       $timeout = $injector.get '$timeout'
       CachedResource = $cachedResource 'class-read-test', '/mock/:id', {id: '@id'}
-
-  afterEach ->
-    $httpBackend.verifyNoOutstandingExpectation()
-    $httpBackend.verifyNoOutstandingRequest()
-    localStorage.clear()
 
   describe 'empty cache', ->
     describe 'query for array of resources', ->

@@ -14,6 +14,7 @@ module.exports = (config) ->
 
       'src/index.coffee'
 
+      'test/_config.coffee'
       'test/*.test.coffee'
     ]
 

@@ -2,15 +2,9 @@ describe '$cachedResource.clearUndefined()', ->
   {$cachedResource, $httpBackend} = {}
 
   beforeEach ->
-    module('ngCachedResource')
     inject ($injector) ->
       $cachedResource = $injector.get '$cachedResource'
       $httpBackend = $injector.get '$httpBackend'
-
-  afterEach ->
-    $httpBackend.verifyNoOutstandingExpectation()
-    $httpBackend.verifyNoOutstandingRequest()
-    localStorage.clear()
 
   describe 'with an item corresponding to a resource in the cache', ->
 

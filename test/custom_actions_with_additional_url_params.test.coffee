@@ -2,7 +2,6 @@ describe 'custom actions with addtional URL parameters', ->
   {Group, $httpBackend} = {}
 
   beforeEach ->
-    module('ngCachedResource')
     inject ($injector) ->
       $cachedResource = $injector.get '$cachedResource'
       $httpBackend = $injector.get '$httpBackend'
@@ -10,11 +9,6 @@ describe 'custom actions with addtional URL parameters', ->
         saveByContact:
           method: "PUT"
           url: '/contacts/:contactId/groups/:id'
-
-  afterEach ->
-    $httpBackend.verifyNoOutstandingExpectation()
-    $httpBackend.verifyNoOutstandingRequest()
-    localStorage.clear()
 
   it 'sends a request to the custom URL', ->
     $httpBackend.expectPUT('/contacts/C-3PO/groups/cybot_galactica', { id: 'cybot_galactica', location: 'Etti IV'}).respond 200

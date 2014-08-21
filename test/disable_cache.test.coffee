@@ -2,18 +2,12 @@ describe 'disabling cache for certain actions', ->
   {Goat, $httpBackend} = {}
 
   beforeEach ->
-    module('ngCachedResource')
     inject ($injector) ->
       $cachedResource = $injector.get '$cachedResource'
       $httpBackend = $injector.get '$httpBackend'
       Goat = $cachedResource 'disable-cache-test', '/goats/:name', {name: '@name'},
         bleat: { url: '/goats/:name/bleat', method: 'PUT', cache: off }
         kick: { url: '/goats/:name/kick', method: 'PUT' }
-
-  afterEach ->
-    $httpBackend.verifyNoOutstandingExpectation()
-    $httpBackend.verifyNoOutstandingRequest()
-    localStorage.clear()
 
   describe 'Goat class', ->
     it 'does not cache when bleating', ->

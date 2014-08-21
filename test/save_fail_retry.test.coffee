@@ -4,7 +4,6 @@ describe 'attempting to save a resource after a resource with the same cache key
   {$cachedResource, $httpBackend} = {}
 
   beforeEach ->
-    module('ngCachedResource')
     inject ($injector) ->
       $cachedResource = $injector.get '$cachedResource'
       $httpBackend = $injector.get '$httpBackend'
@@ -19,11 +18,6 @@ describe 'attempting to save a resource after a resource with the same cache key
       resourceInstance.notes = 'this is a saved note'
       resourceInstance.$save()
       $httpBackend.flush()
-
-  afterEach ->
-    $httpBackend.verifyNoOutstandingExpectation()
-    $httpBackend.verifyNoOutstandingRequest()
-    localStorage.clear()
 
   it 'successfully saves the second resource with the same cache key', ->
     $httpBackend.expectPOST('/mock/1', { id: 1, notes: 'this is a saved note' }).respond 500

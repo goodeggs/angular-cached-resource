@@ -2,17 +2,11 @@ describe 'write cache introspection', ->
   {Album, $httpBackend, $timeout} = {}
 
   beforeEach ->
-    module('ngCachedResource')
     inject ($injector) ->
       $cachedResource = $injector.get '$cachedResource'
       $httpBackend = $injector.get '$httpBackend'
       $timeout = $injector.get '$timeout'
       Album = $cachedResource 'album', '/album/:id', {id: '@id'}
-
-  afterEach ->
-    $httpBackend.verifyNoOutstandingExpectation()
-    $httpBackend.verifyNoOutstandingRequest()
-    localStorage.clear()
 
   describe 'before write', ->
 
