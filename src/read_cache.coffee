@@ -16,12 +16,12 @@ module.exports = readCache = ($q, log, name, CachedResource) ->
 
     readHttp = ->
       resource = CachedResource.$resource[name].call(CachedResource.$resource, params)
-      resource.$promise.then (response) ->
-        modifyObjectInPlace(instance, response)
+      resource.$promise.then (httpResponse) ->
+        modifyObjectInPlace(instance, httpResponse)
 
         cacheDeferred.resolve instance unless cacheEntry.value
         httpDeferred.resolve instance
-        cacheEntry.set response, false
+        cacheEntry.set httpResponse, false
       resource.$promise.catch (error) ->
         cacheDeferred.reject error unless cacheEntry.value
         httpDeferred.reject error
