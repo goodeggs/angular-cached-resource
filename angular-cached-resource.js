@@ -283,7 +283,7 @@ module.exports = function(log) {
       args = Array.prototype.slice.call(arguments);
       CachedResource = this.build(args);
       this.byKey[CachedResource.$key] = CachedResource;
-      this.flushQueues();
+      CachedResource.$writes.flush();
       return CachedResource;
     };
 
@@ -398,14 +398,16 @@ $cachedResourceFactory = [
 var modifyObjectInPlace;
 
 module.exports = modifyObjectInPlace = function(oldObject, newObject, cachedObject) {
-  var key, localChanges, _i, _j, _len, _len1, _ref, _ref1, _results;
+  var key, localChange, localChanges, _i, _j, _len, _len1, _ref, _ref1, _results;
   _ref = Object.keys(oldObject);
   for (_i = 0, _len = _ref.length; _i < _len; _i++) {
     key = _ref[_i];
-    if (key[0] !== '$') {
-      if (newObject[key] == null) {
-        delete oldObject[key];
-      }
+    if (!(key[0] !== '$')) {
+      continue;
+    }
+    localChange = cachedObject && (cachedObject[key] == null);
+    if (!((newObject[key] != null) || localChange)) {
+      delete oldObject[key];
     }
   }
   _ref1 = Object.keys(newObject);
@@ -417,7 +419,7 @@ module.exports = modifyObjectInPlace = function(oldObject, newObject, cachedObje
         _results.push(modifyObjectInPlace(oldObject[key], newObject[key], cachedObject != null ? cachedObject[key] : void 0));
       } else {
         localChanges = cachedObject && !angular.equals(oldObject[key], cachedObject[key]);
-        if (!angular.equals(oldObject[key], newObject[key]) && !localChanges) {
+        if (!(angular.equals(oldObject[key], newObject[key]) || localChanges)) {
           _results.push(oldObject[key] = newObject[key]);
         } else {
           _results.push(void 0);
@@ -519,11 +521,7 @@ module.exports = readArrayCache = function($q, log, name, CachedResource) {
         return httpDeferred.reject(error);
       });
     };
-    if (CachedResource.$writes.count > 0) {
-      CachedResource.$writes.flush(readHttp);
-    } else {
-      readHttp();
-    }
+    CachedResource.$writes.flush(readHttp);
     if (cacheArrayEntry.value) {
       _ref1 = cacheArrayEntry.value;
       for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
@@ -674,6 +672,9 @@ module.exports = function(log) {
 
     ResourceCacheEntry.prototype.set = function(value, dirty) {
       this.value = value;
+      if (this.dirty && !dirty) {
+        log.error("unexpectedly setting a clean entry (load) over a dirty entry (pending write)");
+      }
       this.dirty = dirty;
       return this._update();
     };
@@ -718,7 +719,7 @@ module.exports = function(log, $q) {
   };
   return ResourceWriteQueue = (function() {
     ResourceWriteQueue.prototype.logStatusOfRequest = function(status, action, params, data) {
-      return log.debug("" + action + " for " + this.key + " " + (angular.toJson(params)) + " " + status + " (queue length: " + this.count + ")", data);
+      return log.debug("" + action + " for " + this.key + " " + (angular.toJson(params)) + " " + status + " (queue length: " + this.queue.length + ")", data);
     };
 
     function ResourceWriteQueue(CachedResource, $timeout) {
@@ -726,13 +727,15 @@ module.exports = function(log, $q) {
       this.$timeout = $timeout;
       this.key = "" + this.CachedResource.$key + "/write";
       this.queue = Cache.getItem(this.key, []);
-      this.count = 0;
-      resetDeferred(this).resolve();
+      resetDeferred(this);
+      if (this.queue.length === 0) {
+        resolveDeferred(this);
+      }
     }
 
     ResourceWriteQueue.prototype.enqueue = function(params, resourceData, action, deferred) {
       var resourceParams, write, _ref, _ref1;
-      if (this.count === 0) {
+      if (this.queue.length === 0) {
         resetDeferred(this);
       }
       resourceParams = angular.isArray(resourceData) ? resourceData.map(function(resource) {
@@ -794,7 +797,7 @@ module.exports = function(log, $q) {
         delete this.timeoutPromise;
       }
       this._update();
-      if (this.count === 0) {
+      if (this.queue.length === 0) {
         return resolveDeferred(this);
       }
     };
@@ -915,8 +918,7 @@ module.exports = function(log, $q) {
           action: write.action
         };
       });
-      Cache.setItem(this.key, savableQueue);
-      return this.count = savableQueue.length;
+      return Cache.setItem(this.key, savableQueue);
     };
 
     return ResourceWriteQueue;

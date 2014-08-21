@@ -37,6 +37,13 @@ describe 'CachedResource::post', ->
       expect(resourceInstance.notes).to.be.undefined
       expect(resourceInstance.list).to.be.undefined
 
+    it 'does not remove resource attributes that have been added but not saved to local storage', ->
+      $httpBackend.whenPOST('/mock/1').respond id: 1, notes: 'from the server'
+      resourceInstance.$save()
+      resourceInstance.localChange = 'added after save request but before httpResponse resolved'
+      $httpBackend.flush()
+      expect(resourceInstance.localChange).to.be.defined
+
     it 'adds new resource attributes if the response has them', ->
       $httpBackend.whenPOST('/mock/1').respond
         id: 1
