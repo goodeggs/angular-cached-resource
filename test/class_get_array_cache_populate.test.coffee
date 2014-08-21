@@ -2,16 +2,10 @@ describe 'CachedResource.get cache population from an isArray request', ->
   {$httpBackend, CachedResource} = {}
 
   beforeEach ->
-    module('ngCachedResource')
     inject ($injector) ->
       $cachedResource = $injector.get '$cachedResource'
       $httpBackend = $injector.get '$httpBackend'
       CachedResource = $cachedResource 'class-get-array-test', '/colors/:color', {color: '@color'}
-
-  afterEach ->
-    $httpBackend.verifyNoOutstandingExpectation()
-    $httpBackend.verifyNoOutstandingRequest()
-    localStorage.clear()
 
   describe 'when cache is populated by a parameterless query', ->
     beforeEach ->

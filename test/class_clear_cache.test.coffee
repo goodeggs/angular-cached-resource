@@ -2,31 +2,28 @@ describe 'CachedResource.$clearCache()', ->
   {CachedResource, $cachedResource, $httpBackend, rabbits, combos} = {}
 
   beforeEach ->
-    localStorage.clear() # TODO this should not be actually necessary
-    module('ngCachedResource')
     inject ($injector) ->
       $cachedResource = $injector.get '$cachedResource'
       $httpBackend = $injector.get '$httpBackend'
     CachedResource = $cachedResource 'class-clear-test', '/animals/:name', {name: '@name'}
 
-  afterEach ->
-    $httpBackend.verifyNoOutstandingExpectation()
-    $httpBackend.verifyNoOutstandingRequest()
-    localStorage.clear()
-
   describe 'with a populated cache', ->
-
     beforeEach ->
-      CachedResource.$addArrayToCache type: 'fictional-rabbits', [
+      CachedResource.$addArrayToCache type: 'fictional-rabbits', rabbits = [
         { name: 'white-rabbit', source: 'Alice In Wonderland' }
         { name: 'peppy-hare', source: 'Starfox' }
         { name: 'energizer-bunny', source: 'Energizer' }
         { name: 'frank', source: 'Donnie Darko' }
       ]
-      CachedResource.$addArrayToCache type: 'combos', [
+      CachedResource.$addArrayToCache type: 'combos', combos = [
         { name: 'liger', from: ['Lion', 'Tiger'] }
         { name: 'groler-bear', from: ['Grizzly Bear', 'Polar Bear'] }
       ]
+      $httpBackend.expectGET('/animals?type=fictional-rabbits').respond rabbits
+      $httpBackend.expectGET('/animals?type=combos').respond combos
+      rabbits = CachedResource.query type: 'fictional-rabbits'
+      combos = CachedResource.query type: 'combos'
+      $httpBackend.flush()
 
     it 'should remove all entries from the cache', ->
       CachedResource.$clearCache()
@@ -88,11 +85,11 @@ describe 'CachedResource.$clearCache()', ->
         $httpBackend.flush()
 
       it 'should remove all entries from the cache', ->
-        RouteResource.$clearAll()
+        RouteResource.$clearCache()
         expect(localStorage.length).to.equal 0
 
       it 'should remove all entries from the cache except for those specified by a key', ->
-        RouteResource.$clearAll exceptFor: {type: 'easy'}
+        RouteResource.$clearCache exceptFor: {type: 'easy'}
         expect(localStorage.length).to.equal 3
         expect(localStorage.getItem('cachedResource://route-resource/array?type=easy')).to.contain 1
         expect(localStorage.getItem('cachedResource://route-resource?routeId=1')).to.contain 'direct'

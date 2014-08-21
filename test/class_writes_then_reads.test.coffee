@@ -2,16 +2,10 @@ describe 'Class writes, then reads', ->
   {CachedResource, $httpBackend} = {}
 
   beforeEach ->
-    module('ngCachedResource')
     inject ($injector) ->
       $cachedResource = $injector.get '$cachedResource'
       $httpBackend = $injector.get '$httpBackend'
       CachedResource = $cachedResource 'class-writes-then-reads-test', '/mock/:id', {id: '@id'}
-
-  afterEach ->
-    $httpBackend.verifyNoOutstandingExpectation()
-    $httpBackend.verifyNoOutstandingRequest()
-    localStorage.clear()
 
   describe 'when the write was unsuccessful', ->
     beforeEach ->

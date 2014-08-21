@@ -2,18 +2,12 @@ describe 'bound params do not match array response', ->
   {villains, $httpBackend, $log} = {}
 
   beforeEach ->
-    module 'ngCachedResource'
     inject ($injector) ->
       $log = $injector.get '$log'
       $httpBackend = $injector.get '$httpBackend'
       $cachedResource = $injector.get '$cachedResource'
       Villain = $cachedResource('villain', '/villain/:name', { name: '@name'})
       villains = Villain.query()
-
-  afterEach ->
-    $httpBackend.verifyNoOutstandingExpectation()
-    $httpBackend.verifyNoOutstandingRequest()
-    localStorage.clear()
     $log.reset()
 
   it 'should display a warning message', ->

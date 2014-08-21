@@ -2,16 +2,10 @@ describe 'resource instance returned by CachedResource.get', ->
   {CachedResource, $httpBackend, resourceInstance} = {}
 
   beforeEach ->
-    module('ngCachedResource')
     inject ($injector) ->
       $cachedResource = $injector.get '$cachedResource'
       $httpBackend = $injector.get '$httpBackend'
       CachedResource = $cachedResource('class-get-test', '/mock/:id')
-
-  afterEach ->
-    $httpBackend.verifyNoOutstandingExpectation()
-    $httpBackend.verifyNoOutstandingRequest()
-    localStorage.clear()
 
   describe 'when cache is empty', ->
     expectSuccessfulGET = ->
