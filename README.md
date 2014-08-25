@@ -271,7 +271,7 @@ npm test
 [npm-badge]: http://img.shields.io/npm/v/angular-cached-resource.svg?style=flat
 [npm-link]: https://www.npmjs.org/package/angular-cached-resource
 
-[license-badge]: http://img.shields.io/npm/l/angular-cached-resource.svg
+[license-badge]: http://img.shields.io/badge/license-mit-lightgrey.svg?style=flat
 [license-link]: https://github.com/goodeggs/angular-cached-resource/blob/master/LICENSE.md
 
 [angular]: http://angularjs.org/
