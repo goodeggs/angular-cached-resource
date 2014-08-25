@@ -7,6 +7,8 @@ sources, even when the browser is offline. Uses HTML5
 the core [ngResource][ngResource] module, which it requires as a dependency.
 
 [![Build Status][travis-badge]][travis-link]
+[![npm version][npm-badge]][npm-link]
+[![mit license][license-badge]][license-link]
 
 ## Features
 
@@ -261,10 +263,16 @@ npm test
 
 ## License
 
-[MIT](https://github.com/goodeggs/angular-cached-resource/blob/master/LICENSE.md)
+[MIT][license-link]
 
-[travis-badge]: https://travis-ci.org/goodeggs/angular-cached-resource.svg?branch=master
+[travis-badge]: http://img.shields.io/travis/goodeggs/angular-cached-resource/master.svg?style=flat
 [travis-link]: https://travis-ci.org/goodeggs/angular-cached-resource
+
+[npm-badge]: http://img.shields.io/npm/v/angular-cached-resource.svg?style=flat
+[npm-link]: https://www.npmjs.org/package/angular-cached-resource
+
+[license-badge]: http://img.shields.io/npm/l/angular-cached-resource.svg
+[license-link]: https://github.com/goodeggs/angular-cached-resource/blob/master/LICENSE.md
 
 [angular]: http://angularjs.org/
 [ngResource]: http://docs.angularjs.org/api/ngResource/service/$resource
