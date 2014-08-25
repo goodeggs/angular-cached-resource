@@ -1,7 +1,7 @@
 {
   "name": "angular-cached-resource",
   "main": "angular-cached-resource.js",
-  "version": "0.7.8",
+  "version": "1.0.0",
   "homepage": "https://github.com/goodeggs/angular-cached-resource",
   "authors": [
     "Max Edmands <max@goodeggs.com>",
