@@ -1,8 +1,8 @@
 processReadArgs = require './process_read_args'
 modifyObjectInPlace = require './modify_object_in_place'
 
-module.exports = readCache = ($q, log, name, CachedResource) ->
-  ResourceCacheEntry = require('./resource_cache_entry')(log)
+module.exports = readCache = ($q, providerParams, name, CachedResource) ->
+  ResourceCacheEntry = require('./resource_cache_entry')(providerParams)
 
   ->
     {params, deferred: cacheDeferred} = processReadArgs($q, arguments)

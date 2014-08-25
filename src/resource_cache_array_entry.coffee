@@ -1,5 +1,6 @@
-module.exports = (log) ->
-  ResourceCacheEntry = require('./resource_cache_entry')(log)
+module.exports = (providerParams) ->
+  {$log} = providerParams
+  ResourceCacheEntry = require('./resource_cache_entry')(providerParams)
 
   class ResourceCacheArrayEntry extends ResourceCacheEntry
     defaultValue: []
@@ -10,7 +11,7 @@ module.exports = (log) ->
       for instance in instances
         cacheInstanceParams = instance.$params()
         if Object.keys(cacheInstanceParams).length is 0
-          log.error """
+          $log.error """
             instance #{instance} doesn't have any boundParams. Please, make sure you specified them in your resource's initialization, f.e. `{id: "@id"}`, or it won't be cached.
           """
         else

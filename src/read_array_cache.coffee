@@ -1,9 +1,9 @@
 processReadArgs = require './process_read_args'
 modifyObjectInPlace = require './modify_object_in_place'
 
-module.exports = readArrayCache = ($q, log, name, CachedResource) ->
-  ResourceCacheEntry = require('./resource_cache_entry')(log)
-  ResourceCacheArrayEntry = require('./resource_cache_array_entry')(log)
+module.exports = readArrayCache = ($q, providerParams, name, CachedResource) ->
+  ResourceCacheEntry = require('./resource_cache_entry')(providerParams)
+  ResourceCacheArrayEntry = require('./resource_cache_array_entry')(providerParams)
 
   first = (array, params) ->
     found = null
