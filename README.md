@@ -114,21 +114,29 @@ $cachedResource(cacheKey, url, [paramDefaults], [actions]);
 A CachedResource "class" object. This is a swap-in replacement for an object
 created by the `$resource` factory, with the following additional properties:
 
-- **Resource.$clearAll(** [options] **)**<br>
+- **Resource.$clearCache(** [options] **)**<br>
   Clears all items from the cache associated with this resource. Accepts one
-  argument, described below. This mechanism is slated to change in the next
-  minor version of Cached Resource; take a look at
-  [issue #8](https://github.com/goodeggs/angular-cached-resource/issues/8)
-  for more details.
+  argument, described below.
 
   - **options**, `Object`, *optional*<br>
     `options` may contain the following keys:
+      - `where`, which will limit the resources that are cleared from the cache
+        to only those whose keys are explicitly listed. `where` can be an `Array`
+        or an `Object`. If it is an `Object`, it will be treated like an `Array`
+        containing only the provided `Object`. The `Array` should contain `Objects`
+        representing cache keys that should be removed. If `where` is provided,
+        `exceptFor` must not be provided.
       - `exceptFor`, which will limit the resources that are cleared from the
-        cache. `exceptFor` can be an `Array` or an `Object`. If it is an
-        `Array`, the function will remove every cache item except for the
-        ones whose keys match the provided keys. If it is an `Object`, the
-        function will remove every cache item except for those returned by a
-        query that matches the provided parameters.
+        cache to all resources except for those whose keys are explicitly listed.
+        Just like `where`, `exceptFor` can be an `Array` or an `Object`. If it is an
+        `Object`, it will be treated like an `Array` containing only the provided
+        `Object`. The `Array` should contain `Object`s representing cache keys that
+        should be kept. If `exceptFor` is provided, `where` must not be provided.
+      - `isArray`, a boolean. Default is `false`. If `true`, then the function will
+        treat the `where` or `exceptFor` arguments as referring to `Array` cache key.
+      - `clearChildren`, a boolean. Default is `false`. If `true`, and `isArray` is
+        also `true`, then the function will clear the `Array` cache entry (or entries)
+        as well as all of the instances that the `Array` points to.
       - `clearPendingWrites`, a boolean. Default is `false`. If `true`, then
         the function will also remove cached instances that have a pending
         write to the server.
@@ -157,7 +165,7 @@ hand. Here are the ways that you can accomplish this:
   this module, except that it will prevent any pending write from actually
   occurring.
 
-- **$cachedResource.clearAll()**<br>
+- **$cachedResource.clearCache()**<br>
   Removes every single Angular Cached Resource cache entry that's currently
   stored in localStorage. It will leave all cache entries that were not created
   by this module. (Note: cache entries are namespaced, so if you add anything
@@ -170,32 +178,37 @@ hand. Here are the ways that you can accomplish this:
   that has not been defined since the page was loaded. This is useful if your
   API changes and you want to make sure that old entries are cleared away.
 
-- **$cachedResource.clearAll({exceptFor: ['foo', 'bar']})**<br>
+- **$cachedResource.clearCache({exceptFor: ['foo', 'bar']})**<br>
   Removes every Angular Cached Resource entry except for resources with the
   `foo` or `bar` keys, or resource instances that have a pending write to the
   server.
 
-- **$cachedResource.clearAll({clearPendingWrites: true})**<br>
+- **$cachedResource.clearCache({clearPendingWrites: true})**<br>
   Removes every Angular Cached Resource entry, including those that have a
   pending write to the server.
 
 If you have a "class" object that you've created with `$cachedResource`, then
 you can also do the following:
 
-- **CachedResource.$clearAll()**<br>
+- **CachedResource.$clearCache()**<br>
   Removes all entries from the cache associated with this particular resource
   class, except for resource instances that have a pending write to the server.
 
-- **CachedResource.$clearAll({exceptFor: [{id: 1}])**<br>
+- **CachedResource.$clearCache({where: [{id: 1}, {id: 2}])**<br>
+  Removes two entries from the cache associated with this particular resource
+  class; the ones with an `id` of 1 and 2. (This assumes that `paramDefaults`
+  has an `id` param.)
+
+- **CachedResource.$clearCache({exceptFor: {id: 1})**<br>
   Removes all entries from the cache associated with this particular resource
   class, except for those with an `id` of 1.  (This assumes that
   `paramDefaults` has an `id` param.)
 
-- **CachedResource.$clearAll({exceptFor: {query: 'search string'}})**<br>
+- **CachedResource.$clearCache({exceptFor: {query: 'search string'}, isArray: true})**<br>
   Removes all entries from the cache except those that were returned by the
   provided query parameters.
 
-- **CachedResource.$clearAll({clearPendingWrites: true})**<br>
+- **CachedResource.$clearCache({clearPendingWrites: true})**<br>
   Removes all instances of CachedResource from the cache, including those that
   have a pending write to the server.
 
