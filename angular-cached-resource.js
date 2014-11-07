@@ -961,7 +961,7 @@ module.exports = function(providerParams, $q) {
           var _ref;
           if (error && error.status >= 400 && error.status < 500) {
             _this.removeWrite(write);
-            _this.logStatusOfRequest("failed with error " + (angular.toJson(error)) + "; removed from queue", write.action, write.resourceParams, writeData);
+            $log.error("" + write.action + " to " + _this.CachedResource.$key + " (" + error.config.method + " to " + error.config.url + ") failed with error " + error.status);
           } else {
             _this.logStatusOfRequest("failed with error " + (angular.toJson(error)) + "; still in queue", write.action, write.resourceParams, writeData);
           }

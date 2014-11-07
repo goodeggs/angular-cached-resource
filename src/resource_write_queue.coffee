@@ -99,7 +99,7 @@ module.exports = (providerParams, $q) ->
       onFailure = (error) =>
         if error and error.status >= 400 and error.status < 500
           @removeWrite write
-          @logStatusOfRequest("failed with error #{angular.toJson error}; removed from queue", write.action, write.resourceParams, writeData)
+          $log.error "#{write.action} to #{@CachedResource.$key} (#{error.config.method} to #{error.config.url}) failed with error #{error.status}"
         else
           @logStatusOfRequest("failed with error #{angular.toJson error}; still in queue", write.action, write.resourceParams, writeData)
         write.deferred?.reject error

@@ -1,12 +1,14 @@
 describe 'CachedResource.post', ->
-  {CachedResource, $httpBackend, $timeout} = {}
+  {CachedResource, $httpBackend, $timeout, $log} = {}
 
   beforeEach ->
     inject ($injector) ->
       $cachedResource = $injector.get '$cachedResource'
       $httpBackend = $injector.get '$httpBackend'
       $timeout = $injector.get '$timeout'
+      $log = $injector.get '$log'
       CachedResource = $cachedResource 'class-save-test', '/mock/:id'
+    $log.reset()
 
   describe 'while online', ->
     it 'saves the resource normally', (done) ->
@@ -63,3 +65,19 @@ describe 'CachedResource.post', ->
       expect(cachedWrite).to.have.deep.property '[0].action', 'save'
       expect(cachedWrite).to.have.deep.property '[0].params.id', 1
 
+  describe 'when server returns 400', ->
+
+    beforeEach ->
+      $httpBackend.expectPOST('/mock/1', magic: 'Save #1').respond 400
+      resource = CachedResource.save {id: 1}, {magic: 'Save #1'}
+      $httpBackend.flush()
+
+    it 'stops trying to save the resource', ->
+      expect(CachedResource.$writes.queue.length).to.equal 0
+
+    it 'logs the failed write to $logger.error', ->
+      expect($log.error.logs.length).to.equal 1
+      expect($log.error.logs[0][0]).to.equal 'ngCachedResource'
+      expect($log.error.logs[0][1]).to.contain 'save to class-save-test'
+      expect($log.error.logs[0][1]).to.contain 'POST to /mock/1'
+      expect($log.error.logs[0][1]).to.contain 'failed with error 400'
