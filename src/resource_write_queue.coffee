@@ -24,6 +24,7 @@ module.exports = (providerParams, $q) ->
     constructor: (@CachedResource, @$timeout) ->
       @key = "#{@CachedResource.$key}/write"
       @queue = Cache.getItem(@key, [])
+      write.busy = false for write in @queue
       resetDeferred(@)
       if @queue.length is 0
         resolveDeferred(@) # initialize the queue with a resolved promise
@@ -82,6 +83,9 @@ module.exports = (providerParams, $q) ->
       write for write in @queue when angular.equals(params, write.params)
 
     _processWrite: (write, done) ->
+      return if write.busy
+      write.busy = true
+
       if angular.isArray(write.resourceParams)
         cacheEntries = write.resourceParams.map (resourceParams) =>
           new ResourceCacheEntry(@CachedResource.$key, resourceParams).load()
@@ -101,8 +105,10 @@ module.exports = (providerParams, $q) ->
           @removeWrite write
           $log.error "#{write.action} to #{@CachedResource.$key} (#{error.config.method} to #{error.config.url}) failed with error #{error.status}"
         else
+          write.busy = false
           @logStatusOfRequest("failed with error #{angular.toJson error}; still in queue", write.action, write.resourceParams, writeData)
         write.deferred?.reject error
+
       @CachedResource.$resource[write.action](write.params, writeData, onSuccess, onFailure)
       @logStatusOfRequest('processed', write.action, write.resourceParams, writeData)
 
