@@ -16,3 +16,6 @@ module.exports = modifyObjectInPlace = (oldObject, newObject, cachedObject) ->
       localChanges = cachedObject and not angular.equals(oldObject[key], cachedObject[key])
       unless angular.equals(oldObject[key], newObject[key]) or localChanges
         oldObject[key] = newObject[key]
+
+  oldObject.length = newObject.length if newObject.length?
+
