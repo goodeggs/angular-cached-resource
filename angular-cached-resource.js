@@ -470,7 +470,7 @@ $cachedResourceFactory = [
 var modifyObjectInPlace;
 
 module.exports = modifyObjectInPlace = function(oldObject, newObject, cachedObject) {
-  var key, localChange, localChanges, _i, _j, _len, _len1, _ref, _ref1, _results;
+  var key, localChange, localChanges, _i, _j, _len, _len1, _ref, _ref1;
   _ref = Object.keys(oldObject);
   for (_i = 0, _len = _ref.length; _i < _len; _i++) {
     key = _ref[_i];
@@ -483,23 +483,22 @@ module.exports = modifyObjectInPlace = function(oldObject, newObject, cachedObje
     }
   }
   _ref1 = Object.keys(newObject);
-  _results = [];
   for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
     key = _ref1[_j];
     if (key[0] !== '$') {
       if (angular.isObject(oldObject[key]) && angular.isObject(newObject[key])) {
-        _results.push(modifyObjectInPlace(oldObject[key], newObject[key], cachedObject != null ? cachedObject[key] : void 0));
+        modifyObjectInPlace(oldObject[key], newObject[key], cachedObject != null ? cachedObject[key] : void 0);
       } else {
         localChanges = cachedObject && !angular.equals(oldObject[key], cachedObject[key]);
         if (!(angular.equals(oldObject[key], newObject[key]) || localChanges)) {
-          _results.push(oldObject[key] = newObject[key]);
-        } else {
-          _results.push(void 0);
+          oldObject[key] = newObject[key];
         }
       }
     }
   }
-  return _results;
+  if (newObject.length != null) {
+    return oldObject.length = newObject.length;
+  }
 };
 
 },{}],6:[function(require,module,exports){
