@@ -79,5 +79,7 @@ describe 'CachedResource.post', ->
       expect($log.error.logs.length).to.equal 1
       expect($log.error.logs[0][0]).to.equal 'ngCachedResource'
       expect($log.error.logs[0][1]).to.contain 'save to class-save-test'
-      expect($log.error.logs[0][1]).to.contain 'POST to /mock/1'
       expect($log.error.logs[0][1]).to.contain 'failed with error 400'
+      expect($log.error.logs[0][2]).to.have.property 'method', 'POST'
+      expect($log.error.logs[0][2]).to.have.property 'url', '/mock/1'
+      expect($log.error.logs[0][2]).to.have.property 'writeData'
