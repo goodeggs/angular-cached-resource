@@ -76,7 +76,6 @@ describe 'CachedResource.post', ->
       expect(CachedResource.$writes.queue.length).to.equal 0
 
     it 'logs the failed write to $logger.error', ->
-      console.log $log.error.logs[0]
       expect($log.error.logs.length).to.equal 1
       expect($log.error.logs[0][0]).to.equal 'ngCachedResource'
       expect($log.error.logs[0][1]).to.contain 'save to class-save-test'
