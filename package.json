@@ -33,6 +33,10 @@
     "karma-safari-launcher": "^0.1.1"
   },
   "main": "lib/index.js",
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/",
+    "always-auth": true
+  },
   "scripts": {
     "test": "./node_modules/karma/bin/karma start ./karma.full.conf.coffee",
     "prepublish": "bower -sj install",
