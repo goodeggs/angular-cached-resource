@@ -24,6 +24,15 @@ describe 'CachedResource::post', ->
       $httpBackend.flush()
       expect(resourceInstance.notes).to.equal 'this is a different note'
 
+    it 'modifies the cache based on response', ->
+      $httpBackend.whenPOST('/mock/1').respond
+        id: 1
+        notes: 'this is a different note'
+        list: [1,2,3]
+      resourceInstance.$save()
+      $httpBackend.flush()
+      expect(JSON.parse localStorage.getItem 'cachedResource://instance-post-test?id=1').to.have.deep.property 'value.notes', 'this is a different note'
+
     it 'removes resource attributes if the response does not have them', ->
       $httpBackend.whenPOST('/mock/1').respond id: 1
       resourceInstance.$save()

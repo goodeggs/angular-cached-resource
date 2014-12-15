@@ -96,7 +96,6 @@ module.exports = (providerParams, $q) ->
 
       onSuccess = (value) =>
         @removeWrite write
-        cacheEntry.setClean() for cacheEntry in cacheEntries
         write.deferred?.resolve value
         @logStatusOfRequest('succeeded', write.action, write.resourceParams, writeData)
         done() if angular.isFunction(done)
@@ -110,7 +109,13 @@ module.exports = (providerParams, $q) ->
           @logStatusOfRequest("failed with error #{angular.toJson error}; still in queue", write.action, write.resourceParams, writeData)
         write.deferred?.reject error
 
-      @CachedResource.$resource[write.action](write.params, writeData, onSuccess, onFailure)
+      @CachedResource.$resource[write.action](write.params, writeData, onSuccess, onFailure).$promise.then (savedResources) =>
+        savedResources = if angular.isArray(savedResources) then savedResources else [savedResources]
+        for resource in savedResources
+          resourceInstance = new @CachedResource(resource)
+          cacheEntry = new ResourceCacheEntry(@CachedResource.$key, resourceInstance.$params()).load()
+          cacheEntry.set(resource, false)
+
       @logStatusOfRequest('processed', write.action, write.resourceParams, writeData)
 
     _setFlushTimeout: ->

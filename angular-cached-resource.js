@@ -752,11 +752,6 @@ module.exports = function(providerParams) {
       return this._update();
     };
 
-    ResourceCacheEntry.prototype.setClean = function() {
-      this.dirty = false;
-      return this._update();
-    };
-
     ResourceCacheEntry.prototype._update = function() {
       return Cache.setItem(this.fullCacheKey(), {
         value: this.value,
@@ -950,12 +945,8 @@ module.exports = function(providerParams, $q) {
       }
       onSuccess = (function(_this) {
         return function(value) {
-          var cacheEntry, _i, _len, _ref;
+          var _ref;
           _this.removeWrite(write);
-          for (_i = 0, _len = cacheEntries.length; _i < _len; _i++) {
-            cacheEntry = cacheEntries[_i];
-            cacheEntry.setClean();
-          }
           if ((_ref = write.deferred) != null) {
             _ref.resolve(value);
           }
@@ -982,7 +973,20 @@ module.exports = function(providerParams, $q) {
           return (_ref = write.deferred) != null ? _ref.reject(error) : void 0;
         };
       })(this);
-      this.CachedResource.$resource[write.action](write.params, writeData, onSuccess, onFailure);
+      this.CachedResource.$resource[write.action](write.params, writeData, onSuccess, onFailure).$promise.then((function(_this) {
+        return function(savedResources) {
+          var cacheEntry, resource, resourceInstance, _i, _len, _results;
+          savedResources = angular.isArray(savedResources) ? savedResources : [savedResources];
+          _results = [];
+          for (_i = 0, _len = savedResources.length; _i < _len; _i++) {
+            resource = savedResources[_i];
+            resourceInstance = new _this.CachedResource(resource);
+            cacheEntry = new ResourceCacheEntry(_this.CachedResource.$key, resourceInstance.$params()).load();
+            _results.push(cacheEntry.set(resource, false));
+          }
+          return _results;
+        };
+      })(this));
       return this.logStatusOfRequest('processed', write.action, write.resourceParams, writeData);
     };
 
