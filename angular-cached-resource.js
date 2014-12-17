@@ -635,6 +635,9 @@ module.exports = readCache = function($q, providerParams, name, CachedResource) 
           cacheDeferred.resolve(instance);
         }
         httpDeferred.resolve(instance);
+        if (cacheEntry.dirty) {
+          providerParams.$log.error("unexpectedly setting a clean entry (load) over a dirty entry (pending write)");
+        }
         return cacheEntry.set(httpResponse, false);
       });
       return resource.$promise["catch"](function(error) {
@@ -745,9 +748,6 @@ module.exports = function(providerParams) {
 
     ResourceCacheEntry.prototype.set = function(value, dirty) {
       this.value = value;
-      if (this.dirty && !dirty) {
-        $log.error("unexpectedly setting a clean entry (load) over a dirty entry (pending write)");
-      }
       this.dirty = dirty;
       return this._update();
     };
