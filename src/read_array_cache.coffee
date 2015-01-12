@@ -63,6 +63,6 @@ module.exports = readArrayCache = ($q, providerParams, name, CachedResource, act
       # Resolve the promise as the cache is ready
       cacheDeferred.resolve arrayInstance
     else if actionConfig.cacheOnly
-      cacheDeferred.reject new Error("Cache value does not exist for params #{params}")
+      cacheDeferred.reject new Error "Cache value does not exist for params", params
 
     arrayInstance

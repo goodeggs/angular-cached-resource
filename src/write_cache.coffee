@@ -21,6 +21,7 @@ module.exports = writeCache = ($q, providerParams, action, CachedResource, actio
     [success, error] = args
 
     isArray = angular.isArray(data)
+    isDirty = not actionConfig.cacheOnly
 
     wrapInCachedResource = (object) ->
       if object instanceof CachedResource
@@ -32,12 +33,12 @@ module.exports = writeCache = ($q, providerParams, action, CachedResource, actio
       data = data.map((o) -> wrapInCachedResource o)
       for resource in data
         cacheEntry = new ResourceCacheEntry(CachedResource.$key, resource.$params()).load()
-        cacheEntry.set(resource, true) unless angular.equals(cacheEntry.data, resource)
+        cacheEntry.set(resource, isDirty) unless angular.equals(cacheEntry.data, resource)
     else
       data = wrapInCachedResource data
       params[param] = value for param, value of data.$params()
       cacheEntry = new ResourceCacheEntry(CachedResource.$key, data.$params()).load()
-      cacheEntry.set(data, true) unless angular.equals(cacheEntry.data, data)
+      cacheEntry.set(data, isDirty) unless angular.equals(cacheEntry.data, data)
 
     data.$resolved = false
 
@@ -47,7 +48,6 @@ module.exports = writeCache = ($q, providerParams, action, CachedResource, actio
     deferred.promise.catch error if angular.isFunction(error)
 
     if actionConfig.cacheOnly
-      cacheEntry.load()
       data.$resolved = true
       deferred.resolve(data)
     else

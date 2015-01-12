@@ -604,7 +604,7 @@ module.exports = readArrayCache = function($q, providerParams, name, CachedResou
       }
       cacheDeferred.resolve(arrayInstance);
     } else if (actionConfig.cacheOnly) {
-      cacheDeferred.reject(new Error("Cache value does not exist for params " + params));
+      cacheDeferred.reject(new Error("Cache value does not exist for params", params));
     }
     return arrayInstance;
   };
@@ -1035,13 +1035,14 @@ module.exports = writeCache = function($q, providerParams, action, CachedResourc
   var ResourceCacheEntry;
   ResourceCacheEntry = require('./resource_cache_entry')(providerParams);
   return function() {
-    var args, cacheEntry, data, deferred, error, instanceMethod, isArray, param, params, queueDeferred, resource, success, value, wrapInCachedResource, _i, _len, _ref;
+    var args, cacheEntry, data, deferred, error, instanceMethod, isArray, isDirty, param, params, queueDeferred, resource, success, value, wrapInCachedResource, _i, _len, _ref;
     instanceMethod = this instanceof CachedResource;
     args = Array.prototype.slice.call(arguments);
     params = !instanceMethod && angular.isObject(args[1]) ? args.shift() : instanceMethod && angular.isObject(args[0]) ? args.shift() : {};
     data = instanceMethod ? this : args.shift();
     success = args[0], error = args[1];
     isArray = angular.isArray(data);
+    isDirty = !actionConfig.cacheOnly;
     wrapInCachedResource = function(object) {
       if (object instanceof CachedResource) {
         return object;
@@ -1057,7 +1058,7 @@ module.exports = writeCache = function($q, providerParams, action, CachedResourc
         resource = data[_i];
         cacheEntry = new ResourceCacheEntry(CachedResource.$key, resource.$params()).load();
         if (!angular.equals(cacheEntry.data, resource)) {
-          cacheEntry.set(resource, true);
+          cacheEntry.set(resource, isDirty);
         }
       }
     } else {
@@ -1069,7 +1070,7 @@ module.exports = writeCache = function($q, providerParams, action, CachedResourc
       }
       cacheEntry = new ResourceCacheEntry(CachedResource.$key, data.$params()).load();
       if (!angular.equals(cacheEntry.data, data)) {
-        cacheEntry.set(data, true);
+        cacheEntry.set(data, isDirty);
       }
     }
     data.$resolved = false;
@@ -1082,7 +1083,6 @@ module.exports = writeCache = function($q, providerParams, action, CachedResourc
       deferred.promise["catch"](error);
     }
     if (actionConfig.cacheOnly) {
-      cacheEntry.load();
       data.$resolved = true;
       deferred.resolve(data);
     } else {
