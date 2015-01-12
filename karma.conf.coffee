@@ -19,7 +19,7 @@ module.exports = (config) ->
     ]
 
     browsers: [
-      'PhantomJS'
+      'Chrome'
     ]
 
     preprocessors:
