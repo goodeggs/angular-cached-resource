@@ -199,7 +199,7 @@ module.exports = buildCachedResourceClass = function($resource, $timeout, $q, pr
     actionConfig = actions[actionName];
     method = actionConfig.method.toUpperCase();
     if (actionConfig.cache !== false) {
-      handler = method === 'GET' && actionConfig.isArray ? readArrayCache($q, providerParams, actionName, CachedResource) : method === 'GET' ? readCache($q, providerParams, actionName, CachedResource, actionConfig) : method === 'POST' || method === 'PUT' || method === 'DELETE' || method === 'PATCH' ? writeCache($q, providerParams, actionName, CachedResource) : void 0;
+      handler = method === 'GET' && actionConfig.isArray ? readArrayCache($q, providerParams, actionName, CachedResource, actionConfig) : method === 'GET' ? readCache($q, providerParams, actionName, CachedResource, actionConfig) : method === 'POST' || method === 'PUT' || method === 'DELETE' || method === 'PATCH' ? writeCache($q, providerParams, actionName, CachedResource) : void 0;
       CachedResource[actionName] = handler;
       if (method !== 'GET') {
         CachedResource.prototype["$" + actionName] = handler;
@@ -532,7 +532,7 @@ processReadArgs = require('./process_read_args');
 
 modifyObjectInPlace = require('./modify_object_in_place');
 
-module.exports = readArrayCache = function($q, providerParams, name, CachedResource) {
+module.exports = readArrayCache = function($q, providerParams, name, CachedResource, actionConfig) {
   var ResourceCacheArrayEntry, ResourceCacheEntry, first;
   ResourceCacheEntry = require('./resource_cache_entry')(providerParams);
   ResourceCacheArrayEntry = require('./resource_cache_array_entry')(providerParams);
@@ -592,7 +592,9 @@ module.exports = readArrayCache = function($q, providerParams, name, CachedResou
         return httpDeferred.reject(error);
       });
     };
-    CachedResource.$writes.flush(readHttp);
+    if (!actionConfig.cacheOnly) {
+      CachedResource.$writes.flush(readHttp);
+    }
     if (cacheArrayEntry.value) {
       _ref1 = cacheArrayEntry.value;
       for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
@@ -601,6 +603,8 @@ module.exports = readArrayCache = function($q, providerParams, name, CachedResou
         arrayInstance.push(new CachedResource(cacheInstanceEntry.value));
       }
       cacheDeferred.resolve(arrayInstance);
+    } else if (actionConfig.cacheOnly) {
+      cacheDeferred.reject(new Error("Cache value does not exist for params " + params));
     }
     return arrayInstance;
   };

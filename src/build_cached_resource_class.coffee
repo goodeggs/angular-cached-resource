@@ -124,7 +124,7 @@ module.exports = buildCachedResourceClass = ($resource, $timeout, $q, providerPa
     method = actionConfig.method.toUpperCase()
     unless actionConfig.cache is false
       handler = if method is 'GET' and actionConfig.isArray
-          readArrayCache($q, providerParams, actionName, CachedResource)
+          readArrayCache($q, providerParams, actionName, CachedResource, actionConfig)
         else if method is 'GET'
           readCache($q, providerParams, actionName, CachedResource, actionConfig)
         else if method in ['POST', 'PUT', 'DELETE', 'PATCH']

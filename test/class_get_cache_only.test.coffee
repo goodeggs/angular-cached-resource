@@ -26,7 +26,7 @@ describe 'GET cacheOnly=true', ->
     beforeEach ->
       CachedResource.$addToCache {_id: 1, test: 'help, I\'m stuck in a cache'}, false
 
-    it 'throws an error if nothing in the cache', (done) ->
+    it 'returns the resource directly from cache (does not make a request)', (done) ->
       resource = CachedResource.getFromCache({id: 1})
 
       resource.$promise.then ->
