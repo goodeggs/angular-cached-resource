@@ -1,6 +1,6 @@
 modifyObjectInPlace = require './modify_object_in_place'
 
-module.exports = writeCache = ($q, providerParams, action, CachedResource) ->
+module.exports = writeCache = ($q, providerParams, action, CachedResource, actionConfig) ->
   ResourceCacheEntry = require('./resource_cache_entry')(providerParams)
 
   ->
@@ -46,15 +46,20 @@ module.exports = writeCache = ($q, providerParams, action, CachedResource) ->
     deferred.promise.then success if angular.isFunction(success)
     deferred.promise.catch error if angular.isFunction(error)
 
-    queueDeferred = $q.defer()
-    queueDeferred.promise.then (httpResource) ->
+    if actionConfig.cacheOnly
       cacheEntry.load()
-      modifyObjectInPlace(data, httpResource, cacheEntry.value)
       data.$resolved = true
       deferred.resolve(data)
-    queueDeferred.promise.catch deferred.reject
+    else
+      queueDeferred = $q.defer()
+      queueDeferred.promise.then (httpResource) ->
+        cacheEntry.load()
+        modifyObjectInPlace(data, httpResource, cacheEntry.value)
+        data.$resolved = true
+        deferred.resolve(data)
+      queueDeferred.promise.catch deferred.reject
 
-    CachedResource.$writes.enqueue(params, data, action, queueDeferred)
-    CachedResource.$writes.flush()
+      CachedResource.$writes.enqueue(params, data, action, queueDeferred)
+      CachedResource.$writes.flush()
 
     data

@@ -199,7 +199,7 @@ module.exports = buildCachedResourceClass = function($resource, $timeout, $q, pr
     actionConfig = actions[actionName];
     method = actionConfig.method.toUpperCase();
     if (actionConfig.cache !== false) {
-      handler = method === 'GET' && actionConfig.isArray ? readArrayCache($q, providerParams, actionName, CachedResource, actionConfig) : method === 'GET' ? readCache($q, providerParams, actionName, CachedResource, actionConfig) : method === 'POST' || method === 'PUT' || method === 'DELETE' || method === 'PATCH' ? writeCache($q, providerParams, actionName, CachedResource) : void 0;
+      handler = method === 'GET' && actionConfig.isArray ? readArrayCache($q, providerParams, actionName, CachedResource, actionConfig) : method === 'GET' ? readCache($q, providerParams, actionName, CachedResource, actionConfig) : method === 'POST' || method === 'PUT' || method === 'DELETE' || method === 'PATCH' ? writeCache($q, providerParams, actionName, CachedResource, actionConfig) : void 0;
       CachedResource[actionName] = handler;
       if (method !== 'GET') {
         CachedResource.prototype["$" + actionName] = handler;
@@ -1031,7 +1031,7 @@ var modifyObjectInPlace, writeCache;
 
 modifyObjectInPlace = require('./modify_object_in_place');
 
-module.exports = writeCache = function($q, providerParams, action, CachedResource) {
+module.exports = writeCache = function($q, providerParams, action, CachedResource, actionConfig) {
   var ResourceCacheEntry;
   ResourceCacheEntry = require('./resource_cache_entry')(providerParams);
   return function() {
@@ -1081,16 +1081,22 @@ module.exports = writeCache = function($q, providerParams, action, CachedResourc
     if (angular.isFunction(error)) {
       deferred.promise["catch"](error);
     }
-    queueDeferred = $q.defer();
-    queueDeferred.promise.then(function(httpResource) {
+    if (actionConfig.cacheOnly) {
       cacheEntry.load();
-      modifyObjectInPlace(data, httpResource, cacheEntry.value);
       data.$resolved = true;
-      return deferred.resolve(data);
-    });
-    queueDeferred.promise["catch"](deferred.reject);
-    CachedResource.$writes.enqueue(params, data, action, queueDeferred);
-    CachedResource.$writes.flush();
+      deferred.resolve(data);
+    } else {
+      queueDeferred = $q.defer();
+      queueDeferred.promise.then(function(httpResource) {
+        cacheEntry.load();
+        modifyObjectInPlace(data, httpResource, cacheEntry.value);
+        data.$resolved = true;
+        return deferred.resolve(data);
+      });
+      queueDeferred.promise["catch"](deferred.reject);
+      CachedResource.$writes.enqueue(params, data, action, queueDeferred);
+      CachedResource.$writes.flush();
+    }
     return data;
   };
 };

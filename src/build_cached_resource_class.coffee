@@ -128,7 +128,7 @@ module.exports = buildCachedResourceClass = ($resource, $timeout, $q, providerPa
         else if method is 'GET'
           readCache($q, providerParams, actionName, CachedResource, actionConfig)
         else if method in ['POST', 'PUT', 'DELETE', 'PATCH']
-          writeCache($q, providerParams, actionName, CachedResource)
+          writeCache($q, providerParams, actionName, CachedResource, actionConfig)
 
       CachedResource[actionName] = handler
       CachedResource::["$#{actionName}"] = handler unless method is 'GET'
