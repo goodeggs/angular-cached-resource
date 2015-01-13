@@ -1,6 +1,6 @@
 modifyObjectInPlace = require './modify_object_in_place'
 
-module.exports = writeCache = ($q, providerParams, action, CachedResource) ->
+module.exports = writeCache = ($q, providerParams, action, CachedResource, actionConfig) ->
   ResourceCacheEntry = require('./resource_cache_entry')(providerParams)
 
   ->
@@ -21,6 +21,7 @@ module.exports = writeCache = ($q, providerParams, action, CachedResource) ->
     [success, error] = args
 
     isArray = angular.isArray(data)
+    isDirty = not actionConfig.cacheOnly
 
     wrapInCachedResource = (object) ->
       if object instanceof CachedResource
@@ -32,12 +33,12 @@ module.exports = writeCache = ($q, providerParams, action, CachedResource) ->
       data = data.map((o) -> wrapInCachedResource o)
       for resource in data
         cacheEntry = new ResourceCacheEntry(CachedResource.$key, resource.$params()).load()
-        cacheEntry.set(resource, true) unless angular.equals(cacheEntry.data, resource)
+        cacheEntry.set(resource, isDirty) unless angular.equals(cacheEntry.data, resource)
     else
       data = wrapInCachedResource data
       params[param] = value for param, value of data.$params()
       cacheEntry = new ResourceCacheEntry(CachedResource.$key, data.$params()).load()
-      cacheEntry.set(data, true) unless angular.equals(cacheEntry.data, data)
+      cacheEntry.set(data, isDirty) unless angular.equals(cacheEntry.data, data)
 
     data.$resolved = false
 
@@ -46,15 +47,19 @@ module.exports = writeCache = ($q, providerParams, action, CachedResource) ->
     deferred.promise.then success if angular.isFunction(success)
     deferred.promise.catch error if angular.isFunction(error)
 
-    queueDeferred = $q.defer()
-    queueDeferred.promise.then (httpResource) ->
-      cacheEntry.load()
-      modifyObjectInPlace(data, httpResource, cacheEntry.value)
+    if actionConfig.cacheOnly
       data.$resolved = true
       deferred.resolve(data)
-    queueDeferred.promise.catch deferred.reject
+    else
+      queueDeferred = $q.defer()
+      queueDeferred.promise.then (httpResource) ->
+        cacheEntry.load()
+        modifyObjectInPlace(data, httpResource, cacheEntry.value)
+        data.$resolved = true
+        deferred.resolve(data)
+      queueDeferred.promise.catch deferred.reject
 
-    CachedResource.$writes.enqueue(params, data, action, queueDeferred)
-    CachedResource.$writes.flush()
+      CachedResource.$writes.enqueue(params, data, action, queueDeferred)
+      CachedResource.$writes.flush()
 
     data

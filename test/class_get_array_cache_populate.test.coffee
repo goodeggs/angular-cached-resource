@@ -1,4 +1,4 @@
-describe 'CachedResource.get cache population from an isArray request', ->
+describe 'GET cacheOnly=true, isArray=true', ->
   {$httpBackend, CachedResource} = {}
 
   beforeEach ->
@@ -54,4 +54,3 @@ describe 'CachedResource.get cache population from an isArray request', ->
       it 'should immediately return values from the cache', ->
         expect(resourceInstance.hex).to.equal '#7CFC00'
         $httpBackend.flush()
-
