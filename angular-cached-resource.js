@@ -28,7 +28,7 @@ readCache = require('./read_cache');
 writeCache = require('./write_cache');
 
 module.exports = buildCachedResourceClass = function($resource, $timeout, $q, providerParams, args) {
-  var $key, $log, Cache, CachedResource, Resource, ResourceCacheArrayEntry, ResourceCacheEntry, ResourceWriteQueue, actions, arg, boundParams, handler, isPermissibleBoundValue, method, name, param, paramDefault, paramDefaults, params, url;
+  var $key, $log, Cache, CachedResource, Resource, ResourceCacheArrayEntry, ResourceCacheEntry, ResourceWriteQueue, actionConfig, actionName, actions, arg, boundParams, handler, isPermissibleBoundValue, method, param, paramDefault, paramDefaults, url;
   $log = providerParams.$log;
   ResourceCacheEntry = require('./resource_cache_entry')(providerParams);
   ResourceCacheArrayEntry = require('./resource_cache_array_entry')(providerParams);
@@ -195,18 +195,18 @@ module.exports = buildCachedResourceClass = function($resource, $timeout, $q, pr
 
   })();
   CachedResource.$writes = new ResourceWriteQueue(CachedResource, $timeout);
-  for (name in actions) {
-    params = actions[name];
-    method = params.method.toUpperCase();
-    if (params.cache !== false) {
-      handler = method === 'GET' && params.isArray ? readArrayCache($q, providerParams, name, CachedResource) : method === 'GET' ? readCache($q, providerParams, name, CachedResource) : method === 'POST' || method === 'PUT' || method === 'DELETE' || method === 'PATCH' ? writeCache($q, providerParams, name, CachedResource) : void 0;
-      CachedResource[name] = handler;
+  for (actionName in actions) {
+    actionConfig = actions[actionName];
+    method = actionConfig.method.toUpperCase();
+    if (actionConfig.cache !== false) {
+      handler = method === 'GET' && actionConfig.isArray ? readArrayCache($q, providerParams, actionName, CachedResource, actionConfig) : method === 'GET' ? readCache($q, providerParams, actionName, CachedResource, actionConfig) : method === 'POST' || method === 'PUT' || method === 'DELETE' || method === 'PATCH' ? writeCache($q, providerParams, actionName, CachedResource, actionConfig) : void 0;
+      CachedResource[actionName] = handler;
       if (method !== 'GET') {
-        CachedResource.prototype["$" + name] = handler;
+        CachedResource.prototype["$" + actionName] = handler;
       }
     } else {
-      CachedResource[name] = Resource[name];
-      CachedResource.prototype["$" + name] = Resource.prototype["$" + name];
+      CachedResource[actionName] = Resource[actionName];
+      CachedResource.prototype["$" + actionName] = Resource.prototype["$" + actionName];
     }
   }
   return CachedResource;
@@ -536,7 +536,7 @@ processReadArgs = require('./process_read_args');
 
 modifyObjectInPlace = require('./modify_object_in_place');
 
-module.exports = readArrayCache = function($q, providerParams, name, CachedResource) {
+module.exports = readArrayCache = function($q, providerParams, name, CachedResource, actionConfig) {
   var ResourceCacheArrayEntry, ResourceCacheEntry, first;
   ResourceCacheEntry = require('./resource_cache_entry')(providerParams);
   ResourceCacheArrayEntry = require('./resource_cache_array_entry')(providerParams);
@@ -596,7 +596,9 @@ module.exports = readArrayCache = function($q, providerParams, name, CachedResou
         return httpDeferred.reject(error);
       });
     };
-    CachedResource.$writes.flush(readHttp);
+    if (!actionConfig.cacheOnly) {
+      CachedResource.$writes.flush(readHttp);
+    }
     if (cacheArrayEntry.value) {
       _ref1 = cacheArrayEntry.value;
       for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
@@ -605,6 +607,8 @@ module.exports = readArrayCache = function($q, providerParams, name, CachedResou
         arrayInstance.push(new CachedResource(cacheInstanceEntry.value));
       }
       cacheDeferred.resolve(arrayInstance);
+    } else if (actionConfig.cacheOnly) {
+      cacheDeferred.reject(new Error("Cache value does not exist for params", params));
     }
     return arrayInstance;
   };
@@ -618,7 +622,7 @@ processReadArgs = require('./process_read_args');
 
 modifyObjectInPlace = require('./modify_object_in_place');
 
-module.exports = readCache = function($q, providerParams, name, CachedResource) {
+module.exports = readCache = function($q, providerParams, name, CachedResource, actionConfig) {
   var ResourceCacheEntry;
   ResourceCacheEntry = require('./resource_cache_entry')(providerParams);
   return function() {
@@ -653,12 +657,14 @@ module.exports = readCache = function($q, providerParams, name, CachedResource) 
     };
     if (cacheEntry.dirty) {
       CachedResource.$writes.processResource(params, readHttp);
-    } else {
+    } else if (!actionConfig.cacheOnly) {
       readHttp();
     }
     if (cacheEntry.value) {
       angular.extend(instance, cacheEntry.value);
       cacheDeferred.resolve(instance);
+    } else if (actionConfig.cacheOnly) {
+      cacheDeferred.reject(new Error("Cache value does not exist for params", params));
     }
     return instance;
   };
@@ -1029,17 +1035,18 @@ var modifyObjectInPlace, writeCache;
 
 modifyObjectInPlace = require('./modify_object_in_place');
 
-module.exports = writeCache = function($q, providerParams, action, CachedResource) {
+module.exports = writeCache = function($q, providerParams, action, CachedResource, actionConfig) {
   var ResourceCacheEntry;
   ResourceCacheEntry = require('./resource_cache_entry')(providerParams);
   return function() {
-    var args, cacheEntry, data, deferred, error, instanceMethod, isArray, param, params, queueDeferred, resource, success, value, wrapInCachedResource, _i, _len, _ref;
+    var args, cacheEntry, data, deferred, error, instanceMethod, isArray, isDirty, param, params, queueDeferred, resource, success, value, wrapInCachedResource, _i, _len, _ref;
     instanceMethod = this instanceof CachedResource;
     args = Array.prototype.slice.call(arguments);
     params = !instanceMethod && angular.isObject(args[1]) ? args.shift() : instanceMethod && angular.isObject(args[0]) ? args.shift() : {};
     data = instanceMethod ? this : args.shift();
     success = args[0], error = args[1];
     isArray = angular.isArray(data);
+    isDirty = !actionConfig.cacheOnly;
     wrapInCachedResource = function(object) {
       if (object instanceof CachedResource) {
         return object;
@@ -1055,7 +1062,7 @@ module.exports = writeCache = function($q, providerParams, action, CachedResourc
         resource = data[_i];
         cacheEntry = new ResourceCacheEntry(CachedResource.$key, resource.$params()).load();
         if (!angular.equals(cacheEntry.data, resource)) {
-          cacheEntry.set(resource, true);
+          cacheEntry.set(resource, isDirty);
         }
       }
     } else {
@@ -1067,7 +1074,7 @@ module.exports = writeCache = function($q, providerParams, action, CachedResourc
       }
       cacheEntry = new ResourceCacheEntry(CachedResource.$key, data.$params()).load();
       if (!angular.equals(cacheEntry.data, data)) {
-        cacheEntry.set(data, true);
+        cacheEntry.set(data, isDirty);
       }
     }
     data.$resolved = false;
@@ -1079,16 +1086,21 @@ module.exports = writeCache = function($q, providerParams, action, CachedResourc
     if (angular.isFunction(error)) {
       deferred.promise["catch"](error);
     }
-    queueDeferred = $q.defer();
-    queueDeferred.promise.then(function(httpResource) {
-      cacheEntry.load();
-      modifyObjectInPlace(data, httpResource, cacheEntry.value);
+    if (actionConfig.cacheOnly) {
       data.$resolved = true;
-      return deferred.resolve(data);
-    });
-    queueDeferred.promise["catch"](deferred.reject);
-    CachedResource.$writes.enqueue(params, data, action, queueDeferred);
-    CachedResource.$writes.flush();
+      deferred.resolve(data);
+    } else {
+      queueDeferred = $q.defer();
+      queueDeferred.promise.then(function(httpResource) {
+        cacheEntry.load();
+        modifyObjectInPlace(data, httpResource, cacheEntry.value);
+        data.$resolved = true;
+        return deferred.resolve(data);
+      });
+      queueDeferred.promise["catch"](deferred.reject);
+      CachedResource.$writes.enqueue(params, data, action, queueDeferred);
+      CachedResource.$writes.flush();
+    }
     return data;
   };
 };

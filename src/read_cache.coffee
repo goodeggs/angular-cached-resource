@@ -1,7 +1,7 @@
 processReadArgs = require './process_read_args'
 modifyObjectInPlace = require './modify_object_in_place'
 
-module.exports = readCache = ($q, providerParams, name, CachedResource) ->
+module.exports = readCache = ($q, providerParams, name, CachedResource, actionConfig) ->
   ResourceCacheEntry = require('./resource_cache_entry')(providerParams)
 
   ->
@@ -35,11 +35,13 @@ module.exports = readCache = ($q, providerParams, name, CachedResource) ->
 
     if cacheEntry.dirty
       CachedResource.$writes.processResource params, readHttp
-    else
+    else if not actionConfig.cacheOnly
       readHttp()
 
     if cacheEntry.value
       angular.extend(instance, cacheEntry.value)
       cacheDeferred.resolve instance
+    else if actionConfig.cacheOnly
+      cacheDeferred.reject new Error "Cache value does not exist for params", params
 
     instance

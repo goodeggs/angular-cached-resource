@@ -1,7 +1,7 @@
 processReadArgs = require './process_read_args'
 modifyObjectInPlace = require './modify_object_in_place'
 
-module.exports = readArrayCache = ($q, providerParams, name, CachedResource) ->
+module.exports = readArrayCache = ($q, providerParams, name, CachedResource, actionConfig) ->
   ResourceCacheEntry = require('./resource_cache_entry')(providerParams)
   ResourceCacheArrayEntry = require('./resource_cache_array_entry')(providerParams)
 
@@ -52,7 +52,8 @@ module.exports = readArrayCache = ($q, providerParams, name, CachedResource) ->
         cacheDeferred.reject error unless cacheArrayEntry.value
         httpDeferred.reject error
 
-    CachedResource.$writes.flush readHttp
+    if not actionConfig.cacheOnly
+      CachedResource.$writes.flush readHttp
 
     if cacheArrayEntry.value
       for cacheInstanceParams in cacheArrayEntry.value
@@ -61,5 +62,7 @@ module.exports = readArrayCache = ($q, providerParams, name, CachedResource) ->
 
       # Resolve the promise as the cache is ready
       cacheDeferred.resolve arrayInstance
+    else if actionConfig.cacheOnly
+      cacheDeferred.reject new Error "Cache value does not exist for params", params
 
     arrayInstance
