@@ -26,6 +26,10 @@ module.exports = readArrayCache = ($q, providerParams, name, CachedResource, act
 
     cacheArrayEntry = new ResourceCacheArrayEntry(CachedResource.$key, params).load()
 
+    arrayInstance.$push = (resourceInstance) ->
+      arrayInstance.push(resourceInstance)
+      cacheArrayEntry.addInstances([resourceInstance], false, append: true)
+
     arrayInstance.$httpPromise.then (instances) ->
       cacheArrayEntry.addInstances(instances, false)
 
