@@ -6,8 +6,10 @@ module.exports = (providerParams) ->
     defaultValue: []
     cacheKeyPrefix: -> "#{@key}/array"
 
-    addInstances: (instances, dirty) ->
-      cacheArrayReferences = []
+    addInstances: (instances, dirty, options = {append: false}) ->
+      cacheArrayReferences = if options.append then @value else []
+      cacheArrayReferences ?= []
+
       for instance in instances
         cacheInstanceParams = instance.$params()
         if Object.keys(cacheInstanceParams).length is 0
@@ -17,5 +19,7 @@ module.exports = (providerParams) ->
         else
           cacheArrayReferences.push cacheInstanceParams
           cacheInstanceEntry = new ResourceCacheEntry(@key, cacheInstanceParams).load()
-          cacheInstanceEntry.set instance, dirty
+          # if we're appending and there's already a resource entry, we won't clobber external intent (eg. $save) about that resource
+          unless options.append and cacheInstanceEntry.value?
+            cacheInstanceEntry.set instance, dirty
       @set cacheArrayReferences, dirty
