@@ -14,7 +14,7 @@ conditionallyDescribe 'a full localStorage cache', ->
   {CachedResource, $httpBackend, $log} = {}
 
   beforeEach ->
-    sinon.stub(window.localStorage, 'setItem').throws 'QuotaExceededError'
+    sinon.stub(window.localStorage, 'setItem').throws new Error('QuotaExceededError')
     inject ($injector) ->
       $log = $injector.get '$log'
       $cachedResource = $injector.get '$cachedResource'
@@ -39,6 +39,7 @@ conditionallyDescribe 'a full localStorage cache', ->
     CachedResource.save {id: 42}, {id: 42, player: 'Jackie Robinson'}
     expect($log.error.logs[0][0]).to.contain "ngCachedResource"
     expect($log.error.logs[0][1]).to.contain "Failed to write to localStorage"
+    expect($log.error.logs[0][2].error).to.have.property 'message', 'QuotaExceededError'
     expect($log.error.logs[0][2]).to.have.property 'key', 'cachedResource://full-local-storage-cache?id=42'
     expect($log.error.logs[0][2]).to.have.property 'value', '{"value":{"id":42,"player":"Jackie Robinson"},"dirty":true}'
 
