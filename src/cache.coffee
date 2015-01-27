@@ -23,8 +23,8 @@ class Cache
     try
       localStorage.setItem(key, stringValue)
       delete @memoryCache[key] if @memoryCache[key]?
-    catch
-      @$log.error "Failed to write to localStorage.", {key, value: stringValue}
+    catch e
+      @$log.error "Failed to write to localStorage.", {error: e, key, value: stringValue}
       @memoryCache[key] = stringValue
 
     @$log.debug "CACHE PUT: #{key}", angular.fromJson angular.toJson value
