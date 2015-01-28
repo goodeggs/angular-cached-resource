@@ -66,6 +66,14 @@ module.exports = buildCachedResourceClass = function($resource, $timeout, $q, pr
       angular.extend(this, attrs);
     }
 
+    CachedResource.prototype.toJSON = function() {
+      var data;
+      data = angular.extend({}, this);
+      delete data.$promise;
+      delete data.$httpPromise;
+      return data;
+    };
+
     CachedResource.prototype.$params = function() {
       var attribute, params;
       params = {};

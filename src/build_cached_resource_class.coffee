@@ -42,6 +42,12 @@ module.exports = buildCachedResourceClass = ($resource, $timeout, $q, providerPa
     constructor: (attrs) ->
       angular.extend @, attrs
 
+    toJSON: ->
+      data = angular.extend {}, @
+      delete data.$promise
+      delete data.$httpPromise
+      data
+
     $params: ->
       params = {}
       for attribute, param of boundParams when isPermissibleBoundValue @[attribute]
