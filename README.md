@@ -61,7 +61,7 @@ a2.$promise.then(function() {
 ```
 
 Read the [tutorial on the Bites from Good Eggs
-blog](http://bites.goodeggs.com/open_source/angular-cached-resource/).
+blog](https://github.com/goodeggs/bites/blob/master/src/documents/open_source/2014-04-24-angular-cached-resource.md).
 
 -------
 
