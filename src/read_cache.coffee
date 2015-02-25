@@ -12,7 +12,14 @@ module.exports = readCache = ($q, providerParams, name, CachedResource, actionCo
       $promise:     cacheDeferred.promise
       $httpPromise: httpDeferred.promise
 
-    cacheEntry = new ResourceCacheEntry(CachedResource.$key, params).load()
+    cacheParams = {}
+    if actionConfig.cacheParamsKeys
+      for key in actionConfig.cacheParamsKeys
+        cacheParams[key] = params[key]
+    else
+      cacheParams = angular.copy(params);
+
+    cacheEntry = new ResourceCacheEntry(CachedResource.$key, cacheParams).load()
 
     readHttp = ->
       resource = CachedResource.$resource[name].call(CachedResource.$resource, params)
@@ -34,7 +41,7 @@ module.exports = readCache = ($q, providerParams, name, CachedResource, actionCo
         httpDeferred.reject error
 
     if cacheEntry.dirty
-      CachedResource.$writes.processResource params, readHttp
+      CachedResource.$writes.processResource cacheParams, readHttp
     else if not actionConfig.cacheOnly
       readHttp()
 

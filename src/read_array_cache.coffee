@@ -24,7 +24,14 @@ module.exports = readArrayCache = ($q, providerParams, name, CachedResource, act
     arrayInstance.$promise = cacheDeferred.promise
     arrayInstance.$httpPromise = httpDeferred.promise
 
-    cacheArrayEntry = new ResourceCacheArrayEntry(CachedResource.$key, params).load()
+    cacheParams = {}
+    if actionConfig.cacheParamsKeys
+      for key in actionConfig.cacheParamsKeys
+        cacheParams[key] = params[key]
+    else
+      cacheParams = angular.copy(params);
+
+    cacheArrayEntry = new ResourceCacheArrayEntry(CachedResource.$key, cacheParams).load()
 
     arrayInstance.$push = (resourceInstance) ->
       arrayInstance.push(resourceInstance)
