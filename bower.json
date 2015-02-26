@@ -1,11 +1,12 @@
 {
   "name": "angular-cached-resource",
   "main": "angular-cached-resource.js",
-  "version": "1.4.1",
+  "version": "1.4.2",
   "homepage": "https://github.com/goodeggs/angular-cached-resource",
   "authors": [
     "Max Edmands <max@goodeggs.com>",
-    "Aaron Borden <aaron@goodeggs.com>"
+    "Aaron Borden <aaron@goodeggs.com>",
+    "Lukas Dolezal <lukas@feedmepronto.com>"
   ],
   "description": "An AngularJS module to interact with RESTful resources, even when browser is offline",
   "keywords": [
