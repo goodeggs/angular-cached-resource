@@ -108,8 +108,11 @@ $cachedResource(cacheKey, url, [paramDefaults], [actions]);
 
 - **actions**, `Object`, _optional_<br>
   Mostly matches the API for the `actions` param of the
-  [$resource][ngResource] factory. Takes an additonal `cache` param (Boolean,
-  default `true`) that determines if this action uses caching.
+  [$resource][ngResource] factory.
+  Additionaly takse this params:
+  - `cache` (Boolean, default `true`) that determines if this action uses caching.
+  - `cacheOnly` (Boolean, default `false`) that determines if this actions works only on cache - ie that it will not touch underlying http resource
+  - `cacheParamsKeys` (Array[String], default `null`) that determine params of resource used for generating cache key for resource. It allows for example to ignore specific filtering params on GET action so other actions will use the same cached array. When `null` uses all params. To ignore all params use `[]`.
 
 ### Returns
 
@@ -250,6 +253,12 @@ none of the caching benefits.
 ------
 
 ## Development
+
+Build
+
+```
+npm run build
+```
 
 Please make sure you run the tests, and add to them unless it's a trivial
 change. Here is how you can run the tests:
