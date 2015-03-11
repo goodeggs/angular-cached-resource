@@ -723,7 +723,7 @@ module.exports = function(providerParams) {
         instance = instances[_i];
         cacheInstanceParams = instance.$params();
         if (Object.keys(cacheInstanceParams).length === 0) {
-          $log.error("instance " + instance + " doesn't have any boundParams. Please, make sure you specified them in your resource's initialization, f.e. `{id: \"@id\"}`, or it won't be cached.");
+          $log.error("'" + this.key + "' instance doesn't have any boundParams. Please, make sure you specified them in your resource's initialization, f.e. `{id: \"@id\"}`, or it won't be cached.");
         } else {
           cacheArrayReferences.push(cacheInstanceParams);
           cacheInstanceEntry = new ResourceCacheEntry(this.key, cacheInstanceParams).load();

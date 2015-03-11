@@ -18,4 +18,4 @@ describe 'bound params do not match array response', ->
     $httpBackend.flush()
     expect($log.error.logs.length).to.equal 1
     expect($log.error.logs[0][0]).to.equal 'ngCachedResource'
-    expect($log.error.logs[0][1]).to.contain 'boundParams'
+    expect($log.error.logs[0][1]).to.contain "'villain' instance doesn't have any boundParams"
