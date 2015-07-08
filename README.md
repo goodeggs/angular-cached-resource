@@ -51,7 +51,7 @@ a1.$httpPromise.then(function() {
 });
 
 // POST/PUT/PATCH/DELETE requests:
-var a2 = new Article({id: 2});
+var a2 = new Article({id: 2}); // *Note: setting the bound param (`id` in this case) is *required*
 a2.title = "This article will be saved eventually...";
 a2.body = "Even if the browser is offline right now.";
 a2.$save();
@@ -62,6 +62,8 @@ a2.$promise.then(function() {
 
 Read the [tutorial on the Bites from Good Eggs
 blog](https://github.com/goodeggs/bites/blob/master/src/documents/open_source/2014-04-24-angular-cached-resource.md).
+
+*Note: Internally, $cachedResource keeps track of writes by bound params to ensure that it doesn't duplicate writes. If your bound param is null (say you're relying on the server to generate `id`s), then every write will replace the previous one. To avoid this undesirable scenario, simply ensure the `id` is set on the client, and you can safely ignore it on the server.
 
 -------
 
