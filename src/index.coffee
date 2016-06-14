@@ -2,7 +2,8 @@ resourceManagerListener = null
 debugMode = off
 localStoragePrefix = null
 
-module?.exports = app = angular.module 'ngCachedResource', ['ngResource']
+app = angular.module('ngCachedResource', ['ngResource'])
+module?.exports = app
 
 app.provider '$cachedResource', class $cachedResourceProvider
   constructor: ->
