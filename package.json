@@ -1,6 +1,6 @@
 {
   "name": "angular-cached-resource",
-  "version": "1.4.2",
+  "version": "1.5.0",
   "description": "An AngularJS module to interact with RESTful resources, even when browser is offline",
   "author": "Max Edmands <max@goodeggs.com>",
   "contributors": [
