@@ -48,7 +48,7 @@ module.exports = readArrayCache = ($q, providerParams, name, CachedResource, act
             newArrayInstance.push resourceInstance
 
         arrayInstance.splice(0, arrayInstance.length, newArrayInstance...)
-        arrayInstance.$headers = headers()
+        arrayInstance.headers = headers()
 
         cacheDeferred.resolve arrayInstance unless cacheArrayEntry.value
         httpDeferred.resolve arrayInstance

@@ -600,7 +600,7 @@ module.exports = readArrayCache = function($q, providerParams, name, CachedResou
           }
         });
         arrayInstance.splice.apply(arrayInstance, [0, arrayInstance.length].concat(slice.call(newArrayInstance)));
-        arrayInstance.$headers = headers();
+        arrayInstance.headers = headers();
         if (!cacheArrayEntry.value) {
           cacheDeferred.resolve(arrayInstance);
         }
