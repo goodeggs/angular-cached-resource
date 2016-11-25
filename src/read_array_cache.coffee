@@ -34,8 +34,7 @@ module.exports = readArrayCache = ($q, providerParams, name, CachedResource, act
       cacheArrayEntry.addInstances(instances, false)
 
     readHttp = ->
-      resource = CachedResource.$resource[name](params)
-      resource.$promise.then (response) ->
+      resource = CachedResource.$resource[name](params, (response, headers) ->
         newArrayInstance = new Array()
 
         response.map (resourceInstance) ->
@@ -49,12 +48,14 @@ module.exports = readArrayCache = ($q, providerParams, name, CachedResource, act
             newArrayInstance.push resourceInstance
 
         arrayInstance.splice(0, arrayInstance.length, newArrayInstance...)
+        arrayInstance.$headers = headers()
 
         cacheDeferred.resolve arrayInstance unless cacheArrayEntry.value
         httpDeferred.resolve arrayInstance
-      resource.$promise.catch (error) ->
+      , (error) ->
         cacheDeferred.reject error unless cacheArrayEntry.value
         httpDeferred.reject error
+      )
 
     if not actionConfig.cacheOnly
       CachedResource.$writes.flush readHttp
