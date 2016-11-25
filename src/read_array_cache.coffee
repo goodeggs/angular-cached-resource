@@ -61,9 +61,11 @@ module.exports = readArrayCache = ($q, providerParams, name, CachedResource, act
       CachedResource.$writes.flush readHttp
 
     if cacheArrayEntry.value
-      for cacheInstanceParams in cacheArrayEntry.value
+      for cacheInstanceParams in cacheArrayEntry.value.data
         cacheInstanceEntry = new ResourceCacheEntry(CachedResource.$key, cacheInstanceParams).load()
         arrayInstance.push new CachedResource cacheInstanceEntry.value
+      if cacheArrayEntry.value.headers
+        arrayInstance.headers = cacheArrayEntry.value.headers
 
       # Resolve the promise as the cache is ready
       cacheDeferred.resolve arrayInstance
