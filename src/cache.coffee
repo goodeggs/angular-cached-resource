@@ -40,7 +40,7 @@ class Cache
       cacheKeys = []
       for i in [0...localStorage.length]
         cacheKey = localStorage.key i
-        continue unless @_cacheKeyHasPrefix(cacheKey, key)
+        continue unless cacheKey and @_cacheKeyHasPrefix(cacheKey, key)
 
         skipKey = no
         for exception in exceptFor when @_cacheKeyHasPrefix(cacheKey, exception)
