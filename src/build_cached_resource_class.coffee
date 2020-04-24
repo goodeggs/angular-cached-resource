@@ -20,7 +20,7 @@ module.exports = buildCachedResourceClass = ($resource, $timeout, $q, providerPa
   url = args.shift()
   while args.length
     arg = args.pop()
-    if angular.isObject(arg[Object.keys(arg)[0]])
+    if angular.isObject(arg) && angular.isObject(arg[Object.keys(arg)[0]])
       actions = arg
     else
       paramDefaults = arg
